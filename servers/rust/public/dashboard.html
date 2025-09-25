@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { darkMode: 'class' };
+    </script>
+    <style>
+      :root {
+        --bg: #0b0d12;
+        --bg-elev: #111420;
+        --text: #e6e9ef;
+        --muted: #9aa3b2;
+        --accent: #6ea8fe;
+        --ok: #3cc36a;
+        --warn: #f7b955;
+        --crit: #ff6b6b;
+        --border: #2a2f3a;
+        --radius: 10px;
+        --gap: 12px;
+        --pad: 12px;
+        --font-mono: ui-monospace, Consolas, monospace;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.4 system-ui;
+      }
+      header {
+        display: flex;
+        gap: var(--gap);
+        align-items: center;
+        justify-content: space-between;
+        background: var(--bg-elev);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: var(--pad);
+      }
+      .grid {
+        display: grid;
+        gap: var(--gap);
+      }
+      .cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      @media (max-width: 1199px) {
+        .cols-3 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 959px) {
+        .cols-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--pad);
+      }
+      .badge {
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #1d2330;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .kpi {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .kpi h3 {
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .kpi .val {
+        font: 600 20px/1 var(--font-mono);
+      }
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin: 14px var(--pad) 0 var(--pad);
+      }
+      .tab {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--accent);
+        border-bottom: none;
+        border-radius: 8px 8px 0 0;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .tab.active {
+        background: #0e1322;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .tab-panels {
+        margin: 0 var(--pad) var(--pad) var(--pad);
+        border: 1px solid var(--accent);
+        border-radius: 0 8px 8px 8px;
+        padding: var(--pad);
+        background: var(--bg-elev);
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+      }
+      thead th {
+        position: sticky;
+        top: 0;
+        background: var(--bg-elev);
+        z-index: 5;
+        box-shadow: 0 1px 0 var(--border);
+      }
+      .spark {
+        height: 28px;
+        background: linear-gradient(90deg, #192033, #0f1320);
+      }
+
+      /* Custom tooltips */
+      .custom-tooltip {
+        position: relative;
+        cursor: help;
+      }
+
+      .custom-tooltip:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .custom-tooltip:hover::before {
+        content: '';
+        position: absolute;
+        bottom: 115%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body class="bg-[#0b0d12] text-[#e6e9ef]">
+    <header
+      class="sticky top-0 z-10 flex items-center justify-between bg-[#111420] border-b border-[#2a2f3a] p-3"
+    >
+      <div class="flex gap-3 items-center">
+        <span id="connectionDot" class="inline-block w-2.5 h-2.5 rounded-full bg-gray-500"></span>
+        <span id="connectionIP" class="text-sm text-[#6b7280]">Disconnected</span>
+      </div>
+      <div id="connectionStatus" class="text-sm hidden"></div>
+      <div class="flex items-center gap-2"></div>
+    </header>
+
+    <div class="tabs">
+      <button
+        class="tab active px-3 py-1 text-sm border border-[#6ea8fe] border-b-0 rounded-t-md bg-[#111420] hover:bg-[#171b29]"
+        data-tab="overview"
+      >
+        Overview
+      </button>
+      <button
+        class="tab px-3 py-1 text-sm border border-[#6ea8fe] border-b-0 rounded-t-md hover:bg-[#171b29]"
+        data-tab="processes"
+      >
+        Processes
+      </button>
+      <button
+        class="tab px-3 py-1 text-sm border border-[#6ea8fe] border-b-0 rounded-t-md hover:bg-[#171b29]"
+        data-tab="ports"
+      >
+        Ports
+      </button>
+      <button
+        class="tab px-3 py-1 text-sm border border-[#6ea8fe] border-b-0 rounded-t-md hover:bg-[#171b29]"
+        data-tab="network"
+      >
+        Network
+      </button>
+      <button
+        class="tab px-3 py-1 text-sm border border-[#6ea8fe] border-b-0 rounded-t-md hover:bg-[#171b29]"
+        data-tab="resources"
+      >
+        Resources
+      </button>
+      <button
+        class="tab px-3 py-1 text-sm border border-[#6ea8fe] border-b-0 rounded-t-md hover:bg-[#171b29]"
+        data-tab="console"
+      >
+        Console
+      </button>
+      <button
+        class="tab px-3 py-1 text-sm border border-[#6ea8fe] border-b-0 rounded-t-md hover:bg-[#171b29]"
+        data-tab="logs"
+      >
+        Logs
+      </button>
+    </div>
+    <!-- Connections controls moved below panels -->
+    <div class="tab-panels border border-[#6ea8fe] rounded-b-md bg-[#111420] p-3">
+      <section id="panel-overview" class="panel active">
+        <div class="grid cols-3">
+          <div class="card kpi">
+            <h3
+              class="custom-tooltip"
+              data-tooltip="Загрузка процессора - показывает процент использования CPU"
+            >
+              CPU Total
+            </h3>
+            <div
+              id="cpuVal"
+              class="val custom-tooltip"
+              data-tooltip="Текущая загрузка процессора в процентах"
+            >
+              -
+            </div>
+            <div class="spark"></div>
+          </div>
+          <div class="card kpi">
+            <h3
+              class="custom-tooltip"
+              data-tooltip="Использование оперативной памяти - процент занятой RAM"
+            >
+              Memory Used
+            </h3>
+            <div
+              id="memVal"
+              class="val custom-tooltip"
+              data-tooltip="Процент использованной оперативной памяти"
+            >
+              -
+            </div>
+            <div class="spark"></div>
+          </div>
+          <div class="card kpi">
+            <h3 class="custom-tooltip" data-tooltip="Сетевая активность - скорость передачи данных">
+              Network
+            </h3>
+            <div
+              id="netVal"
+              class="val custom-tooltip"
+              data-tooltip="Суммарная скорость сетевого трафика (загрузка + отправка)"
+            >
+              -
+            </div>
+            <div class="spark"></div>
+          </div>
+          <div class="card kpi">
+            <h3 class="custom-tooltip" data-tooltip="Использование диска - процент занятого места">
+              Disk Util
+            </h3>
+            <div
+              id="diskVal"
+              class="val custom-tooltip"
+              data-tooltip="Процент использованного дискового пространства"
+            >
+              -
+            </div>
+            <div class="spark"></div>
+          </div>
+          <div class="card kpi">
+            <h3
+              class="custom-tooltip"
+              data-tooltip="Загрузка видеокарты - процент использования GPU"
+            >
+              GPU Util
+            </h3>
+            <div
+              id="gpuVal"
+              class="val custom-tooltip"
+              data-tooltip="Процент использования графического процессора"
+            >
+              -
+            </div>
+            <div class="spark"></div>
+          </div>
+        </div>
+      </section>
+      <section id="panel-processes" class="panel">
+        <h3 style="margin: 0 0 8px 0; color: var(--muted)">Processes (top)</h3>
+        <table id="procTable" class="table-fixed text-sm">
+          <thead>
+            <tr>
+              <th
+                class="custom-tooltip"
+                data-tooltip="Идентификатор процесса - уникальный номер процесса"
+              >
+                PID
+              </th>
+              <th class="custom-tooltip" data-tooltip="Пользователь - владелец процесса">User</th>
+              <th class="custom-tooltip" data-tooltip="Название - имя исполняемого файла">Name</th>
+              <th class="custom-tooltip" data-tooltip="Команда - полная команда запуска процесса">
+                Cmd
+              </th>
+              <th
+                class="custom-tooltip"
+                data-tooltip="Загрузка CPU - процент использования процессора"
+              >
+                CPU %
+              </th>
+              <th class="custom-tooltip" data-tooltip="Память RSS - физическая память в мегабайтах">
+                RSS MiB
+              </th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <section id="panel-ports" class="panel">
+        <h3 style="margin: 0 0 8px 0; color: var(--muted)">Ports (LISTEN)</h3>
+        <table id="listenTable" class="table-fixed text-sm">
+          <thead>
+            <tr>
+              <th class="custom-tooltip" data-tooltip="Протокол - тип сетевого протокола (TCP/UDP)">
+                Proto
+              </th>
+              <th
+                class="custom-tooltip"
+                data-tooltip="Локальный адрес - IP и порт на котором слушает служба"
+              >
+                Local Addr:Port
+              </th>
+              <th
+                class="custom-tooltip"
+                data-tooltip="ID процесса - идентификатор процесса владельца порта"
+              >
+                PID
+              </th>
+              <th
+                class="custom-tooltip"
+                data-tooltip="Процесс - название программы использующей порт"
+              >
+                Process
+              </th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <section id="panel-network" class="panel">
+        <h3 class="text-[#9aa3b2] mb-2">Network Traffic</h3>
+        <div class="flex items-center gap-4 mb-2 text-sm text-[#e6e9ef]">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-[#6ea8fe] rounded border border-[#6ea8fe]"></div>
+            <span class="font-medium">RX (Download)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-[#3cc36a] rounded border border-[#3cc36a]"></div>
+            <span class="font-medium">TX (Upload)</span>
+          </div>
+          <span class="ml-auto text-[#9aa3b2] font-medium">Mb/s</span>
+        </div>
+        <div class="relative">
+          <canvas id="netChart" class="w-full h-40 bg-black/20 rounded mb-4"></canvas>
+        </div>
+        <h3 class="text-[#9aa3b2] mb-2">Network Connections</h3>
+        <table id="connectionTable" class="table-fixed text-sm w-full">
+          <thead>
+            <tr>
+              <th
+                class="custom-tooltip"
+                data-tooltip="Протокол - тип сетевого протокола соединения"
+              >
+                Proto
+              </th>
+              <th
+                class="custom-tooltip"
+                data-tooltip="Локальный адрес - IP и порт на локальной машине"
+              >
+                Local
+              </th>
+              <th
+                class="custom-tooltip"
+                data-tooltip="Удаленный адрес - IP и порт удаленной машины"
+              >
+                Peer
+              </th>
+              <th
+                class="custom-tooltip"
+                data-tooltip="Состояние - текущее состояние TCP соединения"
+              >
+                State
+              </th>
+              <th class="custom-tooltip" data-tooltip="ID процесса - процесс владелец соединения">
+                PID
+              </th>
+              <th class="custom-tooltip" data-tooltip="Процесс - программа использующая соединение">
+                Process
+              </th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <section id="panel-console" class="panel">
+        <h3 class="text-[#9aa3b2] mb-2">Server Console</h3>
+        <pre
+          id="consoleOut"
+          class="bg-[#0a0d14] text-[#e6e9ef] p-3 rounded h-[300px] overflow-y-auto border border-[#2a2f3a] font-mono text-sm"
+        ></pre>
+        <div class="flex items-center gap-2 mt-2">
+          <span id="cmdPrompt" class="text-[#6ea8fe] font-mono select-none">$</span>
+          <input
+            id="cmdInput"
+            class="flex-1 bg-black/60 text-[#e6e9ef] border border-[#2a2f3a] rounded px-2 py-1 font-mono"
+            placeholder="type command..."
+          />
+          <button id="cmdSend" class="px-3 py-1 border border-[#6ea8fe] rounded hover:bg-[#171b29]">
+            Enter
+          </button>
+        </div>
+      </section>
+      <section id="panel-logs" class="panel">
+        <h3 class="text-[#9aa3b2] mb-2">System Logs</h3>
+        <div class="flex items-center gap-2 mb-2">
+          <button
+            id="refreshLogs"
+            class="px-3 py-1 text-sm border border-[#6ea8fe] rounded hover:bg-[#171b29]"
+          >
+            Refresh
+          </button>
+          <button
+            id="clearLogs"
+            class="px-3 py-1 text-sm border border-[#ff6b6b] rounded hover:bg-[#3a1414]"
+          >
+            Clear
+          </button>
+        </div>
+        <pre
+          id="systemLogs"
+          class="bg-[#0a0d14] text-[#e6e9ef] p-3 rounded h-[300px] overflow-y-auto border border-[#2a2f3a] font-mono text-xs"
+        ></pre>
+      </section>
+      <section id="panel-resources" class="panel">
+        <div class="grid cols-3">
+          <div class="card">
+            <h3
+              class="text-[#9aa3b2] mb-2 custom-tooltip"
+              data-tooltip="График загрузки процессора за последние минуты"
+            >
+              CPU %
+            </h3>
+            <canvas
+              id="cpuSpark"
+              class="w-full h-16 bg-black/20 rounded custom-tooltip"
+              data-tooltip="Наведите для просмотра точных значений загрузки CPU"
+            ></canvas>
+          </div>
+          <div class="card">
+            <h3
+              class="text-[#9aa3b2] mb-2 custom-tooltip"
+              data-tooltip="График загрузки видеокарты за последние минуты"
+            >
+              GPU %
+            </h3>
+            <canvas
+              id="gpuSpark"
+              class="w-full h-16 bg-black/20 rounded custom-tooltip"
+              data-tooltip="Наведите для просмотра точных значений загрузки GPU"
+            ></canvas>
+          </div>
+          <div class="card">
+            <h3
+              class="text-[#9aa3b2] mb-2 custom-tooltip"
+              data-tooltip="Использование дискового пространства и скорость операций"
+            >
+              SSD Usage
+            </h3>
+            <div class="text-sm mb-1">
+              <span
+                id="ssdUsed"
+                class="custom-tooltip"
+                data-tooltip="Процент использованного дискового пространства"
+                >-</span
+              >% used
+            </div>
+            <div class="w-full h-3 bg-black/30 rounded">
+              <div id="ssdBar" class="h-3 bg-[#f7b955] rounded" style="width: 0%"></div>
+            </div>
+            <div id="ssdStats" class="text-xs text-[#9aa3b2] mt-2">
+              <div>
+                Read:
+                <span
+                  id="ssdRead"
+                  class="custom-tooltip"
+                  data-tooltip="Скорость чтения с диска в мегабайтах в секунду"
+                  >- MB/s</span
+                >
+              </div>
+              <div>
+                Write:
+                <span
+                  id="ssdWrite"
+                  class="custom-tooltip"
+                  data-tooltip="Скорость записи на диск в мегабайтах в секунду"
+                  >- MB/s</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid cols-3 mt-3">
+          <div class="card">
+            <h3
+              class="text-[#9aa3b2] mb-2 custom-tooltip"
+              data-tooltip="Оперативная память - использование системной RAM"
+            >
+              RAM
+            </h3>
+            <div class="text-sm mb-1">
+              <span
+                id="ramUsed"
+                class="custom-tooltip"
+                data-tooltip="Использованная оперативная память"
+                >-</span
+              >
+              /
+              <span
+                id="ramTotal"
+                class="custom-tooltip"
+                data-tooltip="Общий объем оперативной памяти"
+                >-</span
+              >
+              GiB
+            </div>
+            <div class="w-full h-3 bg-black/30 rounded">
+              <div id="ramBar" class="h-3 bg-[#6ea8fe] rounded" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3
+              class="text-[#9aa3b2] mb-2 custom-tooltip"
+              data-tooltip="Видеопамять - память графической карты"
+            >
+              VRAM
+            </h3>
+            <div class="text-sm mb-1">
+              <span id="vramUsed" class="custom-tooltip" data-tooltip="Использованная видеопамять"
+                >-</span
+              >
+              /
+              <span id="vramTotal" class="custom-tooltip" data-tooltip="Общий объем видеопамяти"
+                >-</span
+              >
+              GiB
+            </div>
+            <div class="w-full h-3 bg-black/30 rounded">
+              <div id="vramBar" class="h-3 bg-[#3cc36a] rounded" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="mt-3 p-3 border border-[#2a2f3a] rounded bg-[#111420]">
+      <h3 class="text-[#9aa3b2] mb-2">Server Connections (SSH)</h3>
+      <div class="flex flex-wrap gap-2 items-end mb-3">
+        <label class="text-sm"
+          >Host/IP<br /><input
+            id="sshHost"
+            class="bg-[#0b0d12] border border-[#2a2f3a] rounded px-2 py-1"
+            placeholder="192.168.0.10"
+        /></label>
+        <label class="text-sm"
+          >User<br /><input
+            id="sshUser"
+            class="bg-[#0b0d12] border border-[#2a2f3a] rounded px-2 py-1"
+            placeholder="root"
+        /></label>
+        <label class="text-sm"
+          >Port<br /><input
+            id="sshPort"
+            type="number"
+            value="22"
+            class="w-20 bg-[#0b0d12] border border-[#2a2f3a] rounded px-2 py-1"
+        /></label>
+        <label class="text-sm"
+          >Password<br /><input
+            id="sshPassword"
+            type="password"
+            class="bg-[#0b0d12] border border-[#2a2f3a] rounded px-2 py-1"
+            placeholder="password"
+        /></label>
+        <button
+          id="sshConnect"
+          class="px-3 py-1 border border-[#6ea8fe] rounded hover:bg-[#171b29]"
+        >
+          Connect
+        </button>
+        <button
+          id="sshDisconnect"
+          class="px-3 py-1 border border-[#ff6b6b] rounded hover:bg-[#3a1414] hidden"
+        >
+          Disconnect
+        </button>
+      </div>
+      <!-- Active connections and client IPs removed for single-connection design -->
+    </div>
+
+    <!-- Terminal modal -->
+    <div id="terminalModal" class="fixed inset-0 hidden items-center justify-center bg-black/60">
+      <div class="w-[90%] max-w-3xl bg-[#0b0d12] border border-[#2a2f3a] rounded p-3">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-[#9aa3b2]">Process Terminal</h3>
+          <button id="termClose" class="px-2 py-1 border border-[#6ea8fe] rounded">Close</button>
+        </div>
+        <pre
+          id="terminalContent"
+          class="bg-black/50 text-[#e6e9ef] p-3 rounded max-h-[60vh] overflow-auto"
+        ></pre>
+      </div>
+    </div>
+
+    <script defer>
+      let polling;
+      let isConnected = false;
+
+      // Session storage for graph data
+      const sessionData = {
+        networkHistory: [],
+        cpuHistory: [],
+        gpuHistory: [],
+        maxHistoryLength: 60,
+        currentHost: '',
+      };
+
+      // Helper function to add data to history with max length
+      function addToHistory(array, value) {
+        array.push(value);
+        if (array.length > sessionData.maxHistoryLength) {
+          array.shift();
+        }
+        return array;
+      }
+
+      // Save session data to server
+      async function saveSessionData() {
+        try {
+          await fetch('/rust/session/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              network_history: sessionData.networkHistory,
+              cpu_history: sessionData.cpuHistory,
+              gpu_history: sessionData.gpuHistory,
+              current_host: sessionData.currentHost,
+            }),
+          });
+        } catch (e) {
+          console.warn('Failed to save session data:', e);
+        }
+      }
+
+      // Restore session data from server
+      async function restoreSessionData() {
+        try {
+          const response = await fetch('/rust/session/restore');
+          const result = await response.json();
+          if (result.success && result.data) {
+            sessionData.networkHistory = result.data.networkHistory || [];
+            sessionData.cpuHistory = result.data.cpuHistory || [];
+            sessionData.gpuHistory = result.data.gpuHistory || [];
+            sessionData.currentHost = result.data.currentHost || '';
+
+            // Redraw charts with restored data
+            drawNetwork('netChart', sessionData.networkHistory);
+            drawSpark('cpuSpark', sessionData.cpuHistory, '#6ea8fe');
+            drawSpark('gpuSpark', sessionData.gpuHistory, '#3cc36a');
+          }
+        } catch (e) {
+          console.warn('Failed to restore session data:', e);
+        }
+      }
+
+      // Check SSH connection status
+      async function checkSSHStatus() {
+        try {
+          const response = await fetch('/rust/ssh/status');
+          const status = await response.json();
+
+          if (status.connected && status.host) {
+            // Update UI to show connected state without clearing data
+            const connectBtn = document.getElementById('sshConnect');
+            const disconnectBtn = document.getElementById('sshDisconnect');
+            const connectionDot = document.getElementById('connectionDot');
+            const connectionIP = document.getElementById('connectionIP');
+
+            connectBtn?.classList.add('hidden');
+            disconnectBtn?.classList.remove('hidden');
+            connectionDot.className = 'inline-block w-2.5 h-2.5 rounded-full bg-green-500';
+            connectionIP.textContent = status.host;
+            connectionIP.className = 'text-sm text-green-400';
+            sessionData.currentHost = status.host;
+            isConnected = true;
+
+            // Update prompt if we have current directory
+            if (status.current_dir) {
+              const prompt = document.getElementById('cmdPrompt');
+              const shortPath = status.current_dir.split('/').pop() || '~';
+              prompt.textContent = `${shortPath}$`;
+            } else {
+              updatePrompt();
+            }
+          } else {
+            // Ensure disconnected state
+            toggleConnectionButtons(false);
+            isConnected = false;
+          }
+        } catch (e) {
+          console.warn('Failed to check SSH status:', e);
+          // Assume disconnected on error
+          toggleConnectionButtons(false);
+          isConnected = false;
+        }
+      }
+      function setupTabs() {
+        const tabs = Array.from(document.querySelectorAll('.tab'));
+        const panels = Array.from(document.querySelectorAll('.panel'));
+        function activate(name) {
+          tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+          panels.forEach((p) => p.classList.toggle('active', p.id === `panel-${name}`));
+        }
+        tabs.forEach((t) => t.addEventListener('click', () => activate(t.dataset.tab)));
+        activate('overview');
+      }
+      function setVal(id, value, fmt, isBad) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const v = Number(value) || 0;
+        el.textContent = fmt(v);
+        if (isBad(v)) el.style.color = '#ff6b6b';
+        else el.style.color = '';
+      }
+      function highlight(id, bad) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.color = bad ? '#ff6b6b' : '';
+      }
+      function openTerminal(pid, logsByPid) {
+        const modal = document.getElementById('terminalModal');
+        const pre = document.getElementById('terminalContent');
+        const lines = (logsByPid && logsByPid[String(pid)]) || [
+          'No logs available for this process',
+        ];
+        pre.textContent = lines.join('\n');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      document.addEventListener('click', (e) => {
+        if (e.target && (e.target.id === 'termClose' || e.target.id === 'terminalModal')) {
+          const modal = document.getElementById('terminalModal');
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+      });
+      function showConnectionStatus(message, isSuccess) {
+        const status = document.getElementById('connectionStatus');
+        status.textContent = message;
+        status.className = `text-sm ${isSuccess ? 'text-[#3cc36a]' : 'text-[#ff6b6b]'}`;
+        status.classList.remove('hidden');
+        setTimeout(() => status.classList.add('hidden'), 5000);
+      }
+      function toggleConnectionButtons(connected, host = '') {
+        isConnected = connected;
+        const connectBtn = document.getElementById('sshConnect');
+        const disconnectBtn = document.getElementById('sshDisconnect');
+        const connectionDot = document.getElementById('connectionDot');
+        const connectionIP = document.getElementById('connectionIP');
+
+        if (connected) {
+          connectBtn?.classList.add('hidden');
+          disconnectBtn?.classList.remove('hidden');
+          // Show green dot and IP
+          connectionDot.className = 'inline-block w-2.5 h-2.5 rounded-full bg-green-500';
+          connectionIP.textContent = host || 'Connected';
+          connectionIP.className = 'text-sm text-green-400';
+
+          // Check if connecting to a different host
+          const isDifferentHost = sessionData.currentHost && sessionData.currentHost !== host;
+
+          if (isDifferentHost) {
+            // Save previous session data before clearing (if any exists)
+            if (
+              sessionData.networkHistory.length > 0 ||
+              sessionData.cpuHistory.length > 0 ||
+              sessionData.gpuHistory.length > 0
+            ) {
+              saveSessionData();
+            }
+
+            // Clear previous session data when connecting to new host
+            sessionData.networkHistory = [];
+            sessionData.cpuHistory = [];
+            sessionData.gpuHistory = [];
+            // Redraw empty charts for fresh start
+            drawNetwork('netChart');
+            drawSpark('cpuSpark', []);
+            drawSpark('gpuSpark', []);
+          }
+
+          // Update current host
+          sessionData.currentHost = host;
+        } else {
+          connectBtn?.classList.remove('hidden');
+          disconnectBtn?.classList.add('hidden');
+          // Show gray dot and disconnected
+          connectionDot.className = 'inline-block w-2.5 h-2.5 rounded-full bg-gray-500';
+          connectionIP.textContent = 'Disconnected';
+          connectionIP.className = 'text-sm text-[#6b7280]';
+          // Save current data before clearing
+          saveSessionData();
+          // Clear session data when disconnected
+          sessionData.networkHistory = [];
+          sessionData.cpuHistory = [];
+          sessionData.gpuHistory = [];
+          sessionData.currentHost = '';
+          // Reset prompt
+          document.getElementById('cmdPrompt').textContent = '$';
+          // Redraw empty charts
+          drawNetwork('netChart');
+          drawSpark('cpuSpark', []);
+          drawSpark('gpuSpark', []);
+        }
+      }
+      document.getElementById('sshConnect')?.addEventListener('click', () => {
+        const host = (document.getElementById('sshHost') || {}).value || '';
+        const user = (document.getElementById('sshUser') || {}).value || 'root';
+        const port = parseInt((document.getElementById('sshPort') || {}).value || '22', 10);
+        const password = (document.getElementById('sshPassword') || {}).value || '';
+        const payload = { host, user, port, password };
+        fetch('/rust/ssh/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+          .then((r) => r.text().then((t) => ({ ok: r.ok, t })))
+          .then(({ ok, t }) => {
+            const response = JSON.parse(t);
+            if (ok && response.connected) {
+              showConnectionStatus(`Connected to ${host}`, true);
+              toggleConnectionButtons(true, host);
+              appendConsole(`ssh connected: ${response.message}`);
+              updatePrompt(); // Update prompt with current directory
+            } else {
+              showConnectionStatus(`Connection failed: ${response.message || t}`, false);
+              appendConsole(`ssh error: ${response.message || t}`);
+            }
+          })
+          .catch((e) => {
+            showConnectionStatus(`Connection error: ${e}`, false);
+            appendConsole(`ssh connection error: ${e}`);
+          });
+      });
+      document.getElementById('sshDisconnect')?.addEventListener('click', () => {
+        fetch('/rust/ssh/disconnect', { method: 'POST' })
+          .then((r) => r.text().then((t) => ({ ok: r.ok, t })))
+          .then(({ ok, t }) => {
+            if (ok) {
+              showConnectionStatus('Disconnected', true);
+              toggleConnectionButtons(false);
+              appendConsole(`ssh disconnected: ${t}`);
+            } else {
+              showConnectionStatus(`Disconnect failed: ${t}`, false);
+              appendConsole(`ssh disconnect error: ${t}`);
+            }
+          })
+          .catch((e) => {
+            showConnectionStatus(`Disconnect error: ${e}`, false);
+            appendConsole(`ssh disconnect error: ${e}`);
+          });
+      });
+
+      // Logs handling
+      document.getElementById('refreshLogs')?.addEventListener('click', async () => {
+        if (!isConnected) {
+          document.getElementById('systemLogs').textContent = 'Error: Not connected to server';
+          return;
+        }
+        try {
+          const logs = await fetch('/rust/data/process-logs').then((r) => r.json());
+          const systemLogsEl = document.getElementById('systemLogs');
+          if (systemLogsEl && logs.system) {
+            systemLogsEl.textContent = logs.system.join('\n');
+            systemLogsEl.scrollTop = systemLogsEl.scrollHeight;
+          }
+        } catch (e) {
+          document.getElementById('systemLogs').textContent = `Error fetching logs: ${e}`;
+        }
+      });
+
+      document.getElementById('clearLogs')?.addEventListener('click', () => {
+        document.getElementById('systemLogs').textContent = '';
+      });
+
+      // Console command handling
+      function executeCommand(command) {
+        if (!isConnected) {
+          appendConsole('Error: Not connected to server');
+          return;
+        }
+
+        const prompt = document.getElementById('cmdPrompt');
+        appendConsole(`${prompt.textContent} ${command}`);
+
+        fetch('/rust/ssh/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command }),
+        })
+          .then((r) => r.text())
+          .then((output) => {
+            appendConsole(output || 'Command executed (no output)');
+
+            // Update prompt if cd command was executed
+            if (command.trim().startsWith('cd ')) {
+              updatePrompt();
+            }
+          })
+          .catch((e) => {
+            appendConsole(`Command error: ${e}`);
+          });
+      }
+
+      // Update prompt to show current directory
+      function updatePrompt() {
+        fetch('/rust/ssh/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: 'pwd' }),
+        })
+          .then((r) => r.text())
+          .then((pwd) => {
+            const prompt = document.getElementById('cmdPrompt');
+            const shortPath = pwd.trim().split('/').pop() || '~';
+            prompt.textContent = `${shortPath}$`;
+          })
+          .catch(() => {
+            // Keep default prompt on error
+          });
+      }
+
+      document.getElementById('cmdSend')?.addEventListener('click', () => {
+        const input = document.getElementById('cmdInput');
+        const command = input?.value?.trim();
+        if (command) {
+          executeCommand(command);
+          input.value = '';
+        }
+      });
+
+      document.getElementById('cmdInput')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const command = e.target.value?.trim();
+          if (command) {
+            executeCommand(command);
+            e.target.value = '';
+          }
+        }
+      });
+      function drawSpark(id, arr, color = '#6ea8fe') {
+        const c = document.getElementById(id);
+        if (!c) return;
+        const ctx = c.getContext('2d');
+        const w = (c.width = c.clientWidth),
+          h = (c.height = c.clientHeight);
+        ctx.clearRect(0, 0, w, h);
+        if (!arr || !arr.length) {
+          // Draw empty state
+          ctx.strokeStyle = '#333';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, h / 2);
+          ctx.lineTo(w, h / 2);
+          ctx.stroke();
+          return;
+        }
+        const max = Math.max(...arr, 1);
+
+        // Store data for tooltip
+        c.chartData = arr;
+        c.chartMax = max;
+        c.chartType = id.includes('cpu') ? 'CPU' : 'GPU';
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        arr.forEach((v, i) => {
+          const x = (i / (arr.length - 1)) * w;
+          const y = h - (v / max) * h;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // Add mouse event listeners for tooltip
+        if (!c.hasTooltipListeners) {
+          c.hasTooltipListeners = true;
+          c.addEventListener('mousemove', showSparkTooltip);
+          c.addEventListener('mouseleave', hideSparkTooltip);
+        }
+      }
+      function drawNetwork(id, series) {
+        const c = document.getElementById(id);
+        if (!c) return;
+        const ctx = c.getContext('2d');
+        const w = (c.width = c.clientWidth),
+          h = (c.height = c.clientHeight);
+        ctx.clearRect(0, 0, w, h);
+
+        // Use session network history if no series provided
+        const data = series && series.length ? series : sessionData.networkHistory;
+        if (!data || !data.length) {
+          // Draw empty state
+          ctx.strokeStyle = '#333';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, h / 2);
+          ctx.lineTo(w, h / 2);
+          ctx.stroke();
+          return;
+        }
+
+        const max = Math.max(...data.map((p) => Math.max(p.rx || 0, p.tx || 0)), 1);
+
+        // Store data for tooltip
+        c.chartData = data;
+        c.chartMax = max;
+
+        const draw = (key, color) => {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          data.forEach((p, i) => {
+            const x = (i / (data.length - 1)) * w;
+            const y = h - ((p[key] || 0) / max) * h;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        };
+        draw('rx', '#6ea8fe');
+        draw('tx', '#3cc36a');
+
+        // Add mouse event listeners for tooltip
+        if (!c.hasTooltipListeners) {
+          c.hasTooltipListeners = true;
+          c.addEventListener('mousemove', showNetworkTooltip);
+          c.addEventListener('mouseleave', hideTooltip);
+        }
+      }
+
+      function showNetworkTooltip(e) {
+        const canvas = e.target;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const data = canvas.chartData;
+        if (!data || !data.length) return;
+
+        const dataIndex = Math.round((x / canvas.clientWidth) * (data.length - 1));
+        const point = data[dataIndex];
+        if (!point) return;
+
+        // Create or get tooltip
+        let tooltip = document.getElementById('netTooltip');
+        if (!tooltip) {
+          tooltip = document.createElement('div');
+          tooltip.id = 'netTooltip';
+          tooltip.className =
+            'absolute hidden bg-black/80 text-white text-xs px-2 py-1 rounded pointer-events-none z-10';
+          document.body.appendChild(tooltip);
+        }
+
+        tooltip.innerHTML = `
+          <div><span style="color: #6ea8fe;">RX:</span> ${(point.rx || 0).toFixed(2)} Mb/s</div>
+          <div><span style="color: #3cc36a;">TX:</span> ${(point.tx || 0).toFixed(2)} Mb/s</div>
+          <div><strong>Total:</strong> ${((point.rx || 0) + (point.tx || 0)).toFixed(2)} Mb/s</div>
+        `;
+        tooltip.style.left = e.clientX + 10 + 'px';
+        tooltip.style.top = e.clientY - 50 + 'px';
+        tooltip.classList.remove('hidden');
+      }
+
+      function hideTooltip() {
+        const tooltip = document.getElementById('netTooltip');
+        tooltip?.classList.add('hidden');
+      }
+
+      function showSparkTooltip(e) {
+        const canvas = e.target;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const data = canvas.chartData;
+        if (!data || !data.length) return;
+
+        const dataIndex = Math.round((x / canvas.clientWidth) * (data.length - 1));
+        const value = data[dataIndex];
+        if (value === undefined) return;
+
+        // Create or get tooltip
+        let tooltip = document.getElementById('sparkTooltip');
+        if (!tooltip) {
+          tooltip = document.createElement('div');
+          tooltip.id = 'sparkTooltip';
+          tooltip.className =
+            'absolute hidden bg-black/80 text-white text-xs px-2 py-1 rounded pointer-events-none z-10';
+          document.body.appendChild(tooltip);
+        }
+
+        tooltip.innerHTML = `${canvas.chartType}: ${value.toFixed(1)}%`;
+        tooltip.style.left = e.clientX + 10 + 'px';
+        tooltip.style.top = e.clientY - 30 + 'px';
+        tooltip.classList.remove('hidden');
+      }
+
+      function hideSparkTooltip() {
+        const tooltip = document.getElementById('sparkTooltip');
+        tooltip?.classList.add('hidden');
+      }
+      function startPolling() {
+        if (polling) clearInterval(polling);
+        polling = setInterval(async () => {
+          try {
+            if (!isConnected) {
+              return;
+            }
+
+            // Fetch processes
+            const procs = await fetch('/rust/data/processes').then((r) => r.json());
+            const tbody = document.querySelector('#procTable tbody');
+            if (tbody) {
+              tbody.innerHTML = '';
+              (procs.rows || []).forEach((p) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-[#171b29]';
+                tr.innerHTML = `<td>${p.pid || ''}</td><td>${p.user || ''}</td><td>${
+                  p.name || ''
+                }</td><td title="${p.cmd || ''}">${(p.cmd || '').slice(0, 60)}</td><td>${
+                  p.cpu || 0
+                }</td><td>${p.rss || 0}</td>`;
+                tbody.appendChild(tr);
+              });
+            }
+
+            // Fetch ports
+            const ports = await fetch('/rust/data/ports').then((r) => r.json());
+            const ltb = document.querySelector('#listenTable tbody');
+            if (ltb) {
+              ltb.innerHTML = '';
+              (ports.rows || []).forEach((i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${i.proto || ''}</td><td>${i.local || ''}</td><td>${
+                  i.pid || ''
+                }</td><td>${i.proc || ''}</td>`;
+                ltb.appendChild(tr);
+              });
+            }
+
+            // Fetch resources
+            const resources = await fetch('/rust/data/resources').then((r) => r.json());
+            if (resources.ram) {
+              document.getElementById('ramUsed').textContent = resources.ram.used.toFixed(1);
+              document.getElementById('ramTotal').textContent = resources.ram.total.toFixed(1);
+              const ramPercent = (resources.ram.used / resources.ram.total) * 100;
+              document.getElementById('ramBar').style.width = ramPercent + '%';
+            }
+            if (resources.vram) {
+              document.getElementById('vramUsed').textContent = resources.vram.used.toFixed(1);
+              document.getElementById('vramTotal').textContent = resources.vram.total.toFixed(1);
+              const vramPercent =
+                resources.vram.total > 0 ? (resources.vram.used / resources.vram.total) * 100 : 0;
+              document.getElementById('vramBar').style.width = vramPercent + '%';
+            }
+
+            // Fetch network data
+            const network = await fetch('/rust/data/network').then((r) => r.json());
+
+            // Store network data in session
+            if (network && network.length > 0) {
+              const latest = network[network.length - 1];
+              addToHistory(sessionData.networkHistory, {
+                rx: latest.rx || 0,
+                tx: latest.tx || 0,
+                timestamp: Date.now(),
+              });
+              // Save to server periodically (every 10th update to avoid spam)
+              if (sessionData.networkHistory.length % 10 === 0) {
+                saveSessionData();
+              }
+            }
+
+            // Draw network chart with session data
+            drawNetwork('netChart', sessionData.networkHistory);
+
+            // Update network KPI in Overview
+            if (sessionData.networkHistory.length > 0) {
+              const latest = sessionData.networkHistory[sessionData.networkHistory.length - 1];
+              const totalSpeed = (latest.rx || 0) + (latest.tx || 0);
+              setVal(
+                'netVal',
+                totalSpeed,
+                (v) => `${v.toFixed(1)} Mb/s`,
+                (v) => v > 100
+              );
+            }
+
+            // Fetch connections
+            const connections = await fetch('/rust/data/connections').then((r) => r.json());
+            const connTb = document.querySelector('#connectionTable tbody');
+            if (connTb) {
+              connTb.innerHTML = '';
+              (connections || []).forEach((c) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-[#171b29]';
+                tr.innerHTML = `<td>${c.proto || ''}</td><td>${c.local || ''}</td><td>${
+                  c.peer || ''
+                }</td><td>${c.state || ''}</td><td>${c.pid || ''}</td><td>${c.proc || ''}</td>`;
+                connTb.appendChild(tr);
+              });
+            }
+
+            // Update Overview KPI values
+            if (resources.ram) {
+              const memPercent = (resources.ram.used / resources.ram.total) * 100;
+              setVal(
+                'memVal',
+                memPercent,
+                (v) => `${v.toFixed(1)}%`,
+                (v) => v > 85
+              );
+            }
+
+            if (resources.ssd && resources.ssd.util) {
+              const diskUtil = parseFloat(resources.ssd.util) || 0;
+              setVal(
+                'diskVal',
+                diskUtil,
+                (v) => `${v.toFixed(1)}%`,
+                (v) => v > 90
+              );
+
+              // Update SSD details in Resources tab
+              document.getElementById('ssdUsed').textContent = diskUtil.toFixed(1);
+              document.getElementById('ssdBar').style.width = diskUtil + '%';
+              document.getElementById('ssdRead').textContent = (resources.ssd.read || 0) + ' MB/s';
+              document.getElementById('ssdWrite').textContent =
+                (resources.ssd.write || 0) + ' MB/s';
+            }
+
+            // Real CPU data
+            if (resources.cpu && resources.cpu.usage !== undefined) {
+              // Store CPU data in session
+              addToHistory(sessionData.cpuHistory, resources.cpu.usage);
+
+              setVal(
+                'cpuVal',
+                resources.cpu.usage,
+                (v) => `${v.toFixed(1)}%`,
+                (v) => v > 80
+              );
+            }
+
+            // GPU data (most servers don't have GPUs)
+            let gpuUsage = 0;
+            if (resources.gpu && resources.gpu.usage !== undefined) {
+              gpuUsage = resources.gpu.usage;
+            }
+
+            // Store GPU data in session
+            addToHistory(sessionData.gpuHistory, gpuUsage);
+
+            setVal(
+              'gpuVal',
+              gpuUsage,
+              (v) => `${v.toFixed(1)}%`,
+              (v) => v > 85
+            );
+
+            // Update CPU and GPU sparks with session data
+            drawSpark('cpuSpark', sessionData.cpuHistory, '#6ea8fe');
+            drawSpark('gpuSpark', sessionData.gpuHistory, '#3cc36a');
+          } catch (e) {
+            // Log errors but don't change connection indicator (it's now managed by SSH connection)
+            console.error('Polling error:', e);
+          }
+        }, 5000);
+      }
+      function appendConsole(line) {
+        const pre = document.getElementById('consoleOut');
+        pre.textContent += (pre.textContent ? '\n' : '') + line;
+        pre.scrollTop = pre.scrollHeight;
+      }
+      addEventListener('DOMContentLoaded', async () => {
+        setupTabs();
+        await restoreSessionData();
+        await checkSSHStatus();
+        startPolling();
+      });
+    </script>
+  </body>
+</html>
