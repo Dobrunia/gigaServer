@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Snippet Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = { darkMode: 'class' };
+    </script>
+    <style>
+      :root {
+        --bg: #0b0d12;
+        --bg-elev: #111420;
+        --text: #e6e9ef;
+        --muted: #9aa3b2;
+        --accent: #6ea8fe;
+        --ok: #3cc36a;
+        --warn: #f7b955;
+        --crit: #ff6b6b;
+        --border: #2a2f3a;
+        --radius: 10px;
+        --gap: 12px;
+        --pad: 12px;
+        --font-mono: ui-monospace, Consolas, monospace;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.4 system-ui;
+      }
+
+      .card {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--pad);
+      }
+
+      .snippet-card {
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+
+      .snippet-card:hover {
+        /* transform: translateY(-2px); */
+        border-color: var(--accent);
+      }
+
+      .code-preview {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.4;
+        max-height: 150px;
+        overflow-y: auto;
+        background: #1a1a1a;
+        border-radius: 6px;
+        margin-top: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        overflow: hidden;
+      }
+
+      .code-preview:hover {
+        background: #1f1f1f;
+        /* border: 1px solid var(--accent); */
+      }
+
+      .code-preview-numbers {
+        background: #1a1a1a;
+        color: #666;
+        padding: 8px 6px 8px 8px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 1.4;
+        user-select: none;
+        border-right: 1px solid #333;
+        min-width: 30px;
+        text-align: right;
+        flex-shrink: 0;
+        white-space: pre;
+      }
+
+      .code-preview-content {
+        flex: 1;
+        padding: 8px 8px 8px 6px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-x: auto;
+        background: transparent !important;
+      }
+
+      .language-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+
+      .search-input {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 8px 12px;
+        color: var(--text);
+        width: 100%;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      .btn {
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: var(--radius);
+        padding: 8px 16px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .btn:hover {
+        background: #5a9cfe;
+        /* transform: translateY(-1px); */
+      }
+
+      .btn-secondary {
+        background: var(--border);
+        color: var(--text);
+        border: none;
+        border-radius: var(--radius);
+        padding: 8px 16px;
+      }
+
+      .btn-secondary:hover {
+        background: #3a3f4a;
+      }
+
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 500;
+        color: var(--text);
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 8px 12px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-family: var(--font-mono);
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      .form-textarea {
+        min-height: 200px;
+        resize: vertical;
+        background: #1a1a1a !important;
+        border: 1px solid #333 !important;
+      }
+
+      .code-editor-container {
+        display: flex;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 6px;
+        overflow: hidden;
+        min-height: 200px;
+      }
+
+      .code-editor-numbers {
+        background: #1a1a1a;
+        color: #666;
+        padding: 8px 8px 8px 12px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.5;
+        user-select: none;
+        border-right: 1px solid #333;
+        min-width: 40px;
+        text-align: right;
+        flex-shrink: 0;
+        white-space: pre;
+      }
+
+      .code-editor-textarea {
+        flex: 1;
+        background: #1a1a1a !important;
+        border: none !important;
+        padding: 8px 12px 8px 8px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text);
+        resize: none;
+        outline: none;
+        min-height: 184px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .language-colors {
+        --javascript: #f7df1e;
+        --typescript: #3178c6;
+        --python: #3776ab;
+        --rust: #ce422b;
+        --go: #00add8;
+        --haskell: #5d4f85;
+        --perl: #39457e;
+        --html: #e34f26;
+        --css: #1572b6;
+        --json: #000000;
+        --sql: #336791;
+        --bash: #4eaa25;
+        --default: #6ea8fe;
+      }
+
+      .lang-javascript {
+        background: var(--javascript);
+        color: #000;
+      }
+      .lang-typescript {
+        background: var(--typescript);
+        color: white;
+      }
+      .lang-python {
+        background: var(--python);
+        color: white;
+      }
+      .lang-rust {
+        background: var(--rust);
+        color: white;
+      }
+      .lang-go {
+        background: var(--go);
+        color: white;
+      }
+      .lang-haskell {
+        background: var(--haskell);
+        color: white;
+      }
+      .lang-perl {
+        background: var(--perl);
+        color: white;
+      }
+      .lang-html {
+        background: var(--html);
+        color: white;
+      }
+      .lang-css {
+        background: var(--css);
+        color: white;
+      }
+      .lang-json {
+        background: var(--json);
+        color: white;
+      }
+      .lang-sql {
+        background: var(--sql);
+        color: white;
+      }
+      .lang-bash {
+        background: var(--bash);
+        color: white;
+      }
+      .lang-default {
+        background: var(--default);
+        color: white;
+      }
+
+      /* Модальное окно для просмотра кода */
+      .code-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+      }
+
+      .code-modal-content {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        width: 95%;
+        max-width: 1200px;
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .code-modal-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--bg);
+      }
+
+      .code-modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .code-modal-close {
+        background: var(--border);
+        color: var(--text);
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .code-modal-close:hover {
+        background: var(--crit);
+        color: white;
+      }
+
+      .code-modal-body {
+        flex: 1;
+        overflow: auto;
+        padding: 0;
+      }
+
+      .code-modal-code {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.5;
+        background: #0d1117;
+        color: var(--text);
+        padding: 20px;
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-x: auto;
+        min-height: 200px;
+        display: block;
+      }
+
+      .code-modal-code-container {
+        display: flex;
+        background: #1a1a1a;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #333;
+      }
+
+      .code-modal-line-numbers {
+        background: #1a1a1a;
+        color: #666;
+        padding: 20px 12px 20px 20px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.5;
+        user-select: none;
+        border-right: 1px solid #333;
+        min-width: 50px;
+        text-align: right;
+        flex-shrink: 0;
+        white-space: pre;
+      }
+
+      .code-modal-code-content {
+        flex: 1;
+        padding: 20px 20px 20px 12px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-x: auto;
+        background: #1a1a1a;
+      }
+
+      .code-modal-actions {
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 12px;
+        background: var(--bg);
+      }
+
+      .code-modal-btn {
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+
+      .code-modal-btn:hover {
+        background: #5a9cfe;
+        transform: translateY(-1px);
+      }
+
+      .code-modal-btn-secondary {
+        background: var(--border);
+        color: var(--text);
+      }
+
+      .code-modal-btn-secondary:hover {
+        background: #3a3f4a;
+      }
+    </style>
+  </head>
+  <body class="p-4">
+    <header class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold">📝 Snippet Manager</h1>
+        <button id="addSnippetBtn" class="btn">+ Новый снипет</button>
+      </div>
+
+      <div class="card bg-transparent border-none">
+        <div class="form-group">
+          <label class="form-label">🔍 Поиск снипетов</label>
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="Введите название снипета..."
+          />
+        </div>
+      </div>
+    </header>
+
+    <div id="snippetsContainer" class="grid gap-4">
+      <!-- Снипеты будут загружены здесь -->
+    </div>
+
+    <!-- Модальное окно для просмотра кода -->
+    <div id="codeModal" class="code-modal hidden">
+      <div class="code-modal-content">
+        <div class="code-modal-header">
+          <h3 id="codeModalTitle" class="code-modal-title">Просмотр кода</h3>
+          <button id="closeCodeModal" class="code-modal-close">✕</button>
+        </div>
+        <div class="code-modal-body">
+          <div class="code-modal-code-container">
+            <div id="codeModalLineNumbers" class="code-modal-line-numbers"></div>
+            <pre id="codeModalCode" class="code-modal-code-content"></pre>
+          </div>
+        </div>
+        <div class="code-modal-actions">
+          <button id="copyCodeBtn" class="code-modal-btn">📋 Копировать код</button>
+          <button id="closeCodeModalBtn" class="btn-secondary">Закрыть</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модальное окно для создания/редактирования снипета -->
+    <div id="snippetModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="flex items-center justify-between mb-4">
+          <h2 id="modalTitle" class="text-xl font-bold">Новый снипет</h2>
+          <button id="closeModal" class="btn-secondary">✕</button>
+        </div>
+
+        <form id="snippetForm">
+          <div class="form-group">
+            <label class="form-label">Название</label>
+            <input
+              type="text"
+              id="snippetName"
+              class="form-input"
+              placeholder="Введите название снипета"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Язык программирования</label>
+            <select id="snippetLanguage" class="form-input">
+              <option value="javascript">JavaScript</option>
+              <option value="typescript">TypeScript</option>
+              <option value="python">Python</option>
+              <option value="rust">Rust</option>
+              <option value="go">Go</option>
+              <option value="haskell">Haskell</option>
+              <option value="perl">Perl</option>
+              <option value="html">HTML</option>
+              <option value="css">CSS</option>
+              <option value="json">JSON</option>
+              <option value="sql">SQL</option>
+              <option value="bash">Bash</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Код</label>
+            <div class="code-editor-container">
+              <div id="editorLineNumbers" class="code-editor-numbers">1</div>
+              <textarea
+                id="snippetCode"
+                class="code-editor-textarea"
+                placeholder="Введите код снипета..."
+                required
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <button type="submit" class="btn">Сохранить</button>
+            <button type="button" id="cancelBtn" class="btn-secondary">Отмена</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      class SnippetManager {
+        constructor() {
+          this.snippets = this.loadSnippets();
+          this.currentSnippetId = null;
+          this.init();
+        }
+
+        init() {
+          this.bindEvents();
+          this.renderSnippets();
+        }
+
+        bindEvents() {
+          // Поиск
+          document.getElementById('searchInput').addEventListener('input', (e) => {
+            this.filterSnippets(e.target.value);
+          });
+
+          // Модальное окно создания/редактирования
+          document.getElementById('addSnippetBtn').addEventListener('click', () => {
+            this.openModal();
+          });
+
+          document.getElementById('closeModal').addEventListener('click', () => {
+            this.closeModal();
+          });
+
+          document.getElementById('cancelBtn').addEventListener('click', () => {
+            this.closeModal();
+          });
+
+          // Форма
+          document.getElementById('snippetForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveSnippet();
+          });
+
+          // Закрытие по клику вне модального окна
+          document.getElementById('snippetModal').addEventListener('click', (e) => {
+            if (e.target.id === 'snippetModal') {
+              this.closeModal();
+            }
+          });
+
+          // Модальное окно просмотра кода
+          document.getElementById('closeCodeModal').addEventListener('click', () => {
+            this.closeCodeModal();
+          });
+
+          document.getElementById('closeCodeModalBtn').addEventListener('click', () => {
+            this.closeCodeModal();
+          });
+
+          document.getElementById('copyCodeBtn').addEventListener('click', () => {
+            this.copyCodeFromModal();
+          });
+
+          // Закрытие по клику вне модального окна просмотра кода
+          document.getElementById('codeModal').addEventListener('click', (e) => {
+            if (e.target.id === 'codeModal') {
+              this.closeCodeModal();
+            }
+          });
+
+          // Обновление номеров строк в редакторе
+          const codeTextarea = document.getElementById('snippetCode');
+          codeTextarea.addEventListener('input', () => {
+            this.updateEditorLineNumbers();
+          });
+          codeTextarea.addEventListener('scroll', () => {
+            this.syncEditorScroll();
+          });
+        }
+
+        loadSnippets() {
+          const saved = localStorage.getItem('snippets');
+          if (saved) {
+            return JSON.parse(saved);
+          }
+
+          // Пустой массив по умолчанию
+          return [];
+        }
+
+        saveSnippets() {
+          localStorage.setItem('snippets', JSON.stringify(this.snippets));
+        }
+
+        filterSnippets(query) {
+          const filtered = this.snippets.filter(
+            (snippet) =>
+              snippet.name.toLowerCase().includes(query.toLowerCase()) ||
+              snippet.code.toLowerCase().includes(query.toLowerCase())
+          );
+          this.renderSnippets(filtered);
+        }
+
+        renderSnippets(snippets = this.snippets) {
+          const container = document.getElementById('snippetsContainer');
+
+          if (snippets.length === 0) {
+            container.innerHTML = `
+                        <div class="card text-center text-muted">
+                            <p>Снипеты не найдены</p>
+                        </div>
+                    `;
+            return;
+          }
+
+          container.innerHTML = snippets
+            .map(
+              (snippet) => `
+                    <div class="card snippet-card" data-id="${snippet.id}">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="text-lg font-semibold">${snippet.name}</h3>
+                            <span class="language-badge lang-${snippet.language}">${
+                snippet.language
+              }</span>
+                        </div>
+                        <div class="code-preview" onclick="snippetManager.viewCode(${
+                          snippet.id
+                        })" title="Кликните для просмотра на полный экран">
+                            <div class="code-preview-numbers">${this.generateLineNumbers(
+                              snippet.code,
+                              10
+                            )}</div>
+                            <pre class="code-preview-content"><code class="language-${
+                              snippet.language
+                            }">${this.escapeHtml(this.truncateCode(snippet.code, 10))}</code></pre>
+                        </div>
+                        <div class="flex gap-2 mt-3">
+                            <button class="btn-secondary text-xs" onclick="snippetManager.editSnippet(${
+                              snippet.id
+                            })">
+                                ✏️ Редактировать
+                            </button>
+                            <button class="btn-secondary text-xs" onclick="snippetManager.copySnippet(${
+                              snippet.id
+                            })">
+                                📋 Копировать
+                            </button>
+                            <button class="btn-secondary text-xs" onclick="snippetManager.viewCode(${
+                              snippet.id
+                            })">
+                                👁️ Просмотр
+                            </button>
+                            <button class="btn-secondary text-xs" onclick="snippetManager.deleteSnippet(${
+                              snippet.id
+                            })">
+                                🗑️ Удалить
+                            </button>
+                        </div>
+                    </div>
+                `
+            )
+            .join('');
+
+          // Подсветка синтаксиса
+          if (typeof Prism !== 'undefined') {
+            Prism.highlightAll();
+          }
+        }
+
+        openModal(snippetId = null) {
+          this.currentSnippetId = snippetId;
+          const modal = document.getElementById('snippetModal');
+          const title = document.getElementById('modalTitle');
+          const form = document.getElementById('snippetForm');
+
+          if (snippetId) {
+            const snippet = this.snippets.find((s) => s.id === snippetId);
+            title.textContent = 'Редактировать снипет';
+            document.getElementById('snippetName').value = snippet.name;
+            document.getElementById('snippetLanguage').value = snippet.language;
+            document.getElementById('snippetCode').value = snippet.code;
+          } else {
+            title.textContent = 'Новый снипет';
+            form.reset();
+          }
+
+          modal.classList.remove('hidden');
+          document.getElementById('snippetName').focus();
+
+          // Обновляем номера строк после открытия модального окна
+          setTimeout(() => {
+            this.updateEditorLineNumbers();
+          }, 100);
+        }
+
+        closeModal() {
+          document.getElementById('snippetModal').classList.add('hidden');
+          this.currentSnippetId = null;
+        }
+
+        saveSnippet() {
+          const name = document.getElementById('snippetName').value;
+          const language = document.getElementById('snippetLanguage').value;
+          const code = document.getElementById('snippetCode').value;
+
+          if (!name || !code) return;
+
+          if (this.currentSnippetId) {
+            // Редактирование
+            const snippet = this.snippets.find((s) => s.id === this.currentSnippetId);
+            snippet.name = name;
+            snippet.language = language;
+            snippet.code = code;
+          } else {
+            // Создание
+            const newSnippet = {
+              id: Date.now(),
+              name,
+              language,
+              code,
+            };
+            this.snippets.unshift(newSnippet);
+          }
+
+          this.saveSnippets();
+          this.renderSnippets();
+          this.closeModal();
+        }
+
+        editSnippet(id) {
+          this.openModal(id);
+        }
+
+        copySnippet(id) {
+          const snippet = this.snippets.find((s) => s.id === id);
+          navigator.clipboard.writeText(snippet.code).then(() => {
+            // Показать уведомление
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Скопировано';
+            btn.style.background = 'var(--ok)';
+            setTimeout(() => {
+              btn.textContent = originalText;
+              btn.style.background = '';
+            }, 2000);
+          });
+        }
+
+        deleteSnippet(id) {
+          if (confirm('Удалить этот снипет?')) {
+            this.snippets = this.snippets.filter((s) => s.id !== id);
+            this.saveSnippets();
+            this.renderSnippets();
+          }
+        }
+
+        viewCode(id) {
+          const snippet = this.snippets.find((s) => s.id === id);
+          if (!snippet) {
+            console.error('Snippet not found:', id);
+            return;
+          }
+
+          console.log('Opening code modal for snippet:', snippet);
+
+          const modal = document.getElementById('codeModal');
+          const title = document.getElementById('codeModalTitle');
+          const codeElement = document.getElementById('codeModalCode');
+
+          if (!modal || !title || !codeElement) {
+            console.error('Modal elements not found');
+            return;
+          }
+
+          title.textContent = `${snippet.name} (${snippet.language})`;
+
+          // Генерируем номера строк
+          const lines = snippet.code.split('\n');
+          const lineNumbers = lines.map((_, index) => index + 1).join('\n');
+
+          // Устанавливаем номера строк и код
+          const lineNumbersElement = document.getElementById('codeModalLineNumbers');
+          lineNumbersElement.textContent = lineNumbers;
+
+          codeElement.textContent = snippet.code;
+          codeElement.className = `code-modal-code-content language-${snippet.language}`;
+
+          console.log('Code element content:', codeElement.textContent);
+          console.log('Line numbers:', lineNumbers);
+
+          modal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+
+          // Подсветка синтаксиса в модальном окне
+          setTimeout(() => {
+            if (typeof Prism !== 'undefined') {
+              Prism.highlightElement(codeElement);
+            }
+          }, 100);
+        }
+
+        closeCodeModal() {
+          const modal = document.getElementById('codeModal');
+          modal.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
+
+        copyCodeFromModal() {
+          const codeElement = document.getElementById('codeModalCode');
+          const code = codeElement.textContent;
+
+          navigator.clipboard.writeText(code).then(() => {
+            const btn = document.getElementById('copyCodeBtn');
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Скопировано';
+            btn.style.background = 'var(--ok)';
+            setTimeout(() => {
+              btn.textContent = originalText;
+              btn.style.background = '';
+            }, 2000);
+          });
+        }
+
+        generateLineNumbers(code, maxLines = 10) {
+          const lines = code.split('\n');
+          const visibleLines = lines.slice(0, maxLines);
+          return visibleLines.map((_, index) => index + 1).join('\n');
+        }
+
+        truncateCode(code, maxLines = 10) {
+          const lines = code.split('\n');
+          if (lines.length <= maxLines) {
+            return code;
+          }
+          return lines.slice(0, maxLines).join('\n') + '\n...';
+        }
+
+        updateEditorLineNumbers() {
+          const textarea = document.getElementById('snippetCode');
+          const lineNumbers = document.getElementById('editorLineNumbers');
+
+          if (!textarea || !lineNumbers) return;
+
+          const lines = textarea.value.split('\n');
+          const numbers = lines.map((_, index) => index + 1).join('\n');
+          lineNumbers.textContent = numbers;
+        }
+
+        syncEditorScroll() {
+          const textarea = document.getElementById('snippetCode');
+          const lineNumbers = document.getElementById('editorLineNumbers');
+
+          if (!textarea || !lineNumbers) return;
+
+          lineNumbers.scrollTop = textarea.scrollTop;
+        }
+
+        escapeHtml(text) {
+          const div = document.createElement('div');
+          div.textContent = text;
+          return div.innerHTML;
+        }
+      }
+
+      // Инициализация
+      const snippetManager = new SnippetManager();
+    </script>
+  </body>
+</html>

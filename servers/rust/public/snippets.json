@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "React Hook useState",
+    "language": "javascript",
+    "code": "import { useState } from 'react';\n\nfunction MyComponent() {\n  const [count, setCount] = useState(0);\n  \n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={() => setCount(count + 1)}>\n        Increment\n      </button>\n    </div>\n  );\n}"
+  },
+  {
+    "id": 2,
+    "name": "Python Flask Route",
+    "language": "python",
+    "code": "from flask import Flask, request, jsonify\n\napp = Flask(__name__)\n\n@app.route('/api/users', methods=['GET', 'POST'])\ndef users():\n    if request.method == 'GET':\n        return jsonify({'users': []})\n    elif request.method == 'POST':\n        data = request.get_json()\n        return jsonify({'message': 'User created', 'data': data})"
+  },
+  {
+    "id": 3,
+    "name": "Rust HTTP Server",
+    "language": "rust",
+    "code": "use axum::{\n    extract::Query,\n    http::StatusCode,\n    response::Json,\n    routing::get,\n    Router,\n};\nuse serde::Deserialize;\n\n#[derive(Deserialize)]\nstruct Params {\n    name: Option<String>,\n}\n\nasync fn handler(Query(params): Query<Params>) -> Result<Json<serde_json::Value>, StatusCode> {\n    let response = serde_json::json!({\n        \"message\": \"Hello, Rust!\",\n        \"name\": params.name.unwrap_or(\"World\".to_string())\n    });\n    Ok(Json(response))\n}"
+  },
+  {
+    "id": 4,
+    "name": "Go HTTP Handler",
+    "language": "go",
+    "code": "package main\n\nimport (\n    \"encoding/json\"\n    \"net/http\"\n)\n\ntype Response struct {\n    Message string `json:\"message\"`\n    Status  string `json:\"status\"`\n}\n\nfunc handler(w http.ResponseWriter, r *http.Request) {\n    response := Response{\n        Message: \"Hello, Go!\",\n        Status:  \"success\",\n    }\n    \n    w.Header().Set(\"Content-Type\", \"application/json\")\n    json.NewEncoder(w).Encode(response)\n}"
+  },
+  {
+    "id": 5,
+    "name": "SQL Create Table",
+    "language": "sql",
+    "code": "CREATE TABLE users (\n    id SERIAL PRIMARY KEY,\n    username VARCHAR(50) UNIQUE NOT NULL,\n    email VARCHAR(100) UNIQUE NOT NULL,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\nCREATE INDEX idx_users_email ON users(email);\nCREATE INDEX idx_users_username ON users(username);"
+  },
+  {
+    "id": 6,
+    "name": "Bash Script Template",
+    "language": "bash",
+    "code": "#!/bin/bash\n\n# Script description\nset -euo pipefail\n\n# Configuration\nSCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nLOG_FILE=\"${SCRIPT_DIR}/script.log\"\n\n# Functions\nlog() {\n    echo \"$(date '+%Y-%m-%d %H:%M:%S') - $1\" | tee -a \"$LOG_FILE\"\n}\n\n# Main execution\nmain() {\n    log \"Starting script execution\"\n    \n    # Your code here\n    \n    log \"Script completed successfully\"\n}\n\n# Run main function\nmain \"$@\""
+  }
+]

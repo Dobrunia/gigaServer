@@ -25,4 +25,5 @@ pub fn create_task_routes() -> Router {
         .route_service("/dashboard", get_service(ServeFile::new("public/dashboard.html")))
         .route_service("/navigation", get_service(ServeFile::new("public/navigation.html")))
         .route_service("/ajax", get_service(ServeFile::new("public/ajax.html")))
+        .route_service("/snippets", get_service(ServeFile::new("public/snippets.html")))
 }
