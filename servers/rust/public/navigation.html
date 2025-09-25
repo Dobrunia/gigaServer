@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Navigation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --bg: #0b0d12;
+        --elev: #111420;
+        --text: #e6e9ef;
+        --muted: #9aa3b2;
+        --border: #2a2f3a;
+        --accent: #6ea8fe;
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.4 system-ui;
+      }
+      .card {
+        background: var(--elev);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+      }
+    </style>
+  </head>
+  <body class="p-4">
+    <header class="mb-4 flex items-center justify-center card">
+      <h1 class="text-lg font-semibold">Server Navigation</h1>
+    </header>
+
+    <div id="content" class="grid gap-3"></div>
+
+    <script>
+      async function loadRoutes() {
+        try {
+          const res = await fetch('/rust/navigation/routes');
+          const data = await res.json();
+          const list = Array.isArray(data.routes) ? data.routes : [];
+          const wrap = document.getElementById('content');
+          wrap.innerHTML = '';
+          list.forEach((r) => {
+            const a = document.createElement('a');
+            a.href = r.path;
+            a.className = 'card block hover:bg-[#171b29] border border-[#2a2f3a]';
+            a.innerHTML = `<div class="text-base font-medium">${r.name}</div>
+                           <div class="text-sm text-[#9aa3b2]">${r.desc || ''}</div>
+                           <div class="text-xs text-[#6ea8fe] mt-1">${r.path}</div>`;
+            wrap.appendChild(a);
+          });
+        } catch (e) {
+          const wrap = document.getElementById('content');
+          wrap.innerHTML = `<div class="card text-[#ff6b6b]">Failed to load routes: ${e}</div>`;
+        }
+      }
+      loadRoutes();
+    </script>
+  </body>
+</html>

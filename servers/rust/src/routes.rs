@@ -5,6 +5,8 @@ pub mod week2;
 pub mod week3;
 #[path = "routes/dashboard.rs"]
 pub mod dashboard;
+#[path = "routes/navigation.rs"]
+pub mod navigation;
 
 use axum::{Router, routing::get_service};
 use tower_http::services::ServeFile;
@@ -14,7 +16,9 @@ pub fn create_task_routes() -> Router {
     // Здесь будут добавляться новые модули заданий
     Router::new()
         .merge(dashboard::create_routes())
+        .merge(navigation::create_routes())
         .merge(week2::create_routes())
         .merge(week3::create_routes())
         .route_service("/dashboard", get_service(ServeFile::new("public/dashboard.html")))
+        .route_service("/navigation", get_service(ServeFile::new("public/navigation.html")))
 }
