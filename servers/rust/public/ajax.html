@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ajax Mini</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --bg: #0b0d12;
+        --elev: #111420;
+        --text: #e6e9ef;
+        --muted: #9aa3b2;
+        --border: #2a2f3a;
+        --accent: #6ea8fe;
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.4 system-ui;
+      }
+      .card {
+        background: var(--elev);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+      }
+      textarea {
+        font-family: ui-monospace, Consolas, monospace;
+      }
+    </style>
+  </head>
+  <body class="p-4">
+    <header class="mb-3 card flex items-center justify-between">
+      <h1 class="text-lg font-semibold">Ajax Mini</h1>
+      <a href="/navigation" class="text-sm text-[#6ea8fe] underline">Back</a>
+    </header>
+
+    <div class="grid gap-3 md:grid-cols-2 overflow-x-auto">
+      <div class="card overflow-x-auto">
+        <div class="flex gap-2 mb-2 overflow-x-auto">
+          <select id="method" class="bg-[#0b0d12] border border-[#2a2f3a] rounded px-2 py-1">
+            <option>GET</option>
+            <option>POST</option>
+            <option>PUT</option>
+            <option>PATCH</option>
+            <option>DELETE</option>
+          </select>
+          <input
+            id="url"
+            class="flex-1 min-w-0 bg-[#0b0d12] border border-[#2a2f3a] rounded px-2 py-1"
+            placeholder="https://httpbin.org/get"
+          />
+          <button id="send" class="px-3 py-1 border border-[#6ea8fe] rounded hover:bg-[#171b29]">
+            Send
+          </button>
+        </div>
+
+        <div class="grid gap-2 md:grid-cols-2">
+          <div>
+            <div class="text-xs text-[#9aa3b2] mb-1">Headers (JSON object)</div>
+            <textarea
+              id="headers"
+              class="w-full h-28 bg-[#0b0d12] border border-[#2a2f3a] rounded p-2"
+              placeholder='{"Content-Type":"application/json"}'
+            ></textarea>
+          </div>
+          <div>
+            <div class="text-xs text-[#9aa3b2] mb-1">Body (JSON)</div>
+            <textarea
+              id="body"
+              class="w-full h-28 bg-[#0b0d12] border border-[#2a2f3a] rounded p-2"
+              placeholder='{"name":"John"}'
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card overflow-x-auto">
+        <div class="text-xs text-[#9aa3b2] mb-1">Response</div>
+        <div class="grid gap-2">
+          <div class="text-sm">Status: <span id="respStatus">-</span></div>
+          <div>
+            <div class="text-xs text-[#9aa3b2] mb-1">Headers</div>
+            <pre
+              id="respHeaders"
+              class="bg-black/50 p-2 rounded overflow-auto overflow-x-auto whitespace-pre max-h-40"
+            ></pre>
+          </div>
+          <div>
+            <div class="text-xs text-[#9aa3b2] mb-1">Body</div>
+            <pre
+              id="respBody"
+              class="bg-black/50 p-2 rounded overflow-auto overflow-x-auto whitespace-pre max-h-64"
+            ></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function safeParseJSON(txt) {
+        if (!txt) return undefined;
+        try {
+          return JSON.parse(txt);
+        } catch {
+          return undefined;
+        }
+      }
+
+      async function send() {
+        const method = document.getElementById('method').value;
+        const url = document.getElementById('url').value.trim();
+        const headers = safeParseJSON(document.getElementById('headers').value);
+        const body = safeParseJSON(document.getElementById('body').value);
+
+        const payload = { method, url, headers, body };
+        const res = await fetch('/rust/ajax/proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const out = await res.json();
+        document.getElementById('respStatus').textContent = out.status ?? '-';
+        document.getElementById('respHeaders').textContent = JSON.stringify(
+          out.headers || {},
+          null,
+          2
+        );
+        try {
+          const maybe = JSON.parse(out.body_text || '');
+          document.getElementById('respBody').textContent = JSON.stringify(maybe, null, 2);
+        } catch {
+          document.getElementById('respBody').textContent = out.body_text || '';
+        }
+      }
+
+      document.getElementById('send').addEventListener('click', send);
+    </script>
+  </body>
+</html>

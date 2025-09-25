@@ -10,7 +10,8 @@ async fn list_routes() -> impl IntoResponse {
     // Пока только дашборд
     Json(json!({
         "routes": [
-            { "name": "Dashboard", "path": "/dashboard", "desc": "Server monitoring dashboard" }
+            { "name": "Dashboard", "path": "/dashboard", "desc": "Server monitoring dashboard" },
+            { "name": "Ajax Mini", "path": "/ajax", "desc": "Minimal Postman-like client" }
         ]
     }))
 }
