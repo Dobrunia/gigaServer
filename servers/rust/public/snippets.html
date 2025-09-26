@@ -118,6 +118,74 @@
         color: var(--text) !important; /* force readable text color */
       }
 
+      /* Стили для чекбоксов фильтра */
+      .filter-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        transition: all 0.2s ease;
+        user-select: none;
+        min-height: 32px; /* фиксированная высота */
+      }
+
+      .filter-checkbox:hover {
+        background: rgba(110, 168, 254, 0.1);
+      }
+
+      .filter-checkbox input[type='checkbox'] {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .filter-checkbox input[type='checkbox']:checked {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .filter-checkbox input[type='checkbox']:checked::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+      }
+
+      .filter-checkbox input[type='checkbox']:hover {
+        border-color: var(--accent);
+        transform: scale(1.05);
+      }
+
+      .filter-checkbox-label {
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        min-width: fit-content;
+      }
+
+      .filter-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+        min-height: 40px; /* фиксированная минимальная высота */
+        align-items: flex-start;
+      }
+
       .search-input {
         background: var(--bg-elev);
         border: 1px solid var(--border);
@@ -267,11 +335,41 @@
         --go: #00add8;
         --haskell: #5d4f85;
         --perl: #39457e;
+        --ruby: #cc342d;
+        --c: #00599c;
+        --cpp: #00599c;
+        --csharp: #239120;
+        --java: #f89820;
+        --php: #777bb4;
+        --swift: #fa7343;
+        --kotlin: #7f52ff;
+        --scala: #dc322f;
+        --clojure: #5881d8;
+        --elixir: #4e2a8e;
+        --erlang: #a90533;
+        --lua: #000080;
+        --r: #276dc3;
+        --matlab: #e16737;
+        --octave: #0790c0;
+        --fortran: #734f96;
+        --assembly: #6e4c13;
         --html: #e34f26;
         --css: #1572b6;
+        --scss: #cf649a;
+        --sass: #cf649a;
+        --less: #1d365d;
         --json: #000000;
+        --yaml: #cb171e;
+        --xml: #ff6600;
         --sql: #336791;
         --bash: #4eaa25;
+        --powershell: #012456;
+        --dockerfile: #2496ed;
+        --makefile: #427819;
+        --cmake: #064f8c;
+        --markdown: #083fa1;
+        --latex: #008080;
+        --tex: #008080;
         --default: #6ea8fe;
       }
 
@@ -321,6 +419,126 @@
       }
       .lang-bash {
         background: var(--bash);
+        color: white;
+      }
+      .lang-ruby {
+        background: var(--ruby);
+        color: white;
+      }
+      .lang-c {
+        background: var(--c);
+        color: white;
+      }
+      .lang-cpp {
+        background: var(--cpp);
+        color: white;
+      }
+      .lang-csharp {
+        background: var(--csharp);
+        color: white;
+      }
+      .lang-java {
+        background: var(--java);
+        color: white;
+      }
+      .lang-php {
+        background: var(--php);
+        color: white;
+      }
+      .lang-swift {
+        background: var(--swift);
+        color: white;
+      }
+      .lang-kotlin {
+        background: var(--kotlin);
+        color: white;
+      }
+      .lang-scala {
+        background: var(--scala);
+        color: white;
+      }
+      .lang-clojure {
+        background: var(--clojure);
+        color: white;
+      }
+      .lang-elixir {
+        background: var(--elixir);
+        color: white;
+      }
+      .lang-erlang {
+        background: var(--erlang);
+        color: white;
+      }
+      .lang-lua {
+        background: var(--lua);
+        color: white;
+      }
+      .lang-r {
+        background: var(--r);
+        color: white;
+      }
+      .lang-matlab {
+        background: var(--matlab);
+        color: white;
+      }
+      .lang-octave {
+        background: var(--octave);
+        color: white;
+      }
+      .lang-fortran {
+        background: var(--fortran);
+        color: white;
+      }
+      .lang-assembly {
+        background: var(--assembly);
+        color: white;
+      }
+      .lang-scss {
+        background: var(--scss);
+        color: white;
+      }
+      .lang-sass {
+        background: var(--sass);
+        color: white;
+      }
+      .lang-less {
+        background: var(--less);
+        color: white;
+      }
+      .lang-yaml {
+        background: var(--yaml);
+        color: white;
+      }
+      .lang-xml {
+        background: var(--xml);
+        color: white;
+      }
+      .lang-powershell {
+        background: var(--powershell);
+        color: white;
+      }
+      .lang-dockerfile {
+        background: var(--dockerfile);
+        color: white;
+      }
+      .lang-makefile {
+        background: var(--makefile);
+        color: white;
+      }
+      .lang-cmake {
+        background: var(--cmake);
+        color: white;
+      }
+      .lang-markdown {
+        background: var(--markdown);
+        color: white;
+      }
+      .lang-latex {
+        background: var(--latex);
+        color: white;
+      }
+      .lang-tex {
+        background: var(--tex);
         color: white;
       }
       .lang-default {
@@ -543,18 +761,48 @@
           <div class="form-group">
             <label class="form-label">Язык программирования</label>
             <select id="snippetLanguage" class="form-input">
-              <option value="javascript">JavaScript</option>
-              <option value="typescript">TypeScript</option>
-              <option value="python">Python</option>
-              <option value="rust">Rust</option>
-              <option value="go">Go</option>
-              <option value="haskell">Haskell</option>
-              <option value="perl">Perl</option>
-              <option value="html">HTML</option>
-              <option value="css">CSS</option>
-              <option value="json">JSON</option>
-              <option value="sql">SQL</option>
-              <option value="bash">Bash</option>
+              <option value="javascript">🟨 JavaScript</option>
+              <option value="typescript">🔷 TypeScript</option>
+              <option value="python">🐍 Python</option>
+              <option value="rust">🦀 Rust</option>
+              <option value="go">🐹 Go</option>
+              <option value="haskell">🔷 Haskell</option>
+              <option value="perl">🐪 Perl</option>
+              <option value="ruby">💎 Ruby</option>
+              <option value="c">🔵 C</option>
+              <option value="cpp">🔵 C++</option>
+              <option value="csharp">🟣 C#</option>
+              <option value="java">☕ Java</option>
+              <option value="php">🐘 PHP</option>
+              <option value="swift">🦉 Swift</option>
+              <option value="kotlin">🟠 Kotlin</option>
+              <option value="scala">🔴 Scala</option>
+              <option value="clojure">🟢 Clojure</option>
+              <option value="elixir">💜 Elixir</option>
+              <option value="erlang">🟡 Erlang</option>
+              <option value="lua">🌙 Lua</option>
+              <option value="r">📊 R</option>
+              <option value="matlab">🧮 MATLAB</option>
+              <option value="octave">🎵 Octave</option>
+              <option value="fortran">🔢 Fortran</option>
+              <option value="assembly">⚙️ Assembly</option>
+              <option value="html">🌐 HTML</option>
+              <option value="css">🎨 CSS</option>
+              <option value="scss">🎨 SCSS</option>
+              <option value="sass">🎨 Sass</option>
+              <option value="less">🎨 Less</option>
+              <option value="json">📄 JSON</option>
+              <option value="yaml">📝 YAML</option>
+              <option value="xml">📋 XML</option>
+              <option value="sql">🗄️ SQL</option>
+              <option value="bash">🐚 Bash</option>
+              <option value="powershell">💻 PowerShell</option>
+              <option value="dockerfile">🐳 Dockerfile</option>
+              <option value="makefile">🔧 Makefile</option>
+              <option value="cmake">🔧 CMake</option>
+              <option value="markdown">📝 Markdown</option>
+              <option value="latex">📚 LaTeX</option>
+              <option value="tex">📚 TeX</option>
             </select>
           </div>
 
@@ -589,11 +837,41 @@
         'go',
         'haskell',
         'perl',
+        'ruby',
+        'c',
+        'cpp',
+        'csharp',
+        'java',
+        'php',
+        'swift',
+        'kotlin',
+        'scala',
+        'clojure',
+        'elixir',
+        'erlang',
+        'lua',
+        'r',
+        'matlab',
+        'octave',
+        'fortran',
+        'assembly',
         'html',
         'css',
+        'scss',
+        'sass',
+        'less',
         'json',
+        'yaml',
+        'xml',
         'sql',
         'bash',
+        'powershell',
+        'dockerfile',
+        'makefile',
+        'cmake',
+        'markdown',
+        'latex',
+        'tex',
       ]);
 
       const LANG_LABELS = {
@@ -604,15 +882,94 @@
         go: 'Go',
         haskell: 'Haskell',
         perl: 'Perl',
+        ruby: 'Ruby',
+        c: 'C',
+        cpp: 'C++',
+        csharp: 'C#',
+        java: 'Java',
+        php: 'PHP',
+        swift: 'Swift',
+        kotlin: 'Kotlin',
+        scala: 'Scala',
+        clojure: 'Clojure',
+        elixir: 'Elixir',
+        erlang: 'Erlang',
+        lua: 'Lua',
+        r: 'R',
+        matlab: 'MATLAB',
+        octave: 'Octave',
+        fortran: 'Fortran',
+        assembly: 'Assembly',
         html: 'HTML',
         css: 'CSS',
+        scss: 'SCSS',
+        sass: 'Sass',
+        less: 'Less',
         json: 'JSON',
+        yaml: 'YAML',
+        xml: 'XML',
         sql: 'SQL',
         bash: 'Bash',
+        powershell: 'PowerShell',
+        dockerfile: 'Dockerfile',
+        makefile: 'Makefile',
+        cmake: 'CMake',
+        markdown: 'Markdown',
+        latex: 'LaTeX',
+        tex: 'TeX',
+      };
+
+      const LANG_EMOJIS = {
+        javascript: '🟨',
+        typescript: '🔷',
+        python: '🐍',
+        rust: '🦀',
+        go: '🐹',
+        haskell: '🔷',
+        perl: '🐪',
+        ruby: '💎',
+        c: '🔵',
+        cpp: '🔵',
+        csharp: '🟣',
+        java: '☕',
+        php: '🐘',
+        swift: '🦉',
+        kotlin: '🟠',
+        scala: '🔴',
+        clojure: '🟢',
+        elixir: '💜',
+        erlang: '🟡',
+        lua: '🌙',
+        r: '📊',
+        matlab: '🧮',
+        octave: '🎵',
+        fortran: '🔢',
+        assembly: '⚙️',
+        html: '🌐',
+        css: '🎨',
+        scss: '🎨',
+        sass: '🎨',
+        less: '🎨',
+        json: '📄',
+        yaml: '📝',
+        xml: '📋',
+        sql: '🗄️',
+        bash: '🐚',
+        powershell: '💻',
+        dockerfile: '🐳',
+        makefile: '🔧',
+        cmake: '🔧',
+        markdown: '📝',
+        latex: '📚',
+        tex: '📚',
       };
 
       function labelForLang(lang) {
         return LANG_LABELS[lang] || lang.charAt(0).toUpperCase() + lang.slice(1);
+      }
+
+      function emojiForLang(lang) {
+        return LANG_EMOJIS[lang] || '📄';
       }
 
       class SnippetManager {
@@ -715,10 +1072,19 @@
 
         filterSnippets(query) {
           const q = (query || '').toLowerCase();
+
+          // Получаем выбранные языки
+          const selectedLanguages = this.getSelectedLanguages();
+
           const filtered = this.snippets
-            .filter(
-              (s) => this.activeLang === 'all' || s.language.toLowerCase() === this.activeLang
-            )
+            .filter((s) => {
+              // Если выбраны все языки или нет выбранных языков
+              if (selectedLanguages.length === 0 || selectedLanguages.includes('all')) {
+                return true;
+              }
+              // Фильтруем по выбранным языкам
+              return selectedLanguages.includes(s.language.toLowerCase());
+            })
             .filter(
               (snippet) =>
                 snippet.name.toLowerCase().includes(q) || snippet.code.toLowerCase().includes(q)
@@ -726,27 +1092,94 @@
           this.renderSnippets(filtered);
         }
 
+        getSelectedLanguages() {
+          const allCheckbox = document.getElementById('lang-all');
+          const langCheckboxes = document.querySelectorAll('.lang-checkbox[data-lang]');
+
+          // Если выбрано "Все языки"
+          if (allCheckbox && allCheckbox.checked) {
+            return ['all'];
+          }
+
+          // Собираем выбранные языки
+          const selected = [];
+          langCheckboxes.forEach((checkbox) => {
+            if (checkbox.checked) {
+              selected.push(checkbox.dataset.lang);
+            }
+          });
+
+          return selected;
+        }
+
         installLanguageFilter() {
           const container = document.querySelector('header .card');
           if (!container) return;
           const row = document.createElement('div');
           row.className = 'form-group';
-          // Сгенерировать список опций из набора SUPPORTED_LANGUAGES
-          const options = ['<option value="all">Все языки</option>']
-            .concat(
-              Array.from(SUPPORTED_LANGUAGES).map(
-                (l) => `<option value="${l}">${labelForLang(l)}</option>`
-              )
-            )
-            .join('');
+
+          // Создаем контейнер для чекбоксов с фиксированными размерами
+          const checkboxesContainer = document.createElement('div');
+          checkboxesContainer.className = 'filter-container';
+
+          // Создаем чекбокс "Все языки"
+          const allCheckbox = document.createElement('label');
+          allCheckbox.className = 'filter-checkbox';
+          allCheckbox.innerHTML = `
+            <input type="checkbox" id="lang-all" class="lang-checkbox" checked>
+            <span class="filter-checkbox-label">Все языки</span>
+          `;
+
+          // Создаем чекбоксы для каждого языка
+          const languageCheckboxes = Array.from(SUPPORTED_LANGUAGES).map((lang) => {
+            const checkbox = document.createElement('label');
+            checkbox.className = 'filter-checkbox';
+            checkbox.innerHTML = `
+              <input type="checkbox" id="lang-${lang}" class="lang-checkbox" data-lang="${lang}">
+              <span class="filter-checkbox-label language-badge lang-${lang}">${labelForLang(
+              lang
+            )}</span>
+            `;
+            return checkbox;
+          });
+
+          checkboxesContainer.appendChild(allCheckbox);
+          languageCheckboxes.forEach((checkbox) => checkboxesContainer.appendChild(checkbox));
+
           row.innerHTML = `
             <label class="form-label">🧠 Фильтр по языку</label>
-            <select id="langFilter" class="search-input" style="max-width: 260px;">${options}</select>
           `;
+          row.appendChild(checkboxesContainer);
           container.appendChild(row);
-          row.querySelector('#langFilter').addEventListener('change', (e) => {
-            this.activeLang = e.target.value;
+
+          // Обработчики событий для чекбоксов
+          const allCheckboxInput = allCheckbox.querySelector('#lang-all');
+          const langCheckboxes = row.querySelectorAll('.lang-checkbox[data-lang]');
+
+          // Обработчик для "Все языки"
+          allCheckboxInput.addEventListener('change', (e) => {
+            if (e.target.checked) {
+              // Если выбрано "Все языки", снимаем выбор с остальных
+              langCheckboxes.forEach((cb) => (cb.checked = false));
+            }
             this.filterSnippets(document.getElementById('searchInput').value);
+          });
+
+          // Обработчики для языковых чекбоксов
+          langCheckboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', (e) => {
+              if (e.target.checked) {
+                // Если выбрали конкретный язык, снимаем "Все языки"
+                allCheckboxInput.checked = false;
+              } else {
+                // Если сняли все языки, выбираем "Все языки"
+                const anyChecked = Array.from(langCheckboxes).some((cb) => cb.checked);
+                if (!anyChecked) {
+                  allCheckboxInput.checked = true;
+                }
+              }
+              this.filterSnippets(document.getElementById('searchInput').value);
+            });
           });
         }
 
@@ -768,9 +1201,9 @@
                     <div class="card snippet-card" data-id="${snippet.id}">
                         <div class="flex items-start justify-between mb-2">
                             <h3 class="text-lg font-semibold">${snippet.name}</h3>
-                            <span class="language-badge lang-${snippet.language}">${
-                snippet.language
-              }</span>
+                            <span class="language-badge lang-${snippet.language}">
+                              ${emojiForLang(snippet.language)} ${labelForLang(snippet.language)}
+                            </span>
                         </div>
                         <div class="code-preview" onclick="snippetManager.viewCode(${
                           snippet.id
