@@ -732,7 +732,7 @@
           </div>
         </div>
         <div class="code-modal-actions">
-          <button id="copyCodeBtn" class="code-modal-btn">📋 Копировать код</button>
+          <button id="copyCodeBtn" class="btn-secondary text-xs">📋 Копировать код</button>
           <button id="closeCodeModalBtn" class="btn-secondary">Закрыть</button>
         </div>
       </div>
@@ -1224,13 +1224,8 @@
                             </button>
                             <button class="btn-secondary text-xs" onclick="snippetManager.copySnippet(${
                               snippet.id
-                            })">
+                            }, event)">
                                 📋 Копировать
-                            </button>
-                            <button class="btn-secondary text-xs" onclick="snippetManager.viewCode(${
-                              snippet.id
-                            })">
-                                👁️ Просмотр
                             </button>
                             <button class="btn-secondary text-xs" onclick="snippetManager.deleteSnippet(${
                               snippet.id
@@ -1308,7 +1303,7 @@
           this.openModal(id);
         }
 
-        copySnippet(id) {
+        copySnippet(id, event) {
           const snippet = this.snippets.find((s) => s.id === id);
           navigator.clipboard.writeText(snippet.code).then(() => {
             // Показать уведомление
@@ -1316,9 +1311,11 @@
             const originalText = btn.textContent;
             btn.textContent = '✅ Скопировано';
             btn.style.background = 'var(--ok)';
+            btn.style.color = 'white';
             setTimeout(() => {
               btn.textContent = originalText;
               btn.style.background = '';
+              btn.style.color = '';
             }, 2000);
           });
         }
@@ -1398,9 +1395,11 @@
             const originalText = btn.textContent;
             btn.textContent = '✅ Скопировано';
             btn.style.background = 'var(--ok)';
+            btn.style.color = 'white';
             setTimeout(() => {
               btn.textContent = originalText;
               btn.style.background = '';
+              btn.style.color = '';
             }, 2000);
           });
         }
