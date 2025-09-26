@@ -1273,9 +1273,7 @@
                               ${emojiForLang(snippet.language)} ${labelForLang(snippet.language)}
                             </span>
                         </div>
-                        <div class="code-preview" onclick="snippetManager.viewCode(${
-                          snippet.id
-                        })" onscroll="snippetManager.syncPreviewScroll(event)" title="Кликните для просмотра на полный экран">
+                        <div class="code-preview" onscroll="snippetManager.syncPreviewScroll(event)">
                           <div class="code-preview-wrapper">
                             <div class="code-preview-numbers">${this.generateLineNumbersHTML(
                               snippet.code
@@ -1286,21 +1284,26 @@
                             )}</div>
                           </div>
                         </div>
-                        <div class="flex gap-2 mt-3">
-                            <button class="btn-secondary text-xs" onclick="snippetManager.editSnippet(${
+                        <div class="flex gap-1 mt-3">
+                            <button class="btn-secondary text-xs px-2 py-1" onclick="snippetManager.editSnippet(${
                               snippet.id
                             })">
-                                ✏️ Редактировать
+                                ✏️
                             </button>
-                            <button class="btn-secondary text-xs" onclick="snippetManager.copySnippet(${
+                            <button class="btn-secondary text-xs px-2 py-1" onclick="snippetManager.copySnippet(${
                               snippet.id
                             }, event)">
-                                📋 Копировать
+                                📋
                             </button>
-                            <button class="btn-secondary text-xs" onclick="snippetManager.deleteSnippet(${
+                            <button class="btn-secondary text-xs px-2 py-1" onclick="snippetManager.viewCode(${
                               snippet.id
                             })">
-                                🗑️ Удалить
+                                👁️
+                            </button>
+                            <button class="btn-secondary text-xs px-2 py-1" onclick="snippetManager.deleteSnippet(${
+                              snippet.id
+                            })">
+                                🗑️
                             </button>
                         </div>
                     </div>
