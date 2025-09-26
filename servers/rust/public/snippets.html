@@ -50,6 +50,8 @@
       .snippet-card {
         transition: all 0.2s ease;
         cursor: pointer;
+        width: 350px;
+        flex-shrink: 0;
       }
 
       .snippet-card:hover {
@@ -68,7 +70,6 @@
         margin-top: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
-        display: flex;
         -ms-overflow-style: none; /* IE/Edge скрыть полосу */
         scrollbar-width: none; /* Firefox скрыть полосу */
       }
@@ -77,12 +78,20 @@
         height: 0;
       }
 
+      .code-preview-wrapper {
+        display: flex;
+        background: #1a1a1a;
+        min-height: 100%;
+        min-width: 100%;
+        width: max-content;
+      }
+
       .code-preview-numbers {
         background: #1a1a1a;
         color: #666;
         padding: 8px 6px 8px 8px;
         font-family: var(--font-mono);
-        font-size: 11px;
+        font-size: 12px;
         line-height: 1.4;
         user-select: none;
         border-right: 1px solid #333;
@@ -90,8 +99,6 @@
         text-align: right;
         flex-shrink: 0;
         white-space: pre;
-        overflow: hidden; /* блокируем отдельный скролл */
-        position: relative; /* для трансформаций */
       }
 
       .code-preview-content {
@@ -104,8 +111,62 @@
         white-space: pre-wrap;
         word-wrap: break-word;
         background: transparent !important;
-        overflow: hidden; /* блокируем отдельный скролл */
-        position: relative; /* для трансформаций */
+        margin: 0;
+      }
+
+      .code-preview-content code {
+        margin: 0;
+        padding: 0;
+        background: transparent !important;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+        display: block;
+      }
+
+      .code-line-number {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-height: 1.4em;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.4;
+        color: #666;
+        user-select: none;
+      }
+
+      .code-line {
+        display: flex;
+        align-items: center;
+        min-height: 1.4em;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text);
+      }
+
+      /* Стили для модального окна */
+      .code-modal-line-numbers .code-line-number {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-height: 1.5em;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.5;
+        color: #666;
+        user-select: none;
+      }
+
+      .code-modal-code-content .code-line {
+        display: flex;
+        align-items: center;
+        min-height: 1.5em;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text);
       }
 
       .language-badge {
@@ -624,11 +685,20 @@
       }
 
       .code-modal-code-container {
-        display: flex;
         background: #1a1a1a;
         border-radius: 6px;
-        overflow: hidden;
+        overflow: auto;
         border: 1px solid #333;
+        max-height: 60vh;
+        position: relative;
+      }
+
+      .code-modal-code-wrapper {
+        display: flex;
+        background: #1a1a1a;
+        min-height: 100%;
+        min-width: 100%;
+        width: max-content;
       }
 
       .code-modal-line-numbers {
@@ -655,8 +725,9 @@
         color: var(--text);
         white-space: pre-wrap;
         word-wrap: break-word;
-        overflow-x: auto;
         background: #1a1a1a;
+        margin: 0;
+        display: block;
       }
 
       .code-modal-actions {
@@ -714,7 +785,7 @@
       </div>
     </header>
 
-    <div id="snippetsContainer" class="grid gap-4">
+    <div id="snippetsContainer" class="flex flex-wrap gap-4">
       <!-- Снипеты будут загружены здесь -->
     </div>
 
@@ -727,13 +798,14 @@
         </div>
         <div class="code-modal-body">
           <div class="code-modal-code-container">
-            <div id="codeModalLineNumbers" class="code-modal-line-numbers"></div>
-            <pre id="codeModalCode" class="code-modal-code-content"></pre>
+            <div class="code-modal-code-wrapper">
+              <div id="codeModalLineNumbers" class="code-modal-line-numbers"></div>
+              <div id="codeModalCode" class="code-modal-code-content"></div>
+            </div>
           </div>
         </div>
         <div class="code-modal-actions">
           <button id="copyCodeBtn" class="btn-secondary text-xs">📋 Копировать код</button>
-          <button id="closeCodeModalBtn" class="btn-secondary">Закрыть</button>
         </div>
       </div>
     </div>
@@ -1025,10 +1097,6 @@
             this.closeCodeModal();
           });
 
-          document.getElementById('closeCodeModalBtn').addEventListener('click', () => {
-            this.closeCodeModal();
-          });
-
           document.getElementById('copyCodeBtn').addEventListener('click', () => {
             this.copyCodeFromModal();
           });
@@ -1208,13 +1276,15 @@
                         <div class="code-preview" onclick="snippetManager.viewCode(${
                           snippet.id
                         })" onscroll="snippetManager.syncPreviewScroll(event)" title="Кликните для просмотра на полный экран">
-                          <div class="code-preview-numbers">${this.generateLineNumbers(
-                            snippet.code,
-                            10
-                          )}</div>
-                          <pre class="code-preview-content"><code class="language-${
-                            snippet.language
-                          }">${this.escapeHtml(this.truncateCode(snippet.code, 10))}</code></pre>
+                          <div class="code-preview-wrapper">
+                            <div class="code-preview-numbers">${this.generateLineNumbersHTML(
+                              snippet.code
+                            )}</div>
+                            <div class="code-preview-content">${this.generateCodeLinesHTML(
+                              snippet.code,
+                              snippet.language
+                            )}</div>
+                          </div>
                         </div>
                         <div class="flex gap-2 mt-3">
                             <button class="btn-secondary text-xs" onclick="snippetManager.editSnippet(${
@@ -1242,6 +1312,19 @@
           if (typeof Prism !== 'undefined') {
             Prism.highlightAll();
           }
+
+          // Подсветка синтаксиса для новых элементов
+          setTimeout(() => {
+            if (typeof Prism !== 'undefined') {
+              // Подсвечиваем код в карточках
+              const codeLines = container.querySelectorAll('.code-line span[class*="language-"]');
+              codeLines.forEach((line) => {
+                if (line.textContent.trim()) {
+                  Prism.highlightElement(line);
+                }
+              });
+            }
+          }, 100);
         }
 
         openModal(snippetId = null) {
@@ -1353,21 +1436,15 @@
             return;
           }
 
-          title.textContent = `${snippet.name} (${snippet.language})`;
+          title.innerHTML = `${snippet.name} <span class="language-badge lang-${
+            snippet.language
+          }">${emojiForLang(snippet.language)} ${labelForLang(snippet.language)}</span>`;
 
-          // Генерируем номера строк
-          const lines = snippet.code.split('\n');
-          const lineNumbers = lines.map((_, index) => index + 1).join('\n');
-
-          // Устанавливаем номера строк и код
+          // Генерируем номера строк и код с новой структурой
           const lineNumbersElement = document.getElementById('codeModalLineNumbers');
-          lineNumbersElement.textContent = lineNumbers;
 
-          codeElement.textContent = snippet.code;
-          codeElement.className = `code-modal-code-content language-${snippet.language}`;
-
-          console.log('Code element content:', codeElement.textContent);
-          console.log('Line numbers:', lineNumbers);
+          lineNumbersElement.innerHTML = this.generateLineNumbersHTML(snippet.code);
+          codeElement.innerHTML = this.generateCodeLinesHTML(snippet.code, snippet.language);
 
           modal.classList.remove('hidden');
           document.body.style.overflow = 'hidden';
@@ -1375,7 +1452,13 @@
           // Подсветка синтаксиса в модальном окне
           setTimeout(() => {
             if (typeof Prism !== 'undefined') {
-              Prism.highlightElement(codeElement);
+              // Подсвечиваем каждую строку кода отдельно
+              const codeLines = codeElement.querySelectorAll('.code-line span[class*="language-"]');
+              codeLines.forEach((line) => {
+                if (line.textContent.trim()) {
+                  Prism.highlightElement(line);
+                }
+              });
             }
           }, 100);
         }
@@ -1410,6 +1493,30 @@
           return visibleLines.map((_, index) => index + 1).join('\n');
         }
 
+        generateAllLineNumbers(code) {
+          const lines = code.split('\n');
+          return lines.map((_, index) => index + 1).join('\n');
+        }
+
+        generateLineNumbersHTML(code) {
+          const lines = code.split('\n');
+          return lines
+            .map((_, index) => `<div class="code-line-number"><span>${index + 1}</span></div>`)
+            .join('');
+        }
+
+        generateCodeLinesHTML(code, language) {
+          const lines = code.split('\n');
+          return lines
+            .map(
+              (line) =>
+                `<div class="code-line"><span class="language-${language}">${this.escapeHtml(
+                  line
+                )}</span></div>`
+            )
+            .join('');
+        }
+
         truncateCode(code, maxLines = 10) {
           const lines = code.split('\n');
           if (lines.length <= maxLines) {
@@ -1438,22 +1545,16 @@
           lineNumbers.scrollTop = textarea.scrollTop;
         }
 
-        // Простая синхронизация скролла для предпросмотра
         syncPreviewScroll(e) {
-          e.stopPropagation();
-
           const container = e.currentTarget;
           const numbers = container.querySelector('.code-preview-numbers');
           const content = container.querySelector('.code-preview-content');
 
           if (!numbers || !content) return;
 
-          // Синхронизируем скролл через трансформации
-          const scrollTop = container.scrollTop;
-          const scrollLeft = container.scrollLeft;
-
-          numbers.style.transform = `translateY(${-scrollTop}px)`;
-          content.style.transform = `translate(${-scrollLeft}px, ${-scrollTop}px)`;
+          // Синхронизируем скролл
+          numbers.scrollTop = container.scrollTop;
+          content.scrollTop = container.scrollTop;
         }
 
         escapeHtml(text) {
