@@ -62,19 +62,19 @@
         font-size: 12px;
         line-height: 1.4;
         max-height: 150px;
-        overflow-y: auto;
+        overflow: auto; /* единый скролл для всего блока */
         background: #1a1a1a;
         border-radius: 6px;
         margin-top: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
         display: flex;
-        overflow: hidden;
+        -ms-overflow-style: none; /* IE/Edge скрыть полосу */
+        scrollbar-width: none; /* Firefox скрыть полосу */
       }
-
-      .code-preview:hover {
-        background: #1f1f1f;
-        /* border: 1px solid var(--accent); */
+      .code-preview::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
 
       .code-preview-numbers {
@@ -90,6 +90,8 @@
         text-align: right;
         flex-shrink: 0;
         white-space: pre;
+        overflow: hidden; /* блокируем отдельный скролл */
+        position: relative; /* для трансформаций */
       }
 
       .code-preview-content {
@@ -101,8 +103,9 @@
         color: var(--text);
         white-space: pre-wrap;
         word-wrap: break-word;
-        overflow-x: auto;
         background: transparent !important;
+        overflow: hidden; /* блокируем отдельный скролл */
+        position: relative; /* для трансформаций */
       }
 
       .language-badge {
@@ -112,6 +115,7 @@
         font-size: 11px;
         font-weight: 500;
         text-transform: uppercase;
+        color: var(--text) !important; /* force readable text color */
       }
 
       .search-input {
@@ -575,10 +579,46 @@
     </div>
 
     <script>
+      // Единый набор поддерживаемых языков (добавляй/удаляй здесь)
+      const SUPPORTED_LANGUAGES = new Set([
+        'javascript',
+        'typescript',
+        'python',
+        'rust',
+        'go',
+        'haskell',
+        'perl',
+        'html',
+        'css',
+        'json',
+        'sql',
+        'bash',
+      ]);
+
+      const LANG_LABELS = {
+        javascript: 'JavaScript',
+        typescript: 'TypeScript',
+        python: 'Python',
+        rust: 'Rust',
+        go: 'Go',
+        haskell: 'Haskell',
+        perl: 'Perl',
+        html: 'HTML',
+        css: 'CSS',
+        json: 'JSON',
+        sql: 'SQL',
+        bash: 'Bash',
+      };
+
+      function labelForLang(lang) {
+        return LANG_LABELS[lang] || lang.charAt(0).toUpperCase() + lang.slice(1);
+      }
+
       class SnippetManager {
         constructor() {
           this.snippets = this.loadSnippets();
           this.currentSnippetId = null;
+          this.activeLang = 'all';
           this.init();
         }
 
@@ -592,6 +632,9 @@
           document.getElementById('searchInput').addEventListener('input', (e) => {
             this.filterSnippets(e.target.value);
           });
+
+          // Сортировка/фильтр по языку
+          this.installLanguageFilter();
 
           // Модальное окно создания/редактирования
           document.getElementById('addSnippetBtn').addEventListener('click', () => {
@@ -650,26 +693,60 @@
         }
 
         loadSnippets() {
-          const saved = localStorage.getItem('snippets');
-          if (saved) {
-            return JSON.parse(saved);
-          }
-
-          // Пустой массив по умолчанию
+          this.fetchFromServer();
           return [];
         }
 
-        saveSnippets() {
-          localStorage.setItem('snippets', JSON.stringify(this.snippets));
+        async fetchFromServer() {
+          try {
+            const res = await fetch('/rust/snippets/list');
+            const data = await res.json();
+            this.snippets = Array.isArray(data.snippets) ? data.snippets : [];
+            this.renderSnippets();
+          } catch (e) {
+            console.warn('Failed to load snippets:', e);
+            this.snippets = [];
+            this.renderSnippets();
+          }
         }
 
+        saveSnippets() {}
+
         filterSnippets(query) {
-          const filtered = this.snippets.filter(
-            (snippet) =>
-              snippet.name.toLowerCase().includes(query.toLowerCase()) ||
-              snippet.code.toLowerCase().includes(query.toLowerCase())
-          );
+          const q = (query || '').toLowerCase();
+          const filtered = this.snippets
+            .filter(
+              (s) => this.activeLang === 'all' || s.language.toLowerCase() === this.activeLang
+            )
+            .filter(
+              (snippet) =>
+                snippet.name.toLowerCase().includes(q) || snippet.code.toLowerCase().includes(q)
+            );
           this.renderSnippets(filtered);
+        }
+
+        installLanguageFilter() {
+          const container = document.querySelector('header .card');
+          if (!container) return;
+          const row = document.createElement('div');
+          row.className = 'form-group';
+          // Сгенерировать список опций из набора SUPPORTED_LANGUAGES
+          const options = ['<option value="all">Все языки</option>']
+            .concat(
+              Array.from(SUPPORTED_LANGUAGES).map(
+                (l) => `<option value="${l}">${labelForLang(l)}</option>`
+              )
+            )
+            .join('');
+          row.innerHTML = `
+            <label class="form-label">🧠 Фильтр по языку</label>
+            <select id="langFilter" class="search-input" style="max-width: 260px;">${options}</select>
+          `;
+          container.appendChild(row);
+          row.querySelector('#langFilter').addEventListener('change', (e) => {
+            this.activeLang = e.target.value;
+            this.filterSnippets(document.getElementById('searchInput').value);
+          });
         }
 
         renderSnippets(snippets = this.snippets) {
@@ -696,14 +773,14 @@
                         </div>
                         <div class="code-preview" onclick="snippetManager.viewCode(${
                           snippet.id
-                        })" title="Кликните для просмотра на полный экран">
-                            <div class="code-preview-numbers">${this.generateLineNumbers(
-                              snippet.code,
-                              10
-                            )}</div>
-                            <pre class="code-preview-content"><code class="language-${
-                              snippet.language
-                            }">${this.escapeHtml(this.truncateCode(snippet.code, 10))}</code></pre>
+                        })" onscroll="snippetManager.syncPreviewScroll(event)" title="Кликните для просмотра на полный экран">
+                          <div class="code-preview-numbers">${this.generateLineNumbers(
+                            snippet.code,
+                            10
+                          )}</div>
+                          <pre class="code-preview-content"><code class="language-${
+                            snippet.language
+                          }">${this.escapeHtml(this.truncateCode(snippet.code, 10))}</code></pre>
                         </div>
                         <div class="flex gap-2 mt-3">
                             <button class="btn-secondary text-xs" onclick="snippetManager.editSnippet(${
@@ -776,26 +853,21 @@
 
           if (!name || !code) return;
 
-          if (this.currentSnippetId) {
-            // Редактирование
-            const snippet = this.snippets.find((s) => s.id === this.currentSnippetId);
-            snippet.name = name;
-            snippet.language = language;
-            snippet.code = code;
-          } else {
-            // Создание
-            const newSnippet = {
-              id: Date.now(),
-              name,
-              language,
-              code,
-            };
-            this.snippets.unshift(newSnippet);
-          }
-
-          this.saveSnippets();
-          this.renderSnippets();
-          this.closeModal();
+          fetch('/rust/snippets/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: this.currentSnippetId, name, language, code }),
+          })
+            .then((r) => r.json())
+            .then((res) => {
+              if (res.ok) {
+                this.fetchFromServer();
+                this.closeModal();
+              } else {
+                alert('Ошибка сохранения: ' + (res.error || 'unknown'));
+              }
+            })
+            .catch((e) => alert('Ошибка: ' + e));
         }
 
         editSnippet(id) {
@@ -818,11 +890,18 @@
         }
 
         deleteSnippet(id) {
-          if (confirm('Удалить этот снипет?')) {
-            this.snippets = this.snippets.filter((s) => s.id !== id);
-            this.saveSnippets();
-            this.renderSnippets();
-          }
+          if (!confirm('Удалить этот снипет?')) return;
+          fetch('/rust/snippets/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id }),
+          })
+            .then((r) => r.json())
+            .then((res) => {
+              if (res.ok) this.fetchFromServer();
+              else alert('Ошибка удаления: ' + (res.error || 'unknown'));
+            })
+            .catch((e) => alert('Ошибка: ' + e));
         }
 
         viewCode(id) {
@@ -924,6 +1003,24 @@
           if (!textarea || !lineNumbers) return;
 
           lineNumbers.scrollTop = textarea.scrollTop;
+        }
+
+        // Простая синхронизация скролла для предпросмотра
+        syncPreviewScroll(e) {
+          e.stopPropagation();
+
+          const container = e.currentTarget;
+          const numbers = container.querySelector('.code-preview-numbers');
+          const content = container.querySelector('.code-preview-content');
+
+          if (!numbers || !content) return;
+
+          // Синхронизируем скролл через трансформации
+          const scrollTop = container.scrollTop;
+          const scrollLeft = container.scrollLeft;
+
+          numbers.style.transform = `translateY(${-scrollTop}px)`;
+          content.style.transform = `translate(${-scrollLeft}px, ${-scrollTop}px)`;
         }
 
         escapeHtml(text) {

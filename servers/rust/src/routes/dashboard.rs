@@ -2,6 +2,8 @@ use axum::{routing::{get, post}, Router, response::IntoResponse, Json, extract::
 use serde_json::json;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
+use std::fs;
+use std::path::Path;
 use reqwest::Client;
 use tracing::{info, warn, error, debug};
 
@@ -48,6 +50,14 @@ pub fn create_routes() -> Router {
         .route("/rust/session/save", post(save_session))
         .route("/rust/session/restore", get(restore_session))
         .route("/rust/ssh/status", get(get_ssh_status))
+        .route("/rust/process/action", post(process_action))
+        .route("/rust/servers/save", post(save_server))
+        .route("/rust/servers/list", get(list_servers))
+        .route("/rust/servers/delete", post(delete_server))
+        .route("/rust/data/services", get(get_services))
+        .route("/rust/data/disk-usage", get(get_disk_usage))
+        .route("/rust/data/users", get(get_users))
+        .route("/rust/data/system-info", get(get_system_info))
         .with_state(Arc::new(state))
 }
 
@@ -56,6 +66,27 @@ struct SSHConnectReq { host: String, user: String, port: Option<u16>, password: 
 
 #[derive(Deserialize)]
 struct SSHExecuteReq { command: String }
+
+#[derive(Deserialize)]
+struct ProcessActionReq { pid: String, action: String }
+
+#[derive(Serialize, Deserialize, Clone)]
+struct SavedServer {
+    name: String,
+    host: String,
+    user: String,
+    port: u16,
+    password: String,
+}
+
+#[derive(Deserialize)]
+struct SaveServerReq {
+    name: String,
+    host: String,
+    user: String,
+    port: u16,
+    password: String,
+}
 
 async fn ssh_connect(State(state): State<Arc<AppState>>, Json(body): Json<SSHConnectReq>) -> impl IntoResponse {
     info!("ssh_connect: host={} user={} port={}", body.host, body.user, body.port.unwrap_or(22));
@@ -240,5 +271,135 @@ async fn get_ssh_status(State(state): State<Arc<AppState>>) -> impl IntoResponse
     match resp { 
         Ok(r) => { let s=r.status(); let t=r.text().await.unwrap_or_default(); info!("get_ssh_status: status={} bytes={}", s.as_u16(), t.len()); (s,t) }, 
         Err(e)=> { error!("get_ssh_status error: {}", e); (axum::http::StatusCode::BAD_GATEWAY, format!("connection error: {}", e)) } }
+}
+
+async fn process_action(State(state): State<Arc<AppState>>, Json(body): Json<ProcessActionReq>) -> impl IntoResponse {
+    info!("process_action: pid={} action={}", body.pid, body.action);
+    let go_url = format!("{}/process/action", GO_SERVER_BASE);
+    let resp = state.http.post(&go_url).json(&json!({
+        "pid": body.pid,
+        "action": body.action
+    })).send().await;
+    match resp {
+        Ok(r) => {
+            let status = r.status();
+            let text = r.text().await.unwrap_or_else(|_| "".into());
+            info!("process_action result: status={} bytes={}", status.as_u16(), text.len());
+            (status, text)
+        }
+        Err(e) => {
+            error!("process_action error: {}", e);
+            (axum::http::StatusCode::BAD_GATEWAY, format!("connection error: {}", e))
+        }
+    }
+}
+
+const SERVERS_FILE: &str = "saved_servers.json";
+
+fn load_servers() -> Vec<SavedServer> {
+    if !Path::new(SERVERS_FILE).exists() {
+        return vec![];
+    }
+    match fs::read_to_string(SERVERS_FILE) {
+        Ok(content) => serde_json::from_str(&content).unwrap_or_default(),
+        Err(_) => vec![]
+    }
+}
+
+fn save_servers_to_file(servers: &Vec<SavedServer>) -> Result<(), String> {
+    let json = serde_json::to_string_pretty(servers).map_err(|e| e.to_string())?;
+    fs::write(SERVERS_FILE, json).map_err(|e| e.to_string())
+}
+
+async fn save_server(_state: State<Arc<AppState>>, Json(body): Json<SaveServerReq>) -> impl IntoResponse {
+    info!("save_server: name={} host={}", body.name, body.host);
+    
+    let mut servers = load_servers();
+    
+    // Remove existing server with same name
+    servers.retain(|s| s.name != body.name);
+    
+    // Add new server
+    servers.push(SavedServer {
+        name: body.name,
+        host: body.host,
+        user: body.user,
+        port: body.port,
+        password: body.password,
+    });
+    
+    match save_servers_to_file(&servers) {
+        Ok(_) => Json(json!({"ok": true})),
+        Err(e) => {
+            error!("Failed to save servers: {}", e);
+            Json(json!({"ok": false, "error": e}))
+        }
+    }
+}
+
+async fn list_servers(_state: State<Arc<AppState>>) -> impl IntoResponse {
+    debug!("list_servers");
+    let servers = load_servers();
+    info!("list_servers: found {} servers", servers.len());
+    Json(json!({"servers": servers}))
+}
+
+#[derive(Deserialize)]
+struct DeleteServerReq { name: String }
+
+async fn delete_server(_state: State<Arc<AppState>>, Json(body): Json<DeleteServerReq>) -> impl IntoResponse {
+    info!("delete_server: name={}", body.name);
+    
+    let mut servers = load_servers();
+    let initial_count = servers.len();
+    servers.retain(|s| s.name != body.name);
+    
+    if servers.len() < initial_count {
+        match save_servers_to_file(&servers) {
+            Ok(_) => Json(json!({"ok": true})),
+            Err(e) => {
+                error!("Failed to save servers: {}", e);
+                Json(json!({"ok": false, "error": e}))
+            }
+        }
+    } else {
+        Json(json!({"ok": false, "error": "Server not found"}))
+    }
+}
+
+async fn get_services(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    debug!("get_services");
+    let go_url = format!("{}/data/services", GO_SERVER_BASE);
+    let resp = state.http.get(&go_url).send().await;
+    match resp { 
+        Ok(r) => { let s=r.status(); let t=r.text().await.unwrap_or_default(); info!("get_services: status={} bytes={}", s.as_u16(), t.len()); (s,t) }, 
+        Err(e)=> { error!("get_services error: {}", e); (axum::http::StatusCode::BAD_GATEWAY, format!("connection error: {}", e)) } }
+}
+
+async fn get_disk_usage(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    debug!("get_disk_usage");
+    let go_url = format!("{}/data/disk-usage", GO_SERVER_BASE);
+    let resp = state.http.get(&go_url).send().await;
+    match resp { 
+        Ok(r) => { let s=r.status(); let t=r.text().await.unwrap_or_default(); info!("get_disk_usage: status={} bytes={}", s.as_u16(), t.len()); (s,t) }, 
+        Err(e)=> { error!("get_disk_usage error: {}", e); (axum::http::StatusCode::BAD_GATEWAY, format!("connection error: {}", e)) } }
+}
+
+async fn get_users(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    debug!("get_users");
+    let go_url = format!("{}/data/users", GO_SERVER_BASE);
+    let resp = state.http.get(&go_url).send().await;
+    match resp { 
+        Ok(r) => { let s=r.status(); let t=r.text().await.unwrap_or_default(); info!("get_users: status={} bytes={}", s.as_u16(), t.len()); (s,t) }, 
+        Err(e)=> { error!("get_users error: {}", e); (axum::http::StatusCode::BAD_GATEWAY, format!("connection error: {}", e)) } }
+}
+
+async fn get_system_info(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    debug!("get_system_info");
+    let go_url = format!("{}/data/system-info", GO_SERVER_BASE);
+    let resp = state.http.get(&go_url).send().await;
+    match resp { 
+        Ok(r) => { let s=r.status(); let t=r.text().await.unwrap_or_default(); info!("get_system_info: status={} bytes={}", s.as_u16(), t.len()); (s,t) }, 
+        Err(e)=> { error!("get_system_info error: {}", e); (axum::http::StatusCode::BAD_GATEWAY, format!("connection error: {}", e)) } }
 }
 

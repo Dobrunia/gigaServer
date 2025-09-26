@@ -233,6 +233,18 @@
       >
         Logs
       </button>
+      <button
+        class="tab px-3 py-1 text-sm border border-[#6ea8fe] border-b-0 rounded-t-md hover:bg-[#171b29]"
+        data-tab="services"
+      >
+        Services
+      </button>
+      <button
+        class="tab px-3 py-1 text-sm border border-[#6ea8fe] border-b-0 rounded-t-md hover:bg-[#171b29]"
+        data-tab="system"
+      >
+        System
+      </button>
     </div>
     <!-- Connections controls moved below panels -->
     <div class="tab-panels border border-[#6ea8fe] rounded-b-md bg-[#111420] p-3">
@@ -339,6 +351,7 @@
               <th class="custom-tooltip" data-tooltip="Память RSS - физическая память в мегабайтах">
                 RSS MiB
               </th>
+              <th class="custom-tooltip" data-tooltip="Действия - управление процессом">Actions</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -588,6 +601,46 @@
           </div>
         </div>
       </section>
+      <section id="panel-services" class="panel">
+        <h3 class="text-[#9aa3b2] mb-2">System Services</h3>
+        <table id="servicesTable" class="table-fixed text-sm w-full">
+          <thead>
+            <tr>
+              <th>Service Name</th>
+              <th>Load</th>
+              <th>Active</th>
+              <th>Sub</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <section id="panel-system" class="panel">
+        <div class="grid cols-3 gap-4">
+          <div class="card">
+            <h3 class="text-[#9aa3b2] mb-2">System Information</h3>
+            <div id="systemInfo" class="text-sm space-y-1">
+              <div><strong>OS:</strong> <span id="sysDistro">-</span></div>
+              <div><strong>Kernel:</strong> <span id="sysKernel">-</span></div>
+              <div><strong>Architecture:</strong> <span id="sysArch">-</span></div>
+              <div><strong>Uptime:</strong> <span id="sysUptime">-</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="text-[#9aa3b2] mb-2">Disk Usage by Directory</h3>
+            <div id="diskUsageList" class="text-sm space-y-1 max-h-40 overflow-y-auto">
+              <!-- Disk usage will be loaded here -->
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="text-[#9aa3b2] mb-2">Active Users</h3>
+            <div id="activeUsersList" class="text-sm space-y-1 max-h-40 overflow-y-auto">
+              <!-- Active users will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div class="mt-3 p-3 border border-[#2a2f3a] rounded bg-[#111420]">
@@ -631,8 +684,21 @@
         >
           Disconnect
         </button>
+        <button
+          id="saveServer"
+          class="px-3 py-1 border border-[#3cc36a] rounded hover:bg-[#1a2e1a]"
+        >
+          Save Server
+        </button>
       </div>
-      <!-- Active connections and client IPs removed for single-connection design -->
+
+      <!-- Saved servers section -->
+      <div id="savedServers" class="mt-3">
+        <h4 class="text-[#9aa3b2] mb-2">Saved Servers</h4>
+        <div id="savedServersList" class="flex flex-wrap gap-2">
+          <!-- Saved servers will be loaded here -->
+        </div>
+      </div>
     </div>
 
     <!-- Terminal modal -->
@@ -661,6 +727,145 @@
         maxHistoryLength: 60,
         currentHost: '',
       };
+
+      // Process management functions
+      async function processAction(pid, action) {
+        if (!isConnected) {
+          alert('Not connected to server');
+          return;
+        }
+
+        if (!confirm(`Are you sure you want to ${action} process ${pid}?`)) {
+          return;
+        }
+
+        try {
+          const response = await fetch('/rust/process/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pid, action }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            alert(`Process ${action} successful`);
+            // Refresh processes table
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            const error = await response.text();
+            alert(`Process ${action} failed: ${error}`);
+          }
+        } catch (e) {
+          alert(`Process ${action} error: ${e}`);
+        }
+      }
+
+      // Server management functions
+      let savedServers = [];
+
+      async function loadSavedServers() {
+        try {
+          const response = await fetch('/rust/servers/list');
+          const data = await response.json();
+          savedServers = data.servers || [];
+          renderSavedServers();
+        } catch (e) {
+          console.warn('Failed to load saved servers:', e);
+        }
+      }
+
+      function renderSavedServers() {
+        const container = document.getElementById('savedServersList');
+        if (!container) return;
+
+        container.innerHTML = savedServers
+          .map(
+            (server) => `
+          <div class="flex items-center gap-2 bg-[#0b0d12] border border-[#2a2f3a] rounded px-3 py-2">
+            <span class="text-sm">${server.name}</span>
+            <span class="text-xs text-[#9aa3b2]">${server.user}@${server.host}:${server.port}</span>
+            <button onclick="connectToSavedServer('${server.name}')" 
+                    class="text-xs px-2 py-1 border border-[#6ea8fe] rounded hover:bg-[#171b29]">
+              Connect
+            </button>
+            <button onclick="deleteSavedServer('${server.name}')" 
+                    class="text-xs px-2 py-1 border border-[#ff6b6b] rounded hover:bg-[#3a1414]">
+              Delete
+            </button>
+          </div>
+        `
+          )
+          .join('');
+      }
+
+      async function saveCurrentServer() {
+        const host = document.getElementById('sshHost')?.value?.trim();
+        const user = document.getElementById('sshUser')?.value?.trim();
+        const port = parseInt(document.getElementById('sshPort')?.value || '22');
+        const password = document.getElementById('sshPassword')?.value?.trim();
+
+        if (!host || !user || !password) {
+          alert('Please fill all connection fields');
+          return;
+        }
+
+        const name = prompt('Enter a name for this server:', `${user}@${host}`);
+        if (!name) return;
+
+        try {
+          const response = await fetch('/rust/servers/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, host, user, port, password }),
+          });
+
+          const result = await response.json();
+          if (result.ok) {
+            alert('Server saved successfully');
+            loadSavedServers();
+          } else {
+            alert(`Failed to save server: ${result.error}`);
+          }
+        } catch (e) {
+          alert(`Error saving server: ${e}`);
+        }
+      }
+
+      async function connectToSavedServer(name) {
+        const server = savedServers.find((s) => s.name === name);
+        if (!server) return;
+
+        // Fill form fields
+        document.getElementById('sshHost').value = server.host;
+        document.getElementById('sshUser').value = server.user;
+        document.getElementById('sshPort').value = server.port;
+        document.getElementById('sshPassword').value = server.password;
+
+        // Connect
+        document.getElementById('sshConnect').click();
+      }
+
+      async function deleteSavedServer(name) {
+        if (!confirm(`Delete saved server "${name}"?`)) return;
+
+        try {
+          const response = await fetch('/rust/servers/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name }),
+          });
+
+          const result = await response.json();
+          if (result.ok) {
+            alert('Server deleted');
+            loadSavedServers();
+          } else {
+            alert(`Failed to delete server: ${result.error}`);
+          }
+        } catch (e) {
+          alert(`Error deleting server: ${e}`);
+        }
+      }
 
       // Helper function to add data to history with max length
       function addToHistory(array, value) {
@@ -757,9 +962,99 @@
         function activate(name) {
           tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
           panels.forEach((p) => p.classList.toggle('active', p.id === `panel-${name}`));
+
+          // Load data immediately when tab is activated
+          if (isConnected) {
+            if (name === 'services') {
+              loadServicesData();
+            } else if (name === 'system') {
+              loadSystemData();
+            }
+          }
         }
         tabs.forEach((t) => t.addEventListener('click', () => activate(t.dataset.tab)));
         activate('overview');
+      }
+
+      // Immediate data loading functions
+      async function loadServicesData() {
+        try {
+          const services = await fetch('/rust/data/services').then((r) => r.json());
+          const servicesTable = document.querySelector('#servicesTable tbody');
+          if (servicesTable && services.services) {
+            servicesTable.innerHTML = services.services
+              .map(
+                (s) => `
+              <tr class="hover:bg-[#171b29]">
+                <td>${s.name || ''}</td>
+                <td><span class="px-2 py-1 rounded text-xs ${
+                  s.load === 'loaded' ? 'bg-green-900 text-green-200' : 'bg-red-900 text-red-200'
+                }">${s.load || ''}</span></td>
+                <td><span class="px-2 py-1 rounded text-xs ${
+                  s.active === 'active' ? 'bg-green-900 text-green-200' : 'bg-red-900 text-red-200'
+                }">${s.active || ''}</span></td>
+                <td>${s.sub || ''}</td>
+                <td title="${s.description || ''}">${(s.description || '').slice(0, 50)}${
+                  s.description && s.description.length > 50 ? '...' : ''
+                }</td>
+              </tr>
+            `
+              )
+              .join('');
+          }
+        } catch (e) {
+          console.warn('Failed to load services data:', e);
+        }
+      }
+
+      async function loadSystemData() {
+        try {
+          const [systemInfo, diskUsage, users] = await Promise.all([
+            fetch('/rust/data/system-info').then((r) => r.json()),
+            fetch('/rust/data/disk-usage').then((r) => r.json()),
+            fetch('/rust/data/users').then((r) => r.json()),
+          ]);
+
+          // Update system info
+          if (systemInfo) {
+            document.getElementById('sysDistro').textContent = systemInfo.distro || '-';
+            document.getElementById('sysKernel').textContent = systemInfo.kernel || '-';
+            document.getElementById('sysArch').textContent = systemInfo.arch || '-';
+            document.getElementById('sysUptime').textContent = systemInfo.uptime || '-';
+          }
+
+          // Update disk usage
+          if (diskUsage && diskUsage.directories) {
+            const diskList = document.getElementById('diskUsageList');
+            diskList.innerHTML = diskUsage.directories
+              .map(
+                (d) => `
+              <div class="flex justify-between">
+                <span class="text-[#9aa3b2]">${d.path}</span>
+                <span class="font-mono">${d.size}</span>
+              </div>
+            `
+              )
+              .join('');
+          }
+
+          // Update active users
+          if (users && users.users) {
+            const usersList = document.getElementById('activeUsersList');
+            usersList.innerHTML = users.users
+              .map(
+                (u) => `
+              <div class="flex justify-between text-xs">
+                <span>${u.user}@${u.tty}</span>
+                <span class="text-[#9aa3b2]">${u.ip || 'local'}</span>
+              </div>
+            `
+              )
+              .join('');
+          }
+        } catch (e) {
+          console.warn('Failed to load system data:', e);
+        }
       }
       function setVal(id, value, fmt, isBad) {
         const el = document.getElementById(id);
@@ -907,6 +1202,9 @@
             appendConsole(`ssh disconnect error: ${e}`);
           });
       });
+
+      // Save server button
+      document.getElementById('saveServer')?.addEventListener('click', saveCurrentServer);
 
       // Logs handling
       document.getElementById('refreshLogs')?.addEventListener('click', async () => {
@@ -1174,7 +1472,16 @@
                   p.name || ''
                 }</td><td title="${p.cmd || ''}">${(p.cmd || '').slice(0, 60)}</td><td>${
                   p.cpu || 0
-                }</td><td>${p.rss || 0}</td>`;
+                }</td><td>${p.rss || 0}</td><td>
+                  <button onclick="processAction('${p.pid}', 'kill')" 
+                          class="text-xs px-2 py-1 border border-[#ff6b6b] rounded hover:bg-[#3a1414] mr-1">
+                    Kill
+                  </button>
+                  <button onclick="processAction('${p.pid}', 'restart')" 
+                          class="text-xs px-2 py-1 border border-[#f7b955] rounded hover:bg-[#3a2f14]">
+                    Restart
+                  </button>
+                </td>`;
                 tbody.appendChild(tr);
               });
             }
@@ -1316,6 +1623,97 @@
             // Update CPU and GPU sparks with session data
             drawSpark('cpuSpark', sessionData.cpuHistory, '#6ea8fe');
             drawSpark('gpuSpark', sessionData.gpuHistory, '#3cc36a');
+
+            // Fetch services (less frequent)
+            if (sessionData.pollCount % 4 === 0) {
+              // Every 20 seconds
+              try {
+                const services = await fetch('/rust/data/services').then((r) => r.json());
+                const servicesTable = document.querySelector('#servicesTable tbody');
+                if (servicesTable && services.services) {
+                  servicesTable.innerHTML = services.services
+                    .map(
+                      (s) => `
+                    <tr class="hover:bg-[#171b29]">
+                      <td>${s.name || ''}</td>
+                      <td><span class="px-2 py-1 rounded text-xs ${
+                        s.load === 'loaded'
+                          ? 'bg-green-900 text-green-200'
+                          : 'bg-red-900 text-red-200'
+                      }">${s.load || ''}</span></td>
+                      <td><span class="px-2 py-1 rounded text-xs ${
+                        s.active === 'active'
+                          ? 'bg-green-900 text-green-200'
+                          : 'bg-red-900 text-red-200'
+                      }">${s.active || ''}</span></td>
+                      <td>${s.sub || ''}</td>
+                      <td title="${s.description || ''}">${(s.description || '').slice(0, 50)}${
+                        s.description && s.description.length > 50 ? '...' : ''
+                      }</td>
+                    </tr>
+                  `
+                    )
+                    .join('');
+                }
+              } catch (e) {
+                console.warn('Failed to fetch services:', e);
+              }
+            }
+
+            // Fetch system info (even less frequent)
+            if (sessionData.pollCount % 8 === 0) {
+              // Every 40 seconds
+              try {
+                const [systemInfo, diskUsage, users] = await Promise.all([
+                  fetch('/rust/data/system-info').then((r) => r.json()),
+                  fetch('/rust/data/disk-usage').then((r) => r.json()),
+                  fetch('/rust/data/users').then((r) => r.json()),
+                ]);
+
+                // Update system info
+                if (systemInfo) {
+                  document.getElementById('sysDistro').textContent = systemInfo.distro || '-';
+                  document.getElementById('sysKernel').textContent = systemInfo.kernel || '-';
+                  document.getElementById('sysArch').textContent = systemInfo.arch || '-';
+                  document.getElementById('sysUptime').textContent = systemInfo.uptime || '-';
+                }
+
+                // Update disk usage
+                if (diskUsage && diskUsage.directories) {
+                  const diskList = document.getElementById('diskUsageList');
+                  diskList.innerHTML = diskUsage.directories
+                    .map(
+                      (d) => `
+                    <div class="flex justify-between">
+                      <span class="text-[#9aa3b2]">${d.path}</span>
+                      <span class="font-mono">${d.size}</span>
+                    </div>
+                  `
+                    )
+                    .join('');
+                }
+
+                // Update active users
+                if (users && users.users) {
+                  const usersList = document.getElementById('activeUsersList');
+                  usersList.innerHTML = users.users
+                    .map(
+                      (u) => `
+                    <div class="flex justify-between text-xs">
+                      <span>${u.user}@${u.tty}</span>
+                      <span class="text-[#9aa3b2]">${u.ip || 'local'}</span>
+                    </div>
+                  `
+                    )
+                    .join('');
+                }
+              } catch (e) {
+                console.warn('Failed to fetch system data:', e);
+              }
+            }
+
+            // Increment poll counter
+            sessionData.pollCount = (sessionData.pollCount || 0) + 1;
           } catch (e) {
             // Log errors but don't change connection indicator (it's now managed by SSH connection)
             console.error('Polling error:', e);
@@ -1327,10 +1725,12 @@
         pre.textContent += (pre.textContent ? '\n' : '') + line;
         pre.scrollTop = pre.scrollHeight;
       }
+
       addEventListener('DOMContentLoaded', async () => {
         setupTabs();
         await restoreSessionData();
         await checkSSHStatus();
+        await loadSavedServers();
         startPolling();
       });
     </script>

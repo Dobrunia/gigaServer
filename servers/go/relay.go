@@ -26,6 +26,11 @@ type SSHExecuteReq struct {
     Command string `json:"command"`
 }
 
+type ProcessActionReq struct {
+    PID    string `json:"pid"`
+    Action string `json:"action"` // "kill", "restart"
+}
+
 var lastSSH SSHConfig
 var sshClient *ssh.Client
 var keepAliveStop chan struct{}
@@ -136,6 +141,11 @@ func registerRoutes(mux *http.ServeMux) {
     mux.Handle("/go/data/process-logs", withLogging("process_logs", withCORS(http.HandlerFunc(processLogsHandler))))
     mux.Handle("/go/data/resources", withLogging("resources", withCORS(http.HandlerFunc(resourcesHandler))))
     mux.Handle("/go/data/network", withLogging("network", withCORS(http.HandlerFunc(networkHandler))))
+    mux.Handle("/go/process/action", withLogging("process_action", withCORS(http.HandlerFunc(processActionHandler))))
+    mux.Handle("/go/data/services", withLogging("services", withCORS(http.HandlerFunc(servicesHandler))))
+    mux.Handle("/go/data/disk-usage", withLogging("disk_usage", withCORS(http.HandlerFunc(diskUsageHandler))))
+    mux.Handle("/go/data/users", withLogging("users", withCORS(http.HandlerFunc(usersHandler))))
+    mux.Handle("/go/data/system-info", withLogging("system_info", withCORS(http.HandlerFunc(systemInfoHandler))))
     mux.Handle("/health", withLogging("health", withCORS(http.HandlerFunc(healthHandler))))
     mux.Handle("/go/ssh/status", withLogging("ssh_status", withCORS(http.HandlerFunc(sshStatusHandler))))
 }
@@ -354,7 +364,7 @@ func processesHandler(w http.ResponseWriter, r *http.Request) {
 func portsHandler(w http.ResponseWriter, r *http.Request) {
     out, err := runSSH("ss -lntup", 2*time.Second)
     if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
-    rows := parseSs(out)
+    rows := parseListenPorts(out)
     w.Header().Set("Content-Type", "application/json")
     _ = json.NewEncoder(w).Encode(map[string]any{"rows": rows})
 }
@@ -403,6 +413,53 @@ func parsePs(out string) []map[string]any {
 
 var rePid = regexp.MustCompile(`pid=(\d+)`)
 var reName = regexp.MustCompile(`"([^"]+)"`)
+
+func parseListenPorts(out string) []map[string]any {
+    lines := strings.Split(out, "\n")
+    res := make([]map[string]any, 0, len(lines))
+    log.Printf("parseListenPorts input: %s", out) // Debug
+    
+    for _, ln := range lines {
+        ln = strings.TrimSpace(ln)
+        if ln == "" { continue }
+        
+        // Skip header line if present
+        if strings.HasPrefix(ln, "Netid") || strings.HasPrefix(ln, "Proto") { continue }
+        
+        // ss -lntup output format: Proto Recv-Q Send-Q Local-Address:Port Peer-Address:Port Process
+        f := strings.Fields(ln)
+        log.Printf("parseListenPorts fields: %v", f) // Debug
+        
+        if len(f) < 5 { continue }
+        
+        proto := strings.ToUpper(f[0])
+        local := f[4]
+        pid := ""
+        proc := ""
+        
+        // Process info is in the last field(s), format: users:(("process",pid=1234,fd=5))
+        if len(f) > 5 {
+            processField := strings.Join(f[5:], " ")
+            log.Printf("parseListenPorts processField: %s", processField) // Debug
+            
+            if m := rePid.FindStringSubmatch(processField); len(m) > 1 { 
+                pid = m[1] 
+            }
+            if m := reName.FindStringSubmatch(processField); len(m) > 1 { 
+                proc = m[1] 
+            }
+        }
+        
+        res = append(res, map[string]any{
+            "proto": proto, 
+            "local": local, 
+            "pid": pid, 
+            "proc": proc,
+        })
+    }
+    log.Printf("parseListenPorts result: %v", res) // Debug
+    return res
+}
 
 func parseSs(out string) []map[string]any {
     lines := strings.Split(out, "\n")
@@ -690,6 +747,569 @@ func parseConnections(out string) []map[string]any {
         })
     }
     return res
+}
+
+func processActionHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+    
+    var req ProcessActionReq
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    
+    log.Printf("process_action: pid=%s action=%s", req.PID, req.Action)
+    
+    var cmd string
+    switch req.Action {
+    case "kill":
+        cmd = fmt.Sprintf("kill -9 %s", req.PID)
+    case "restart":
+        // Get process command first, then kill and restart
+        getCmdOut, err := runSSH(fmt.Sprintf("ps -p %s -o cmd --no-headers", req.PID), 3*time.Second)
+        if err != nil {
+            http.Error(w, fmt.Sprintf("failed to get process command: %v", err), http.StatusBadGateway)
+            return
+        }
+        processCmd := strings.TrimSpace(getCmdOut)
+        if processCmd == "" {
+            http.Error(w, "process not found or no command available", http.StatusNotFound)
+            return
+        }
+        
+        // Kill the process
+        if _, err := runSSH(fmt.Sprintf("kill %s", req.PID), 3*time.Second); err != nil {
+            http.Error(w, fmt.Sprintf("failed to kill process: %v", err), http.StatusBadGateway)
+            return
+        }
+        
+        // Wait a moment
+        time.Sleep(1 * time.Second)
+        
+        // Restart the process in background
+        cmd = fmt.Sprintf("nohup %s > /dev/null 2>&1 &", processCmd)
+    default:
+        http.Error(w, "invalid action, use 'kill' or 'restart'", http.StatusBadRequest)
+        return
+    }
+    
+    output, err := runSSH(cmd, 5*time.Second)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("command failed: %v", err), http.StatusBadGateway)
+        return
+    }
+    
+    w.Header().Set("Content-Type", "application/json")
+    result := map[string]any{
+        "success": true,
+        "action": req.Action,
+        "pid": req.PID,
+        "output": output,
+    }
+    _ = json.NewEncoder(w).Encode(result)
+}
+
+// Services management (systemctl)
+func servicesHandler(w http.ResponseWriter, r *http.Request) {
+    // Try different commands for getting running services
+    commands := []string{
+        "systemctl list-units --type=service --state=running --no-pager --no-legend | head -15",
+        "systemctl list-units --type=service --state=running --no-pager | head -15", 
+        "/etc/init.d/* status 2>/dev/null | grep running | head -10", // SysV init scripts
+        "ls /etc/init.d/ | head -10", // List available init scripts
+        "ps aux | grep -E '[s]shd|[n]ginx|[a]pache|[m]ysql|[p]ostgres' | head -10", // Common services (bracket notation prevents grep from finding itself)
+        "ps aux | grep -v grep | grep -E 'root.*[[:space:]]/.*' | head -15", // Root processes with full paths
+        "ps -eo pid,user,comm | grep -v grep | head -15", // Simple process list
+    }
+    
+    var out string
+    var err error
+    var usedCmd string
+    
+    for _, cmd := range commands {
+        out, err = runSSH(cmd, 3*time.Second)
+        if err == nil && strings.TrimSpace(out) != "" && 
+           !strings.Contains(out, "System has") && !strings.Contains(out, "Failed to") &&
+           !strings.Contains(out, "Can't operate") && !strings.Contains(out, "Host is down") {
+            usedCmd = cmd
+            break
+        }
+        log.Printf("servicesHandler cmd '%s' failed or returned error: %v, output: %s", cmd, err, out)
+    }
+    
+    if err != nil || strings.TrimSpace(out) == "" { 
+        log.Printf("servicesHandler all commands failed, last error: %v", err)
+        // Return empty but valid response instead of error
+        w.Header().Set("Content-Type", "application/json")
+        _ = json.NewEncoder(w).Encode(map[string]any{"services": []map[string]any{}})
+        return 
+    }
+    log.Printf("servicesHandler used cmd: %s", usedCmd)
+    log.Printf("servicesHandler output: %s", out) // Debug
+    
+    services := parseServices(out, usedCmd)
+    
+    // If no services found, try to get at least some processes
+    if len(services) == 0 {
+        log.Printf("servicesHandler no services parsed, trying process fallback")
+        if procOut, err := runSSH("ps aux | grep -E 'sshd|nginx|apache|mysql|postgres|redis|docker' | grep -v grep | head -10", 3*time.Second); err == nil {
+            procServices := parseProcessAsServices(procOut)
+            if len(procServices) > 0 {
+                services = procServices
+            }
+        }
+    }
+    
+    w.Header().Set("Content-Type", "application/json")
+    _ = json.NewEncoder(w).Encode(map[string]any{"services": services})
+}
+
+func parseServices(out string, cmd string) []map[string]any {
+    lines := strings.Split(out, "\n")
+    res := make([]map[string]any, 0, len(lines))
+    log.Printf("parseServices input: %s", out) // Debug
+    log.Printf("parseServices cmd: %s", cmd) // Debug
+    
+    for _, ln := range lines {
+        ln = strings.TrimSpace(ln)
+        if ln == "" { continue }
+        
+        // Different parsing based on command used
+        if strings.Contains(cmd, "systemctl") {
+            // Skip headers and error messages
+            if strings.HasPrefix(ln, "UNIT") || strings.HasPrefix(ln, "●") || strings.Contains(ln, "LOAD") ||
+               strings.Contains(ln, "System has") || strings.Contains(ln, "Failed to") || 
+               strings.Contains(ln, "systemd as init") || strings.Contains(ln, "Can't operate") ||
+               strings.Contains(ln, "bus:") || strings.Contains(ln, "Host is down") {
+                continue
+            }
+            
+            // systemctl output: UNIT LOAD ACTIVE SUB DESCRIPTION
+            f := strings.Fields(ln)
+            log.Printf("parseServices systemctl fields: %v", f) // Debug
+            
+            if len(f) < 4 { continue }
+            
+            name := f[0]
+            load := f[1] 
+            active := f[2]
+            sub := f[3]
+            description := ""
+            if len(f) > 4 {
+                description = strings.Join(f[4:], " ")
+            }
+            
+            // Only add if it looks like a real service
+            if strings.HasSuffix(name, ".service") || strings.Contains(name, "service") {
+                res = append(res, map[string]any{
+                    "name": name,
+                    "load": load,
+                    "active": active,
+                    "sub": sub,
+                    "description": description,
+                })
+            }
+            
+        } else if strings.Contains(cmd, "/etc/init.d") && strings.Contains(cmd, "status") {
+            // /etc/init.d/* status output
+            if strings.Contains(ln, "running") || strings.Contains(ln, "active") {
+                parts := strings.Fields(ln)
+                if len(parts) >= 1 {
+                    serviceName := parts[0]
+                    if strings.Contains(serviceName, "/") {
+                        pathParts := strings.Split(serviceName, "/")
+                        serviceName = pathParts[len(pathParts)-1]
+                    }
+                    res = append(res, map[string]any{
+                        "name": serviceName,
+                        "load": "loaded",
+                        "active": "active", 
+                        "sub": "running",
+                        "description": "SysV init service",
+                    })
+                }
+            }
+            
+        } else if strings.Contains(cmd, "ls /etc/init.d") {
+            // List of init scripts
+            if ln != "" && !strings.Contains(ln, "README") && !strings.Contains(ln, "skeleton") {
+                res = append(res, map[string]any{
+                    "name": ln,
+                    "load": "available",
+                    "active": "unknown",
+                    "sub": "init-script", 
+                    "description": "Available init script",
+                })
+            }
+            
+        } else if strings.Contains(cmd, "ps -eo") {
+            // ps -eo pid,user,comm output
+            f := strings.Fields(ln)
+            if len(f) >= 3 && !strings.Contains(ln, "PID") {
+                pid := f[0]
+                user := f[1] 
+                command := f[2]
+                
+                res = append(res, map[string]any{
+                    "name": command,
+                    "load": "loaded",
+                    "active": "active",
+                    "sub": "running",
+                    "description": fmt.Sprintf("Process PID %s, User %s", pid, user),
+                })
+            }
+            
+        } else if strings.Contains(cmd, "ps aux") {
+            // Process output - extract process names
+            f := strings.Fields(ln)
+            if len(f) < 11 { continue }
+            
+            // Skip header
+            if strings.Contains(ln, "PID") { continue }
+            
+            user := f[0]
+            pid := f[1]
+            processName := f[10] // Command column
+            command := strings.Join(f[10:], " ")
+            
+            // Extract service name from path
+            serviceName := processName
+            if strings.Contains(serviceName, "/") {
+                parts := strings.Split(serviceName, "/")
+                serviceName = parts[len(parts)-1]
+            }
+            
+            // Skip some common non-service processes
+            if strings.Contains(serviceName, "grep") || strings.Contains(serviceName, "awk") || 
+               strings.Contains(serviceName, "head") || serviceName == "ps" {
+                continue
+            }
+            
+            res = append(res, map[string]any{
+                "name": serviceName,
+                "load": "loaded", 
+                "active": "active",
+                "sub": "running",
+                "description": fmt.Sprintf("Process %s (PID %s, User %s)", command, pid, user),
+            })
+        }
+    }
+    log.Printf("parseServices result: %v", res) // Debug
+    return res
+}
+
+func parseProcessAsServices(out string) []map[string]any {
+    lines := strings.Split(out, "\n")
+    res := make([]map[string]any, 0, len(lines))
+    log.Printf("parseProcessAsServices input: %s", out) // Debug
+    
+    for _, ln := range lines {
+        if strings.TrimSpace(ln) == "" { continue }
+        f := strings.Fields(ln)
+        if len(f) < 11 { continue }
+        
+        // Skip header
+        if strings.Contains(ln, "PID") { continue }
+        
+        user := f[0]
+        pid := f[1]
+        command := strings.Join(f[10:], " ")
+        
+        // Extract service name from command
+        serviceName := f[10]
+        if strings.Contains(serviceName, "/") {
+            parts := strings.Split(serviceName, "/")
+            serviceName = parts[len(parts)-1]
+        }
+        
+        res = append(res, map[string]any{
+            "name": serviceName,
+            "load": "loaded",
+            "active": "active", 
+            "sub": "running",
+            "description": fmt.Sprintf("Process %s (PID %s, User %s)", command, pid, user),
+        })
+    }
+    
+    log.Printf("parseProcessAsServices result: %v", res) // Debug
+    return res
+}
+
+// Disk usage by directories
+func diskUsageHandler(w http.ResponseWriter, r *http.Request) {
+    // Try common directories, ignore errors for individual dirs
+    dirs := []string{"/var", "/tmp", "/home", "/opt", "/usr", "/etc", "/root"}
+    var results []string
+    
+    for _, dir := range dirs {
+        if out, err := runSSH(fmt.Sprintf("du -sh %s 2>/dev/null", dir), 2*time.Second); err == nil && strings.TrimSpace(out) != "" {
+            results = append(results, strings.TrimSpace(out))
+        }
+    }
+    
+    if len(results) == 0 {
+        // Fallback: just get root filesystem usage
+        if out, err := runSSH("du -sh /* 2>/dev/null | head -10", 4*time.Second); err == nil {
+            results = strings.Split(strings.TrimSpace(out), "\n")
+        }
+    }
+    
+    usage := parseDiskUsage(strings.Join(results, "\n"))
+    w.Header().Set("Content-Type", "application/json")
+    _ = json.NewEncoder(w).Encode(map[string]any{"directories": usage})
+}
+
+func parseDiskUsage(out string) []map[string]any {
+    lines := strings.Split(out, "\n")
+    res := make([]map[string]any, 0, len(lines))
+    for _, ln := range lines {
+        if strings.TrimSpace(ln) == "" { continue }
+        f := strings.Fields(ln)
+        if len(f) < 2 { continue }
+        
+        size := f[0]
+        path := f[1]
+        
+        res = append(res, map[string]any{
+            "size": size,
+            "path": path,
+        })
+    }
+    return res
+}
+
+// Active users
+func usersHandler(w http.ResponseWriter, r *http.Request) {
+    // Try multiple commands to get user info
+    commands := []string{
+        "who",
+        "w -h", 
+        "users",
+        "cat /etc/passwd | grep -E '/bin/(bash|sh|zsh|fish)$' | cut -d: -f1,5 | head -10", // Real users with shells
+        "getent passwd | grep -E '/bin/(bash|sh|zsh|fish)$' | cut -d: -f1,5 | head -10", // Alternative passwd lookup
+        "loginctl list-sessions 2>/dev/null | grep -v SESSION", // Systemd login sessions
+        "ps aux | awk '$1 != \"root\" && $6 ~ /pts|tty/ {print $1, $6}' | sort -u | head -5", // Non-root terminal users
+        "netstat -tnp 2>/dev/null | grep :22 | awk '{print $5}' | cut -d: -f1 | sort -u | head -5", // SSH connections
+    }
+    
+    var out string
+    var err error
+    var usedCmd string
+    
+    for _, cmd := range commands {
+        out, err = runSSH(cmd, 2*time.Second)
+        if err == nil && strings.TrimSpace(out) != "" {
+            usedCmd = cmd
+            break
+        }
+        log.Printf("usersHandler cmd '%s' failed or empty: %v", cmd, err)
+    }
+    
+    if err != nil || strings.TrimSpace(out) == "" { 
+        log.Printf("usersHandler all commands failed")
+        w.Header().Set("Content-Type", "application/json")
+        _ = json.NewEncoder(w).Encode(map[string]any{"users": []map[string]any{}})
+        return 
+    }
+    log.Printf("usersHandler used cmd: %s", usedCmd)
+    log.Printf("usersHandler output: %s", out) // Debug
+    
+    users := parseUsers(out, usedCmd)
+    
+    // Log if no users found but don't create mock data
+    if len(users) == 0 {
+        log.Printf("usersHandler no users parsed from output")
+    }
+    
+    w.Header().Set("Content-Type", "application/json")
+    _ = json.NewEncoder(w).Encode(map[string]any{"users": users})
+}
+
+func parseUsers(out string, cmd string) []map[string]any {
+    lines := strings.Split(out, "\n")
+    res := make([]map[string]any, 0, len(lines))
+    log.Printf("parseUsers input: %s", out) // Debug
+    log.Printf("parseUsers cmd: %s", cmd) // Debug
+    
+    for _, ln := range lines {
+        if strings.TrimSpace(ln) == "" { continue }
+        f := strings.Fields(ln)
+        log.Printf("parseUsers fields: %v", f) // Debug
+        
+        if strings.Contains(cmd, "who") || strings.Contains(cmd, "w -h") {
+            if len(f) < 2 { continue }
+            
+            user := f[0]
+            tty := ""
+            time := ""
+            ip := ""
+            
+            if len(f) >= 2 { tty = f[1] }
+            if len(f) >= 4 {
+                time = f[2] + " " + f[3]
+            }
+            if len(f) >= 5 && strings.Contains(f[4], "(") {
+                ip = strings.Trim(f[4], "()")
+            }
+            
+            res = append(res, map[string]any{
+                "user": user,
+                "tty": tty,
+                "time": time,
+                "ip": ip,
+            })
+            
+        } else if strings.Contains(cmd, "users") {
+            // 'users' command just lists usernames
+            for _, user := range f {
+                if user != "" {
+                    res = append(res, map[string]any{
+                        "user": user,
+                        "tty": "unknown",
+                        "time": "active",
+                        "ip": "",
+                    })
+                }
+            }
+            
+        } else if strings.Contains(cmd, "last") {
+            // last command output: username tty from time
+            if len(f) < 3 { continue }
+            if strings.Contains(ln, "reboot") || strings.Contains(ln, "wtmp") { continue }
+            
+            user := f[0]
+            tty := f[1]
+            from := ""
+            time := ""
+            
+            if len(f) >= 3 { from = f[2] }
+            if len(f) >= 5 { time = f[3] + " " + f[4] }
+            
+            res = append(res, map[string]any{
+                "user": user,
+                "tty": tty,
+                "time": time,
+                "ip": from,
+            })
+            
+        } else if strings.Contains(cmd, "cat /etc/passwd") || strings.Contains(cmd, "getent passwd") {
+            // passwd output: username:gecos
+            parts := strings.Split(ln, ":")
+            if len(parts) >= 2 {
+                username := parts[0]
+                description := ""
+                if len(parts) > 1 {
+                    description = parts[1]
+                }
+                res = append(res, map[string]any{
+                    "user": username,
+                    "tty": "system",
+                    "time": "account",
+                    "ip": description,
+                })
+            }
+            
+        } else if strings.Contains(cmd, "loginctl") {
+            // loginctl output: SESSION UID USER SEAT TTY
+            if len(f) >= 4 {
+                session := f[0]
+                user := f[2]
+                tty := ""
+                if len(f) >= 5 {
+                    tty = f[4]
+                }
+                res = append(res, map[string]any{
+                    "user": user,
+                    "tty": tty,
+                    "time": "session",
+                    "ip": session,
+                })
+            }
+            
+        } else if strings.Contains(cmd, "ps aux | awk") {
+            // awk output: user tty
+            if len(f) >= 2 {
+                user := f[0]
+                tty := f[1]
+                res = append(res, map[string]any{
+                    "user": user,
+                    "tty": tty,
+                    "time": "active",
+                    "ip": "terminal",
+                })
+            }
+            
+        } else if strings.Contains(cmd, "netstat") {
+            // netstat output: IP addresses of SSH connections
+            if ln != "" && !strings.Contains(ln, "127.0.0.1") {
+                res = append(res, map[string]any{
+                    "user": "ssh-client",
+                    "tty": "remote",
+                    "time": "connected",
+                    "ip": ln,
+                })
+            }
+            
+        } else if strings.Contains(cmd, "ps aux") {
+            // Process output with terminal info
+            if len(f) < 11 { continue }
+            if strings.Contains(ln, "PID") { continue }
+            
+            user := f[0]
+            tty := f[6] // TTY column
+            command := strings.Join(f[10:], " ")
+            
+            // Only include if it's a terminal process
+            if strings.Contains(tty, "pts") || strings.Contains(tty, "tty") {
+                res = append(res, map[string]any{
+                    "user": user,
+                    "tty": tty,
+                    "time": "active",
+                    "ip": command,
+                })
+            }
+        }
+    }
+    log.Printf("parseUsers result: %v", res) // Debug
+    return res
+}
+
+// System information
+func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
+    // Get uptime
+    uptime, _ := runSSH("uptime", 2*time.Second)
+    
+    // Get kernel info
+    kernel, _ := runSSH("uname -r", 2*time.Second)
+    arch, _ := runSSH("uname -m", 2*time.Second)
+    
+    // Try to get distro info with fallbacks
+    distro, err := runSSH("cat /etc/os-release | grep PRETTY_NAME | cut -d'=' -f2 | tr -d '\"'", 2*time.Second)
+    if err != nil || strings.TrimSpace(distro) == "" {
+        // Fallback methods
+        if lsb, err := runSSH("lsb_release -d | cut -f2", 2*time.Second); err == nil && strings.TrimSpace(lsb) != "" {
+            distro = lsb
+        } else if redhat, err := runSSH("cat /etc/redhat-release 2>/dev/null", 2*time.Second); err == nil && strings.TrimSpace(redhat) != "" {
+            distro = redhat
+        } else if debian, err := runSSH("cat /etc/debian_version 2>/dev/null", 2*time.Second); err == nil && strings.TrimSpace(debian) != "" {
+            distro = "Debian " + strings.TrimSpace(debian)
+        } else {
+            distro = "Unknown Linux"
+        }
+    }
+    
+    info := map[string]any{
+        "uptime": strings.TrimSpace(uptime),
+        "distro": strings.TrimSpace(distro),
+        "kernel": strings.TrimSpace(kernel),
+        "arch": strings.TrimSpace(arch),
+    }
+    
+    w.Header().Set("Content-Type", "application/json")
+    _ = json.NewEncoder(w).Encode(info)
 }
 
 
