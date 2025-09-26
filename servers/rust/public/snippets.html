@@ -306,14 +306,30 @@
         background: var(--bg-elev);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: 24px;
+        padding: 20px;
         width: 90%;
-        max-width: 600px;
-        max-height: 80vh;
-        overflow-y: auto;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
 
       .form-group {
+        margin-bottom: 12px;
+      }
+
+      #snippetForm {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .form-group:last-of-type {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
         margin-bottom: 16px;
       }
 
@@ -352,7 +368,8 @@
         border: 1px solid #333;
         border-radius: 6px;
         overflow: hidden;
-        min-height: 200px;
+        height: 200px;
+        position: relative;
       }
 
       .code-editor-numbers {
@@ -368,11 +385,15 @@
         text-align: right;
         flex-shrink: 0;
         white-space: pre;
+        overflow: auto;
+        height: 100%;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
 
       .code-editor-textarea {
         flex: 1;
-        background: #1a1a1a !important;
+        background: transparent !important;
         border: none !important;
         padding: 8px 12px 8px 8px;
         font-family: var(--font-mono);
@@ -381,7 +402,19 @@
         color: var(--text);
         resize: none;
         outline: none;
-        min-height: 184px;
+        height: 100%;
+        overflow: auto;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .code-editor-textarea::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+
+      .code-editor-numbers::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
 
       .hidden {
@@ -1545,6 +1578,7 @@
 
           if (!textarea || !lineNumbers) return;
 
+          // Простая синхронизация скролла
           lineNumbers.scrollTop = textarea.scrollTop;
         }
 
