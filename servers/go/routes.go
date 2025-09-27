@@ -23,8 +23,8 @@ func registerRoutes(mux *http.ServeMux) {
     mux.Handle("/health", withLogging("health", withCORS(http.HandlerFunc(healthHandler))))
 
     // network endpoints
-    mux.Handle("/go/network/devices", withLogging("network_devices_local", withCORS(http.HandlerFunc(networkDevicesLocalHandler))))
-    mux.Handle("/go/network/packets", withLogging("network_packets_local", withCORS(http.HandlerFunc(networkPacketsLocalHandler))))
+    mux.Handle("/go/network/devices", withLogging("network_devices", withCORS(http.HandlerFunc(networkDevicesHandler))))
+    mux.Handle("/go/network/packets", withLogging("network_packets", withCORS(http.HandlerFunc(networkPacketsHandler))))
 }
 
 
