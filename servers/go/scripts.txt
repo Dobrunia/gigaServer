@@ -1,0 +1,1363 @@
+// payload — []byte из TCP reassembled stream (конкатенация сегментов)
+func tryParseHTTP(payload []byte) (ok bool, summary string) {
+    // простая эвристика: начало запроса начинается с метода
+    methods := []string{"GET ", "POST ", "PUT ", "DELETE ", "HEAD ", "OPTIONS "}
+    for _, m := range methods {
+        if len(payload) >= len(m) && string(payload[:len(m)]) == m {
+            // ищем конец заголовков
+            idx := bytes.Index(payload, []byte("\r\n\r\n"))
+            if idx == -1 {
+                return true, "HTTP headers incomplete"
+            }
+            headers := payload[:idx+4]
+            // короткий вывод: первая строка + Host + Content-Length (если есть)
+            lines := strings.Split(string(headers), "\r\n")
+            first := lines[0]
+            host := ""
+            clen := ""
+            for _, l := range lines[1:] {
+                if strings.HasPrefix(strings.ToLower(l), "host:") {
+                    host = strings.TrimSpace(strings.SplitN(l, ":", 2)[1])
+                }
+                if strings.HasPrefix(strings.ToLower(l), "content-length:") {
+                    clen = strings.TrimSpace(strings.SplitN(l, ":", 2)[1])
+                }
+            }
+            return true, fmt.Sprintf("%s host=%s content-length=%s", first, host, clen)
+        }
+    }
+    return false, ""
+}
+(Важно: этот фрагмент работает только на уже собранном TCP-потоке; для корректного парсинга используй gopacket/tcpassembly и полноценный HTTP-парсер при необходимости.)
+Что такое «сборка TCP-потока» (in simple words)
+
+TCP делит данные на сегменты, которые:
+
+могут приходить фрагментированно (один HTTP-запрос разбит на несколько TCP-пакетов),
+
+могут приходить вне порядка,
+
+могут быть повторены при ретрансляции,
+
+одно TCP-соединение может содержать несколько HTTP-запросов (keep-alive).
+
+«Сборка потока» — это процесс, когда мы из отдельных TCP-пакетов восстанавливаем упорядоченную непрерывную последовательность байт, как будто это был один поток данных. Без этого парсить HTTP нельзя корректно.
+
+Как это делается в Go — идея
+
+Используем gopacket/tcpassembly. Алгоритм:
+
+Открываешь pcap и BPF-фильтруешь tcp port 80 (или весь IP).
+
+Создаёшь tcpassembly.Assembler и tcpassembly.StreamPool.
+
+Реализуешь tcpassembly.StreamFactory, который создаёт объект stream для каждого направления соединения (client→server и server→client).
+
+В stream.Reassembled([]gopacket.Reassembly) собираешь байты в буфер в правильном порядке.
+
+Пытаешься из буфера читать HTTP-запросы (через bufio.Reader + http.ReadRequest) в цикле — http.ReadRequest сам обработает Content-Length/chunked и вернёт io.EOF, если данных мало.
+
+На ReassemblyComplete() или по таймауту закрываешь поток.
+
+Ниже — компактный рабочий пример-скелет, который можно вставить в твой проект.
+import (
+    "bufio"
+    "bytes"
+    "fmt"
+    "log"
+    "net/http"
+    "time"
+
+    "github.com/google/gopacket"
+    "github.com/google/gopacket/layers"
+    "github.com/google/gopacket/pcap"
+    "github.com/google/gopacket/reassembly"
+    "github.com/google/gopacket/tcpassembly"
+    "github.com/google/gopacket/tcpassembly/tcpreader"
+)
+
+// StreamFactory создаёт stream для каждого TCP направления
+type StreamFactory struct{}
+func (f *StreamFactory) New(netFlow, tcpFlow gopacket.Flow) tcpassembly.Stream {
+    s := &HTTPStream{
+        net: netFlow, tcp: tcpFlow,
+        buf: &bytes.Buffer{},
+    }
+    return s
+}
+
+// HTTPStream реализует tcpassembly.Stream
+type HTTPStream struct {
+    net, tcp    gopacket.Flow
+    buf         *bytes.Buffer
+    reader      *bufio.Reader
+    assembler   tcpassembly.Stream
+}
+
+func (s *HTTPStream) Reassembled(reassemblies []reassembly.Reassembly) {
+    for _, r := range reassemblies {
+        if len(r.Bytes) > 0 {
+            s.buf.Write(r.Bytes) // append in-order bytes (tcpassembly гарантирует порядок)
+        }
+    }
+    // Попытка распарсить все полные HTTP-запросы, которые есть в буфере
+    s.tryParseHTTP()
+}
+
+func (s *HTTPStream) ReassemblyComplete() {
+    // финальная обработка
+    s.tryParseHTTP()
+}
+
+func (s *HTTPStream) tryParseHTTP() {
+    // Используем bufio.Reader поверх текущего буфера.
+    // Копируем буфер в читатель, но оставляем неполные данные в буфере.
+    for {
+        if s.buf.Len() == 0 { return }
+        br := bufio.NewReader(bytes.NewReader(s.buf.Bytes()))
+        req, err := http.ReadRequest(br)
+        if err != nil {
+            // err может быть io.EOF или «header incomplete» — значит нужно ждать ещё данных
+            return
+        }
+        // Успешно прочитали запрос — обработаем/залогируем
+        fmt.Printf("HTTP %s %s Host:%s from %s->%s\n",
+            req.Method, req.RequestURI, req.Host, s.net.Src(), s.net.Dst())
+
+        // Нужно узнать, сколько байт было прочитано из br, чтобы удалить их из s.buf
+        // К сожалению http.ReadRequest не даёт длину. Хитрость: читать тело (если есть) и подсчитать.
+        // Читаем тело полностью (если есть) чтобы сдвинуть курсор.
+        if req.ContentLength > 0 {
+            // читаем Content-Length байт
+            _, _ = io.CopyN(io.Discard, req.Body, req.ContentLength)
+        } else if chunked(req.TransferEncoding) {
+            // для chunked — читает до конца (реализовать при необходимости)
+        }
+        req.Body.Close()
+
+        // Теперь узнаём сколько байт реально потреблено: используем br.Buffered() нельзя.
+        // Простое (но рабочее) решение: переконструируем raw запроса заново и удалим его размер:
+        // (в проде лучше парсить вручную или использовать tcpreader.ReaderStream)
+        // Для краткости: очищаем весь буфер (в демо) — но в реальном коде надо удалить только прочитанные байты.
+        s.buf.Reset()
+    }
+}
+
+готовый минимальный Go-пример (один файл), который делает:
+
+автоматически обнаруживает устройства по ARP/DHCP/IP;
+
+снимает пакеты через pcap;
+
+собирает TCP-потоки (reassembly) и парсит HTTP (чтобы было читаемо);
+
+шлёт события/метаданные в дашборд (HTTP POST в JSON).
+
+Запусти на Mac после включённого Internet Sharing, аргументом укажи интерфейс (например bridge100 или en0). Укажи DASH_URL в окружении (например http://localhost:8080/events) — это endpoint дашборда, который принимает JSON.
+
+Код (с минимальными зависимостями: github.com/google/gopacket):
+
+// go.mod: module netcap
+// require github.com/google/gopacket v1.1.19
+
+package main
+
+import (
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
+	"github.com/google/gopacket/tcpassembly"
+	"github.com/google/gopacket/tcpassembly/tcpreader"
+)
+
+var (
+	seenMu sync.Mutex
+	seen   = map[string]time.Time{} // ip -> last seen
+)
+
+type Event struct {
+	Type      string            `json:"type"`
+	Timestamp time.Time         `json:"ts"`
+	Details   map[string]string `json:"details"`
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: ./cap <iface>")
+		return
+	}
+	iface := os.Args[1]
+	dashURL := os.Getenv("DASH_URL")
+	if dashURL == "" {
+		dashURL = "http://localhost:8080/events"
+	}
+	handle, err := pcap.OpenLive(iface, 65536, true, pcap.BlockForever)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer handle.Close()
+
+	// Ловим ARP/DHCP/IP/TCP (можно сузить)
+	if err := handle.SetBPFFilter("ip or arp or udp port 67 or udp port 68"); err != nil {
+		log.Println("BPF error:", err)
+	}
+
+	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+
+	// tcpassembly: собираем TCP потоки (нужен для HTTP)
+	streamFactory := &HTTPStreamFactory{dashURL: dashURL}
+	streamPool := tcpassembly.NewStreamPool(streamFactory)
+	assembler := tcpassembly.NewAssembler(streamPool)
+
+	// graceful shutdown
+	sign := make(chan os.Signal, 1)
+	signal.Notify(sign, os.Interrupt, syscall.SIGTERM)
+
+	// ticker для сборки (очистка старых потоков)
+	ticker := time.Tick(time.Second * 30)
+
+	log.Println("Started on", iface)
+run:
+	for {
+		select {
+		case <-sign:
+			log.Println("Stopping")
+			break run
+		case pkt := <-packetSource.Packets():
+			if pkt == nil {
+				continue
+			}
+			go processPacket(pkt, assembler, dashURL)
+		case <-ticker:
+			// flush old connections
+			assembler.FlushCloseOlderThan(time.Now().Add(-2 * time.Minute))
+		}
+	}
+}
+
+// --- 1) обнаружение устройств и отправка событий в дашборд ---
+func markSeen(ip string, dashURL string) {
+	if ip == "" || ip == "0.0.0.0" {
+		return
+	}
+	seenMu.Lock()
+	defer seenMu.Unlock()
+	if _, ok := seen[ip]; !ok {
+		seen[ip] = time.Now()
+		ev := Event{
+			Type:      "new_device",
+			Timestamp: time.Now(),
+			Details:   map[string]string{"ip": ip},
+		}
+		go sendEvent(dashURL, ev)
+	} else {
+		seen[ip] = time.Now()
+	}
+}
+
+// --- 2) обработка пакета: ARP/DHCP/UDP/TCP ---
+func processPacket(pkt gopacket.Packet, assembler *tcpassembly.Assembler, dashURL string) {
+	// ARP
+	if arpLayer := pkt.Layer(layers.LayerTypeARP); arpLayer != nil {
+		arp := arpLayer.(*layers.ARP)
+		ip := gopacket.LayerDump(arp) // not pretty, but we also extract IP
+		_ = ip
+		srcIP := netIP(arp.SourceProtAddress)
+		markSeen(srcIP, dashURL)
+		// отправим краткий эвент
+		ev := Event{Type: "arp", Timestamp: time.Now(), Details: map[string]string{"ip": srcIP, "mac": netHW(arp.SourceHwAddress)}}
+		go sendEvent(dashURL, ev)
+		return
+	}
+
+	// DHCP
+	if dhcpLayer := pkt.Layer(layers.LayerTypeDHCPv4); dhcpLayer != nil {
+		dhcp := dhcpLayer.(*layers.DHCPv4)
+		ip := dhcp.ClientIP.String()
+		markSeen(ip, dashURL)
+		ev := Event{Type: "dhcp", Timestamp: time.Now(), Details: map[string]string{"ip": ip, "hw": dhcp.ClientHWAddr.String()}}
+		go sendEvent(dashURL, ev)
+		return
+	}
+
+	// IP layer
+	network := pkt.NetworkLayer()
+	if network == nil {
+		return
+	}
+	src := network.NetworkFlow().Src().String()
+	dst := network.NetworkFlow().Dst().String()
+	markSeen(src, dashURL)
+	markSeen(dst, dashURL)
+
+	// TCP processing: feed assembler
+	if tcp := pkt.Layer(layers.LayerTypeTCP); tcp != nil {
+		tcpLayer := tcp.(*layers.TCP)
+		// create flow key
+		ci := gopacket.CaptureInfo{Timestamp: pkt.Metadata().Timestamp}
+		assembler.AssembleWithTimestamp(network.NetworkFlow(), tcpLayer, ci.Timestamp)
+		// send basic flow metadata event (could be aggregated)
+		ev := Event{Type: "tcp_meta", Timestamp: time.Now(), Details: map[string]string{
+			"src": fmt.Sprintf("%s:%d", src, tcpLayer.SrcPort),
+			"dst": fmt.Sprintf("%s:%d", dst, tcpLayer.DstPort),
+			"flags": tcpLayer.Flags.String(),
+		}}
+		go sendEvent(dashURL, ev)
+		return
+	}
+
+	// UDP metadata (e.g., DNS)
+	if udp := pkt.Layer(layers.LayerTypeUDP); udp != nil {
+		udpLayer := udp.(*layers.UDP)
+		ev := Event{Type: "udp_meta", Timestamp: time.Now(), Details: map[string]string{
+			"src": fmt.Sprintf("%s:%d", src, udpLayer.SrcPort),
+			"dst": fmt.Sprintf("%s:%d", dst, udpLayer.DstPort),
+			"len": fmt.Sprintf("%d", len(udpLayer.Payload)),
+		}}
+		go sendEvent(dashURL, ev)
+	}
+}
+
+func sendEvent(url string, e Event) {
+	b, _ := json.Marshal(e)
+	req, _ := http.NewRequest("POST", url, bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		// логируем, но не ломаем
+		log.Printf("sendEvent err: %v", err)
+		return
+	}
+	resp.Body.Close()
+}
+
+// --- helpers to print hw/ip ---
+func netIP(b []byte) string {
+	if len(b) == 4 {
+		return fmt.Sprintf("%d.%d.%d.%d", b[0], b[1], b[2], b[3])
+	}
+	return ""
+}
+func netHW(b []byte) string {
+	parts := make([]string, 0, len(b))
+	for _, x := range b {
+		parts = append(parts, fmt.Sprintf("%02x", x))
+	}
+	return strings.Join(parts, ":")
+}
+
+// ------------------ TCP stream / HTTP parsing via tcpreader --------------------
+
+type HTTPStreamFactory struct {
+	dashURL string
+}
+
+func (f *HTTPStreamFactory) New(netFlow, tcpFlow gopacket.Flow) tcpassembly.Stream {
+	r := tcpreader.NewReaderStream()
+	s := &httpStream{
+		net:    netFlow.String(),
+		tcp:    tcpFlow.String(),
+		reader: &r,
+		dash:   f.dashURL,
+	}
+	// парсинг потоков в отдельной горутине
+	go s.run()
+	return &r
+}
+
+type httpStream struct {
+	net    string
+	tcp    string
+	reader *tcpreader.ReaderStream
+	dash   string
+}
+
+func (s *httpStream) run() {
+	buf := bufio.NewReader(s.reader)
+	for {
+		// Попытка прочитать HTTP запрос (работает для HTTP/1.x)
+		req, err := http.ReadRequest(buf)
+		if err != nil {
+			if err == io.EOF {
+				return
+			}
+			// если данных недостаточно — ждём
+			if strings.Contains(err.Error(), "short") || strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "header") {
+				time.Sleep(50 * time.Millisecond)
+				continue
+			}
+			// другие ошибки — завершаем
+			return
+		}
+		// Соберём краткую инфу
+		host := req.Host
+		uri := req.RequestURI
+		method := req.Method
+		// тело: осторожно, не вытаскиваем слишком много
+		bodyPreview := ""
+		if req.ContentLength > 0 && req.ContentLength < 1024 {
+			b, _ := io.ReadAll(io.LimitReader(req.Body, 1024))
+			bodyPreview = string(b)
+		}
+		req.Body.Close()
+
+		ev := Event{
+			Type:      "http_request",
+			Timestamp: time.Now(),
+			Details: map[string]string{
+				"net":    s.net,
+				"tcp":    s.tcp,
+				"method": method,
+				"host":   host,
+				"uri":    uri,
+				"body":   bodyPreview, // по умолчанию показываем превью
+			},
+		}
+		sendEvent(s.dash, ev)
+	}
+}
+
+Короткие пояснения / рекомендации
+
+markSeen — фиксирует новые IP (шаг 1). Можно расширить за счёт анализа ARP / DHCP.
+
+Основной цикл читает пакеты и передаёт TCP-сегменты в tcpassembly.Assembler — он обеспечивает сборку TCP-потока (шаг 3).
+
+tcpreader.ReaderStream предоставляет io.Reader, из которого удобно читать HTTP последовательные запросы через http.ReadRequest. Это корректно работает с фрагментированными сегментами и keep-alive.
+
+sendEvent шлёт JSON в дашборд (шаг 4). Ты можешь заменить на websocket для реального-времени.
+
+Для HTTPS: в потоке после TLS handshake будут только зашифрованные записи — http.ReadRequest их не распарсит; но ты всё равно увидишь TCP мета (src/dst/port/size) и сможешь попытаться извлечь SNI парсингом ClientHello (дополнительно).
+Версия с WebSocket (реалтайм): один файл Go
+
+Функции:
+
+Автообнаружение устройств (ARP/DHCP/IP).
+
+Захват пакетов (pcap).
+
+Сборка TCP-потоков (tcpassembly).
+
+Парсинг HTTP/1.x запросов.
+
+Парсинг SNI из TLS ClientHello.
+
+Рилтайм трансляция событий в подключённые дашборды по WebSocket (/ws).
+
+Зависимости
+go.mod:
+module netcap
+go 1.21
+require (
+    github.com/google/gopacket v1.1.19
+    github.com/gorilla/websocket v1.5.1
+)
+
+Код (скопируй в main.go)
+package main
+
+import (
+	"bufio"
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
+	"github.com/google/gopacket/tcpassembly"
+	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/gorilla/websocket"
+)
+
+// ---------- Event model ----------
+
+type Event struct {
+	Type string            `json:"type"`
+	TS   int64             `json:"ts"` // unix ms
+	KV   map[string]string `json:"kv"`
+}
+
+func ev(t string, kv map[string]string) Event {
+	return Event{Type: t, TS: time.Now().UnixMilli(), KV: kv}
+}
+
+// ---------- WS hub (broadcast to dashboards) ----------
+
+type hub struct {
+	mu       sync.Mutex
+	clients  map[*websocket.Conn]struct{}
+	bcast    chan Event
+	upgrader websocket.Upgrader
+}
+
+func newHub() *hub {
+	return &hub{
+		clients: make(map[*websocket.Conn]struct{}),
+		bcast:   make(chan Event, 1024),
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool { return true },
+		},
+	}
+}
+
+func (h *hub) serveWS(w http.ResponseWriter, r *http.Request) {
+	conn, err := h.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	h.mu.Lock()
+	h.clients[conn] = struct{}{}
+	h.mu.Unlock()
+	log.Println("WS client connected")
+
+	// read loop (discard, keep alive)
+	conn.SetReadLimit(1 << 20)
+	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	conn.SetPongHandler(func(string) error {
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		return nil
+	})
+	go func() {
+		t := time.NewTicker(30 * time.Second)
+		defer t.Stop()
+		for range t.C {
+			_ = conn.WriteControl(websocket.PingMessage, []byte("ping"), time.Now().Add(5*time.Second))
+		}
+	}()
+
+	for {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			h.mu.Lock()
+			delete(h.clients, conn)
+			h.mu.Unlock()
+			_ = conn.Close()
+			log.Println("WS client disconnected")
+			return
+		}
+	}
+}
+
+func (h *hub) run() {
+	for e := range h.bcast {
+		b, _ := json.Marshal(e)
+		h.mu.Lock()
+		for c := range h.clients {
+			_ = c.WriteMessage(websocket.TextMessage, b)
+		}
+		h.mu.Unlock()
+	}
+}
+
+// ---------- Discovery state ----------
+
+var (
+	seenMu sync.Mutex
+	seenIP = map[string]time.Time{}
+)
+
+func markSeenIP(ip string, send func(Event)) {
+	if ip == "" || ip == "0.0.0.0" {
+		return
+	}
+	seenMu.Lock()
+	defer seenMu.Unlock()
+	if _, ok := seenIP[ip]; !ok {
+		seenIP[ip] = time.Now()
+		send(ev("new_device", map[string]string{"ip": ip}))
+	} else {
+		seenIP[ip] = time.Now()
+	}
+}
+
+// ---------- Capture & processing ----------
+
+func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: sudo ./netcap <iface>   (e.g., bridge100 or en0)")
+		return
+	}
+	iface := os.Args[1]
+
+	// start WS hub & HTTP server
+	h := newHub()
+	go h.run()
+	http.HandleFunc("/ws", h.serveWS)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("OK. WS at /ws"))
+	})
+	go func() {
+		log.Println("HTTP/WS listening on :9000")
+		log.Fatal(http.ListenAndServe(":9000", nil))
+	}()
+
+	// open pcap
+	handle, err := pcap.OpenLive(iface, 65536, true, pcap.BlockForever)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer handle.Close()
+
+	// Filter: ARP, DHCP, and all IP (TCP/UDP/ICMP). Narrow later if needed.
+	if err := handle.SetBPFFilter("ip or arp or udp port 67 or udp port 68"); err != nil {
+		log.Println("BPF error:", err)
+	}
+
+	src := gopacket.NewPacketSource(handle, handle.LinkType())
+
+	// TCP assembly
+	sf := &HTTPStreamFactory{send: func(e Event) { h.bcast <- e }}
+	pool := tcpassembly.NewStreamPool(sf)
+	asm := tcpassembly.NewAssembler(pool)
+
+	// shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	// periodic flush
+	tick := time.NewTicker(30 * time.Second)
+	defer tick.Stop()
+
+	log.Println("Capturing on", iface)
+run:
+	for {
+		select {
+		case <-stop:
+			log.Println("Stopping…")
+			break run
+		case p := <-src.Packets():
+			if p == nil {
+				continue
+			}
+			// ARP discovery
+			if al := p.Layer(layers.LayerTypeARP); al != nil {
+				arp := al.(*layers.ARP)
+				markSeenIP(byteIP(arp.SourceProtAddress), func(e Event) { h.bcast <- e })
+				h.bcast <- ev("arp", map[string]string{
+					"ip":  byteIP(arp.SourceProtAddress),
+					"mac": byteMAC(arp.SourceHwAddress),
+				})
+				continue
+			}
+			// DHCP discovery
+			if dl := p.Layer(layers.LayerTypeDHCPv4); dl != nil {
+				dhcp := dl.(*layers.DHCPv4)
+				ip := dhcp.ClientIP.String()
+				markSeenIP(ip, func(e Event) { h.bcast <- e })
+				h.bcast <- ev("dhcp", map[string]string{
+					"ip": ip, "hw": dhcp.ClientHWAddr.String(),
+				})
+				continue
+			}
+
+			nl := p.NetworkLayer()
+			if nl == nil {
+				continue
+			}
+			srcIP := nl.NetworkFlow().Src().String()
+			dstIP := nl.NetworkFlow().Dst().String()
+			markSeenIP(srcIP, func(e Event) { h.bcast <- e })
+			markSeenIP(dstIP, func(e Event) { h.bcast <- e })
+
+			// UDP meta (e.g., DNS)
+			if ul := p.Layer(layers.LayerTypeUDP); ul != nil {
+				udp := ul.(*layers.UDP)
+				h.bcast <- ev("udp", map[string]string{
+					"src": fmt.Sprintf("%s:%d", srcIP, udp.SrcPort),
+					"dst": fmt.Sprintf("%s:%d", dstIP, udp.DstPort),
+					"len": fmt.Sprintf("%d", len(udp.Payload)),
+				})
+			}
+
+			// TCP: assemble + quick TLS SNI probe on first payloads
+			if tl := p.Layer(layers.LayerTypeTCP); tl != nil {
+				tcp := tl.(*layers.TCP)
+
+				// Quick meta
+				h.bcast <- ev("tcp", map[string]string{
+					"src":  fmt.Sprintf("%s:%d", srcIP, tcp.SrcPort),
+					"dst":  fmt.Sprintf("%s:%d", dstIP, tcp.DstPort),
+					"flg":  tcp.Flags.String(),
+					"plen": fmt.Sprintf("%d", len(tcp.Payload)),
+				})
+
+				// SNI best-effort (only on payloads that look like TLS ClientHello)
+				if sni := parseSNI(tcp.Payload); sni != "" {
+					h.bcast <- ev("sni", map[string]string{
+						"src": fmt.Sprintf("%s:%d", srcIP, tcp.SrcPort),
+						"dst": fmt.Sprintf("%s:%d", dstIP, tcp.DstPort),
+						"host": sni,
+					})
+				}
+
+				// Feed to assembler (for HTTP reassembly)
+				asm.AssembleWithTimestamp(nl.NetworkFlow(), tcp, p.Metadata().Timestamp)
+			}
+		case <-tick.C:
+			asm.FlushCloseOlderThan(time.Now().Add(-2 * time.Minute))
+		}
+	}
+}
+
+// ---------- TCP stream -> HTTP parsing ----------
+
+type HTTPStreamFactory struct {
+	send func(Event)
+}
+
+func (f *HTTPStreamFactory) New(netFlow, tcpFlow gopacket.Flow) tcpassembly.Stream {
+	rs := tcpreader.NewReaderStream()
+	hs := &httpStream{
+		net:  netFlow.String(),
+		tcp:  tcpFlow.String(),
+		rs:   &rs,
+		send: f.send,
+	}
+	go hs.run()
+	return &rs
+}
+
+type httpStream struct {
+	net, tcp string
+	rs       *tcpreader.ReaderStream
+	send     func(Event)
+}
+
+func (s *httpStream) run() {
+	reader := bufio.NewReader(s.rs)
+
+	for {
+		req, err := http.ReadRequest(reader) // HTTP/1.x only; HTTPS не распарсится (шифр)
+		if err != nil {
+			if err == io.EOF {
+				return
+			}
+			// недост. данных — подождём
+			if strings.Contains(err.Error(), "short") || strings.Contains(err.Error(), "malformed") || strings.Contains(err.Error(), "unexpected EOF") {
+				time.Sleep(20 * time.Millisecond)
+				continue
+			}
+			// не HTTP — выходим по направлению
+			return
+		}
+
+		host := req.Host
+		method := req.Method
+		uri := req.RequestURI
+
+		// Body preview (безопасный лимит)
+		var preview string
+		if req.ContentLength > 0 {
+			n := req.ContentLength
+			if n > 1024 {
+				n = 1024
+			}
+			b, _ := io.ReadAll(io.LimitReader(req.Body, n))
+			preview = string(b)
+		}
+		_ = req.Body.Close()
+
+		// Маскируем потенциально чувствительные заголовки
+		cookie := ""
+		if v := req.Header.Get("Cookie"); v != "" {
+			cookie = "[masked]"
+		}
+
+		s.send(ev("http_request", map[string]string{
+			"net":    s.net,
+			"tcp":    s.tcp,
+			"method": method,
+			"host":   host,
+			"uri":    uri,
+			"cookie": cookie,
+			"body":   preview,
+		}))
+	}
+}
+
+// ---------- TLS ClientHello SNI (best-effort parser) ----------
+
+func parseSNI(payload []byte) string {
+	if len(payload) < 5 || payload[0] != 0x16 { // TLS record handshake
+		return ""
+	}
+	// Handshake starts at 5
+	hs := payload[5:]
+	if len(hs) < 4 || hs[0] != 0x01 { // ClientHello
+		return ""
+	}
+	// skip: type(1)+len(3)+version(2)+random(32)
+	cur := 1 + 3 + 2 + 32
+	if len(hs) < cur+1 {
+		return ""
+	}
+	// session id
+	sidLen := int(hs[cur])
+	cur += 1 + sidLen
+	if len(hs) < cur+2 {
+		return ""
+	}
+	// cipher suites
+	csLen := int(binary.BigEndian.Uint16(hs[cur : cur+2]))
+	cur += 2 + csLen
+	if len(hs) < cur+1 {
+		return ""
+	}
+	// compression methods
+	compLen := int(hs[cur])
+	cur += 1 + compLen
+	if len(hs) < cur+2 {
+		return ""
+	}
+	// extensions total
+	extTotal := int(binary.BigEndian.Uint16(hs[cur : cur+2]))
+	cur += 2
+	end := cur + extTotal
+	if end > len(hs) {
+		end = len(hs)
+	}
+	for cur+4 <= end {
+		extType := binary.BigEndian.Uint16(hs[cur : cur+2])
+		extLen := int(binary.BigEndian.Uint16(hs[cur+2 : cur+4]))
+		cur += 4
+		if extType == 0x0000 { // server_name
+			if cur+2 > len(hs) {
+				return ""
+			}
+			listLen := int(binary.BigEndian.Uint16(hs[cur : cur+2]))
+			cur += 2
+			if cur+listLen > len(hs) {
+				return ""
+			}
+			// one entry: name_type(1) + name_len(2) + name
+			if cur+3 > len(hs) {
+				return ""
+			}
+			nameLen := int(binary.BigEndian.Uint16(hs[cur+1 : cur+3]))
+			if cur+3+nameLen > len(hs) {
+				return ""
+			}
+			return string(hs[cur+3 : cur+3+nameLen])
+		}
+		cur += extLen
+	}
+	return ""
+}
+
+// ---------- small helpers ----------
+
+func byteIP(b []byte) string {
+	if len(b) != 4 {
+		return ""
+	}
+	return fmt.Sprintf("%d.%d.%d.%d", b[0], b[1], b[2], b[3])
+}
+func byteMAC(b []byte) string {
+	sb := make([]string, 0, len(b))
+	for _, x := range b {
+		sb = append(sb, fmt.Sprintf("%02x", x))
+	}
+	return strings.Join(sb, ":")
+}
+
+Как запустить
+# 1) Включи Internet Sharing на macOS (iPhone USB -> Wi-Fi), подключи планшет к этой Wi-Fi
+# 2) Узнай интерфейс (часто bridge100): ifconfig | grep -B2 bridge
+# 3) Сборка и запуск (нужны права на pcap)
+go mod init netcap
+go get github.com/google/gopacket@v1.1.19 github.com/gorilla/websocket@v1.5.1
+go build -o netcap .
+sudo ./netcap bridge100
+
+
+
+
+
+
+
+дальше нужное
+
+// main.go
+// go.mod: module netcap
+// require (
+//   github.com/google/gopacket v1.1.19
+//   github.com/gorilla/websocket v1.5.1
+//   golang.org/x/net v0.20.0  // для hpack
+// )
+
+package main
+
+import (
+	"bufio"
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
+	"github.com/google/gopacket/tcpassembly"
+	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/gorilla/websocket"
+	"golang.org/x/net/http2/hpack"
+)
+
+// ---------- Event model ----------
+type Event struct {
+	Type string            `json:"type"`
+	TS   int64             `json:"ts"` // unix ms
+	KV   map[string]string `json:"kv"`
+}
+func ev(t string, kv map[string]string) Event {
+	return Event{Type: t, TS: time.Now().UnixMilli(), KV: kv}
+}
+
+// ---------- WS hub ----------
+type hub struct {
+	mu       sync.Mutex
+	clients  map[*websocket.Conn]struct{}
+	bcast    chan Event
+	upgrader websocket.Upgrader
+}
+func newHub() *hub {
+	return &hub{
+		clients: make(map[*websocket.Conn]struct{}),
+		bcast:   make(chan Event, 4096),
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool { return true },
+		},
+	}
+}
+func (h *hub) serveWS(w http.ResponseWriter, r *http.Request) {
+	conn, err := h.upgrader.Upgrade(w, r, nil)
+	if err != nil { http.Error(w, err.Error(), 500); return }
+	h.mu.Lock(); h.clients[conn] = struct{}{}; h.mu.Unlock()
+	log.Println("WS client connected")
+	conn.SetReadLimit(1<<20)
+	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	conn.SetPongHandler(func(string) error { conn.SetReadDeadline(time.Now().Add(60 * time.Second)); return nil })
+	go func() {
+		t := time.NewTicker(30 * time.Second); defer t.Stop()
+		for range t.C { _ = conn.WriteControl(websocket.PingMessage, []byte("ping"), time.Now().Add(5*time.Second)) }
+	}()
+	for {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			h.mu.Lock(); delete(h.clients, conn); h.mu.Unlock(); _ = conn.Close(); log.Println("WS client disconnected"); return
+		}
+	}
+}
+func (h *hub) run() {
+	for e := range h.bcast {
+		b, _ := json.Marshal(e)
+		h.mu.Lock()
+		for c := range h.clients { _ = c.WriteMessage(websocket.TextMessage, b) }
+		h.mu.Unlock()
+	}
+}
+
+// ---------- discovery ----------
+var (
+	seenMu sync.Mutex
+	seenIP = map[string]time.Time{}
+)
+func markSeenIP(ip string, send func(Event)) {
+	if ip == "" || ip == "0.0.0.0" { return }
+	seenMu.Lock(); defer seenMu.Unlock()
+	if _, ok := seenIP[ip]; !ok {
+		seenIP[ip] = time.Now()
+		send(ev("new_device", map[string]string{"ip": ip}))
+	} else {
+		seenIP[ip] = time.Now()
+	}
+}
+
+// ---------- main capture & processing ----------
+func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: sudo ./netcap <iface>")
+		return
+	}
+	iface := os.Args[1]
+
+	h := newHub()
+	go h.run()
+	http.HandleFunc("/ws", h.serveWS)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("OK. WS at /ws")) })
+	go func() { log.Println("HTTP/WS listening on :9000"); log.Fatal(http.ListenAndServe(":9000", nil)) }()
+
+	handle, err := pcap.OpenLive(iface, 65536, true, pcap.BlockForever)
+	if err != nil { log.Fatal(err) }
+	defer handle.Close()
+
+	if err := handle.SetBPFFilter("ip or arp or udp port 67 or udp port 68"); err != nil {
+		log.Println("BPF error:", err)
+	}
+
+	src := gopacket.NewPacketSource(handle, handle.LinkType())
+	sf := &HTTPStreamFactory{send: func(e Event) { h.bcast <- e }}
+	pool := tcpassembly.NewStreamPool(sf)
+	asm := tcpassembly.NewAssembler(pool)
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	tick := time.NewTicker(30 * time.Second); defer tick.Stop()
+
+	log.Println("Capturing on", iface)
+run:
+	for {
+		select {
+		case <-stop:
+			log.Println("Stopping…"); break run
+		case p := <-src.Packets():
+			if p == nil { continue }
+			// ARP
+			if al := p.Layer(layers.LayerTypeARP); al != nil {
+				arp := al.(*layers.ARP)
+				markSeenIP(byteIP(arp.SourceProtAddress), func(e Event) { h.bcast <- e })
+				h.bcast <- ev("arp", map[string]string{
+					"ip":  byteIP(arp.SourceProtAddress),
+					"mac": byteMAC(arp.SourceHwAddress),
+				})
+				continue
+			}
+			// DHCP
+			if dl := p.Layer(layers.LayerTypeDHCPv4); dl != nil {
+				dhcp := dl.(*layers.DHCPv4)
+				ip := dhcp.ClientIP.String()
+				markSeenIP(ip, func(e Event) { h.bcast <- e })
+				h.bcast <- ev("dhcp", map[string]string{
+					"ip": ip, "hw": dhcp.ClientHWAddr.String(),
+				})
+				continue
+			}
+
+			nl := p.NetworkLayer()
+			if nl == nil { continue }
+			srcIP := nl.NetworkFlow().Src().String()
+			dstIP := nl.NetworkFlow().Dst().String()
+			markSeenIP(srcIP, func(e Event) { h.bcast <- e })
+			markSeenIP(dstIP, func(e Event) { h.bcast <- e })
+
+			// UDP meta (e.g., DNS)
+			if ul := p.Layer(layers.LayerTypeUDP); ul != nil {
+				udp := ul.(*layers.UDP)
+				h.bcast <- ev("udp", map[string]string{
+					"src": fmt.Sprintf("%s:%d", srcIP, udp.SrcPort),
+					"dst": fmt.Sprintf("%s:%d", dstIP, udp.DstPort),
+					"len": fmt.Sprintf("%d", len(udp.Payload)),
+				})
+			}
+
+			// TCP: assemble + SNI probe
+			if tl := p.Layer(layers.LayerTypeTCP); tl != nil {
+				tcp := tl.(*layers.TCP)
+				h.bcast <- ev("tcp", map[string]string{
+					"src":  fmt.Sprintf("%s:%d", srcIP, tcp.SrcPort),
+					"dst":  fmt.Sprintf("%s:%d", dstIP, tcp.DstPort),
+					"flg":  tcp.Flags.String(),
+					"plen": fmt.Sprintf("%d", len(tcp.Payload)),
+				})
+
+				// SNI best-effort
+				if sni := parseSNI(tcp.Payload); sni != "" {
+					h.bcast <- ev("sni", map[string]string{
+						"src":  fmt.Sprintf("%s:%d", srcIP, tcp.SrcPort),
+						"dst":  fmt.Sprintf("%s:%d", dstIP, tcp.DstPort),
+						"host": sni,
+					})
+				}
+
+				asm.AssembleWithTimestamp(nl.NetworkFlow(), tcp, p.Metadata().Timestamp)
+			}
+		case <-tick.C:
+			asm.FlushCloseOlderThan(time.Now().Add(-2 * time.Minute))
+		}
+	}
+}
+
+// ---------------- TCP stream -> HTTP/1.x parsing and h2c (HTTP/2 cleartext) ----------------
+
+type HTTPStreamFactory struct {
+	send func(Event)
+}
+
+func (f *HTTPStreamFactory) New(netFlow, tcpFlow gopacket.Flow) tcpassembly.Stream {
+	rs := tcpreader.NewReaderStream()
+	hs := &httpStream{
+		net:  netFlow.String(),
+		tcp:  tcpFlow.String(),
+		rs:   &rs,
+		send: f.send,
+	}
+	go hs.run()
+	return &rs
+}
+
+type httpStream struct {
+	net, tcp string
+	rs       *tcpreader.ReaderStream
+	send     func(Event)
+}
+
+func (s *httpStream) run() {
+	reader := bufio.NewReader(s.rs)
+
+	// We must support:
+	// - HTTP/1.x via http.ReadRequest
+	// - HTTP/2 cleartext (h2c) detected via connection preface
+	// Approach: peek first bytes; if preface detected -> handle h2c frame loop;
+	// otherwise loop http.ReadRequest.
+
+	peekBuf := make([]byte, 24)
+	// try to peek preface without blocking forever (Peek may block until enough bytes)
+	// but here Reader blocks - acceptable; if no preface and HTTP/1.x traffic arrives, we will proceed.
+	if n, err := reader.Peek(24); err == nil && len(n) >= 24 {
+		copy(peekBuf, n[:24])
+	}
+	// check preface
+	if string(peekBuf) == "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n" {
+		// consume preface
+		_, _ = io.ReadFull(reader, make([]byte, 24))
+		s.send(ev("h2_preface", map[string]string{"net": s.net, "tcp": s.tcp}))
+		// handle HTTP/2 frames (h2c)
+		s.handleH2C(reader)
+		return
+	}
+
+	// Fallback: HTTP/1.x parsing loop (existing logic)
+	for {
+		req, err := http.ReadRequest(reader)
+		if err != nil {
+			if err == io.EOF {
+				return
+			}
+			// not enough data — small sleep and continue
+			if strings.Contains(err.Error(), "short") || strings.Contains(err.Error(), "malformed") || strings.Contains(err.Error(), "unexpected EOF") {
+				time.Sleep(20 * time.Millisecond)
+				continue
+			}
+			// other errors — quit
+			return
+		}
+		host := req.Host
+		method := req.Method
+		uri := req.RequestURI
+		var preview string
+		if req.ContentLength > 0 {
+			n := req.ContentLength
+			if n > 1024 { n = 1024 }
+			b, _ := io.ReadAll(io.LimitReader(req.Body, n))
+			preview = string(b)
+		}
+		_ = req.Body.Close()
+		cookie := ""
+		if v := req.Header.Get("Cookie"); v != "" { cookie = "[masked]" }
+		s.send(ev("http_request", map[string]string{
+			"net": s.net, "tcp": s.tcp, "method": method, "host": host, "uri": uri, "cookie": cookie, "body": preview,
+		}))
+	}
+}
+
+// handleH2C parses HTTP/2 frames on a reader (best-effort), extracts header blocks (HEADERS + CONTINUATION),
+// decodes HPACK and emits an event containing :method, :path, :authority.
+func (s *httpStream) handleH2C(r *bufio.Reader) {
+	// HPACK decoder for this connection (client->server direction)
+	dec := hpack.NewDecoder(4096, nil)
+
+	// map streamID -> accumulated header block bytes
+	fragBufs := map[uint32]*bytes.Buffer{}
+
+	for {
+		// Read frame header (9 bytes)
+		hdr := make([]byte, 9)
+		if _, err := io.ReadFull(r, hdr); err != nil {
+			// EOF or not enough data for frame header -> stop
+			return
+		}
+		length := int(hdr[0])<<16 | int(hdr[1])<<8 | int(hdr[2])
+		ftype := hdr[3]
+		flags := hdr[4]
+		streamID := binary.BigEndian.Uint32(hdr[5:9]) & 0x7fffffff
+
+		// Read payload
+		payload := make([]byte, length)
+		if length > 0 {
+			if _, err := io.ReadFull(r, payload); err != nil {
+				return
+			}
+		}
+
+		// Handle HEADERS (0x1) and CONTINUATION (0x9)
+		switch ftype {
+		case 0x1: // HEADERS
+			// Remove optional padding and priority fields
+			start := 0
+			// PADDED flag = 0x8, PRIORITY flag = 0x20
+			if flags&0x20 != 0 {
+				// 5 bytes priority
+				if len(payload) < 5 { continue }
+				start += 5
+			}
+			if flags&0x8 != 0 {
+				// last byte is pad length
+				if len(payload) < 1 { continue }
+				padLen := int(payload[len(payload)-1])
+				if len(payload)-1-padLen < start { continue }
+				payload = payload[start : len(payload)-1-padLen]
+			} else {
+				payload = payload[start:]
+			}
+			buf := fragBufs[streamID]
+			if buf == nil { buf = &bytes.Buffer{}; fragBufs[streamID] = buf }
+			buf.Write(payload)
+
+			// If END_HEADERS flag set, decode header block
+			if flags&0x4 != 0 {
+				block := buf.Bytes()
+				hfs, err := dec.DecodeFull(block)
+				delete(fragBufs, streamID)
+				if err == nil {
+					// extract important pseudo-headers
+					method, path, authority := "", "", ""
+					for _, hf := range hfs {
+						n := strings.ToLower(hf.Name)
+						switch n {
+						case ":method": method = hf.Value
+						case ":path": path = hf.Value
+						case ":authority": authority = hf.Value
+						}
+					}
+					s.send(ev("h2_request", map[string]string{
+						"net": s.net, "tcp": s.tcp,
+						"method": method, "path": path, "authority": authority,
+					}))
+				} else {
+					// decoding error - still emit that headers existed
+					s.send(ev("h2_headers_decode_error", map[string]string{
+						"net": s.net, "tcp": s.tcp, "err": err.Error(),
+					}))
+				}
+			}
+		case 0x9: // CONTINUATION
+			// payload is header fragment; no padding/priority
+			buf := fragBufs[streamID]
+			if buf == nil { buf = &bytes.Buffer{}; fragBufs[streamID] = buf }
+			buf.Write(payload)
+			if flags&0x4 != 0 {
+				block := buf.Bytes()
+				hfs, err := dec.DecodeFull(block)
+				delete(fragBufs, streamID)
+				if err == nil {
+					method, path, authority := "", "", ""
+					for _, hf := range hfs {
+						n := strings.ToLower(hf.Name)
+						switch n {
+						case ":method": method = hf.Value
+						case ":path": path = hf.Value
+						case ":authority": authority = hf.Value
+						}
+					}
+					s.send(ev("h2_request", map[string]string{
+						"net": s.net, "tcp": s.tcp,
+						"method": method, "path": path, "authority": authority,
+					}))
+				} else {
+					s.send(ev("h2_headers_decode_error", map[string]string{
+						"net": s.net, "tcp": s.tcp, "err": err.Error(),
+					}))
+				}
+			}
+		default:
+			// ignore other frame types; could emit settings or goaway for debugging
+			// for debugging: emit minimal events for SETTINGS (0x4) and DATA (0x0)
+			if ftype == 0x4 {
+				s.send(ev("h2_settings", map[string]string{"net": s.net, "tcp": s.tcp}))
+			}
+			// continue loop
+		}
+	}
+}
+
+// ---------- TLS ClientHello SNI (best-effort parser) ----------
+func parseSNI(payload []byte) string {
+	if len(payload) < 5 || payload[0] != 0x16 { // TLS record handshake
+		return ""
+	}
+	hs := payload[5:]
+	if len(hs) < 4 || hs[0] != 0x01 { // ClientHello
+		return ""
+	}
+	cur := 1 + 3 + 2 + 32
+	if len(hs) < cur+1 { return "" }
+	sidLen := int(hs[cur]); cur += 1 + sidLen
+	if len(hs) < cur+2 { return "" }
+	csLen := int(binary.BigEndian.Uint16(hs[cur : cur+2])); cur += 2 + csLen
+	if len(hs) < cur+1 { return "" }
+	compLen := int(hs[cur]); cur += 1 + compLen
+	if len(hs) < cur+2 { return "" }
+	extTotal := int(binary.BigEndian.Uint16(hs[cur : cur+2])); cur += 2
+	end := cur + extTotal
+	if end > len(hs) { end = len(hs) }
+	for cur+4 <= end {
+		extType := binary.BigEndian.Uint16(hs[cur : cur+2])
+		extLen := int(binary.BigEndian.Uint16(hs[cur+2 : cur+4])); cur += 4
+		if extType == 0x0000 {
+			if cur+2 > len(hs) { return "" }
+			listLen := int(binary.BigEndian.Uint16(hs[cur : cur+2])); cur += 2
+			if cur+listLen > len(hs) { return "" }
+			if cur+3 > len(hs) { return "" }
+			nameLen := int(binary.BigEndian.Uint16(hs[cur+1 : cur+3]))
+			if cur+3+nameLen > len(hs) { return "" }
+			return string(hs[cur+3 : cur+3+nameLen])
+		}
+		cur += extLen
+	}
+	return ""
+}
+
+// ---------- helpers ----------
+func byteIP(b []byte) string {
+	if len(b) != 4 { return "" }
+	return fmt.Sprintf("%d.%d.%d.%d", b[0], b[1], b[2], b[3])
+}
+func byteMAC(b []byte) string {
+	sb := make([]string, 0, len(b))
+	for _, x := range b { sb = append(sb, fmt.Sprintf("%02x", x)) }
+	return strings.Join(sb, ":")
+}
