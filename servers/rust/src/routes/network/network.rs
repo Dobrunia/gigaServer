@@ -8,6 +8,8 @@ use serde_json::{json, Value};
 
 pub mod overview;
 pub mod devices;
+#[path = "traffic.rs"]
+pub mod traffic;
 
 pub fn create_routes() -> Router {
     Router::new()
@@ -20,6 +22,9 @@ pub fn create_routes() -> Router {
         .route("/network/devices/summary", get(devices::inventory::get_device_summary))
         .route("/network/devices/filtered", get(devices::inventory::get_filtered_devices))
         .route("/network/map", get(devices::inventory::get_topology))
+        .route("/network/traffic/instant", get(traffic::get_instant))
+        .route("/network/traffic/flows", get(traffic::get_flows))
+        .route("/network/traffic/summary", get(traffic::get_summary))
 }
 
 async fn get_network_overview() -> Result<Json<Value>, StatusCode> {

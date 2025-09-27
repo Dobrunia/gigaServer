@@ -367,6 +367,7 @@
       <button class="sidebar-tab active" data-tab="overview">📡 Network Overview</button>
       <button class="sidebar-tab" data-tab="devices">🔍 Device Discovery</button>
       <button class="sidebar-tab" data-tab="map">🗺️ Network Map</button>
+      <button class="sidebar-tab" data-tab="traffic">📈 Traffic & Flows</button>
     </div>
 
     <!-- Main Content -->
@@ -605,6 +606,48 @@
           style="position: absolute; right: 16px; top: 120px; width: 320px"
         >
           <div id="drawerContent" class="text-sm"></div>
+        </div>
+      </section>
+
+      <!-- Traffic & Flows Panel -->
+      <section id="panel-traffic" class="panel">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-[#e6e9ef]">Traffic & Flows</h2>
+          <div class="flex gap-2">
+            <button id="refreshTraffic" class="btn">🔎 Get Data</button>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 12px">
+          <div class="card">
+            <h3 class="text-[#9aa3b2] mb-2">Traffic Timeline (snapshot)</h3>
+            <canvas id="trafficTimeline" class="throughput-sparkline w-full"></canvas>
+            <div class="grid cols-3 gap-4 mt-3">
+              <div class="kpi">
+                <h3>Download</h3>
+                <div id="trafDown" class="val">-</div>
+              </div>
+              <div class="kpi">
+                <h3>Upload</h3>
+                <div id="trafUp" class="val">-</div>
+              </div>
+              <div class="kpi">
+                <h3>Flows</h3>
+                <div id="trafFlows" class="val">-</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="text-[#9aa3b2] mb-2">Top Protocols</h3>
+            <ul id="topProtocols" class="text-sm"></ul>
+            <h3 class="text-[#9aa3b2] mt-3 mb-2">Top Ports</h3>
+            <ul id="topPorts" class="text-sm"></ul>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <h3 class="text-[#9aa3b2] mb-2">Flow Table</h3>
+          <div id="flowTable" class="text-sm"></div>
         </div>
       </section>
     </div>
@@ -1058,6 +1101,101 @@
         });
       }
 
+      // -------- Traffic & Flows --------
+      const timeline = { points: [], max: 60 };
+      async function refreshTrafficData() {
+        const [instantRes, flowsRes, sumRes] = await Promise.all([
+          fetch('/network/traffic/instant', { cache: 'no-store' }),
+          fetch('/network/traffic/flows', { cache: 'no-store' }),
+          fetch('/network/traffic/summary', { cache: 'no-store' }),
+        ]);
+        const instant = await instantRes.json();
+        const flows = await flowsRes.json();
+        const summary = await sumRes.json();
+
+        // Update KPIs
+        document.getElementById('trafDown').textContent = `${(instant.download_mbps || 0).toFixed(
+          2
+        )} Mbps`;
+        document.getElementById('trafUp').textContent = `${(instant.upload_mbps || 0).toFixed(
+          2
+        )} Mbps`;
+        document.getElementById('trafFlows').textContent = (flows.flows || []).length;
+
+        // Update lists
+        const tp = document.getElementById('topProtocols');
+        tp.innerHTML = (summary.top_protocols || [])
+          .slice(0, 8)
+          .map((it) => `<li>${it.name}: ${it.count}</li>`)
+          .join('');
+        const tports = document.getElementById('topPorts');
+        tports.innerHTML = (summary.top_ports || [])
+          .slice(0, 8)
+          .map((it) => `<li>${it.port}: ${it.count}</li>`)
+          .join('');
+
+        // Timeline
+        timeline.points.push({ d: instant.download_mbps || 0, u: instant.upload_mbps || 0 });
+        if (timeline.points.length > timeline.max) timeline.points.shift();
+        drawTrafficTimeline();
+
+        // Flow table
+        const tbl = document.getElementById('flowTable');
+        const rows = (flows.flows || [])
+          .slice(0, 100)
+          .map(
+            (f) =>
+              `<div class="grid" style="grid-template-columns: 60px 1fr 1fr 80px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>${f.proto}</div><div>${f.local_ip}:${f.local_port}</div><div>${f.remote_ip}:${f.remote_port}</div><div>${f.count}</div></div>`
+          )
+          .join('');
+        tbl.innerHTML = `<div class="grid" style="grid-template-columns: 60px 1fr 1fr 80px; gap:8px; font-weight:600; border-bottom:1px solid var(--border); padding-bottom:6px"><div>Proto</div><div>Local</div><div>Remote</div><div>Hits</div></div>${
+          rows || '<div class="text-[#9aa3b2]">No flows</div>'
+        }`;
+      }
+
+      function drawTrafficTimeline() {
+        const canvas = document.getElementById('trafficTimeline');
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const maxVal = Math.max(1, ...timeline.points.map((p) => Math.max(p.d, p.u)));
+        ctx.strokeStyle = '#6ea8fe';
+        ctx.beginPath();
+        timeline.points.forEach((p, i) => {
+          const x = (i / (timeline.points.length - 1 || 1)) * canvas.width;
+          const y = canvas.height - (p.d / maxVal) * canvas.height;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.strokeStyle = '#3cc36a';
+        ctx.beginPath();
+        timeline.points.forEach((p, i) => {
+          const x = (i / (timeline.points.length - 1 || 1)) * canvas.width;
+          const y = canvas.height - (p.u / maxVal) * canvas.height;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      function setupTraffic() {
+        const btn = document.getElementById('refreshTraffic');
+        if (!btn) return;
+        btn.addEventListener('click', async () => {
+          btn.textContent = '⏳ Thinking...';
+          btn.disabled = true;
+          try {
+            await refreshTrafficData();
+          } finally {
+            btn.textContent = '🔎 Get Data';
+            btn.disabled = false;
+          }
+        });
+      }
+
       function drawMap() {
         const canvas = document.getElementById('mapCanvas');
         const rect = canvas.getBoundingClientRect();
@@ -1163,6 +1301,7 @@
         setupRefreshButton();
         setupDeviceDiscovery();
         setupMap();
+        setupTraffic();
 
         // Draw initial chart (no data until Refresh is clicked)
         drawThroughputChart();
