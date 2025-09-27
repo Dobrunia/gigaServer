@@ -368,6 +368,8 @@
       <button class="sidebar-tab" data-tab="devices">🔍 Device Discovery</button>
       <button class="sidebar-tab" data-tab="map">🗺️ Network Map</button>
       <button class="sidebar-tab" data-tab="traffic">📈 Traffic & Flows</button>
+      <button class="sidebar-tab" data-tab="capture">🧪 Capture</button>
+      <button class="sidebar-tab" data-tab="activity">📡 Activity Monitor</button>
     </div>
 
     <!-- Main Content -->
@@ -648,6 +650,84 @@
         <div class="card mt-3">
           <h3 class="text-[#9aa3b2] mb-2">Flow Table</h3>
           <div id="flowTable" class="text-sm"></div>
+        </div>
+      </section>
+
+      <!-- Capture Panel -->
+      <section id="panel-capture" class="panel">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-[#e6e9ef]">Capture Manager</h2>
+          <div class="flex gap-2">
+            <button id="refreshCapture" class="btn secondary">Refresh</button>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <!-- Consent removed per lab policy -->
+          <div class="mt-2 flex gap-2">
+            <label class="flex items-center gap-2"
+              ><input type="checkbox" id="privacyMask" checked /> Privacy mask</label
+            >
+            <input id="capIface" class="filter-input" placeholder="iface (optional)" />
+            <input id="capBpf" class="filter-input" placeholder="bpf filter (optional)" />
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button id="startCapture" class="btn">Start</button>
+            <button id="stopCapture" class="btn secondary">Stop</button>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 12px">
+          <div class="card">
+            <h3 class="text-[#9aa3b2] mb-2">Status</h3>
+            <pre id="captureStatus" class="text-sm"></pre>
+          </div>
+          <div class="card">
+            <h3 class="text-[#9aa3b2] mb-2">Audit Log</h3>
+            <div id="captureAudit" class="text-sm"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-activity" class="panel">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-[#e6e9ef]">Activity Monitor</h2>
+          <div class="flex gap-2">
+            <button
+              id="amToggle"
+              class="btn"
+              style="background: var(--ok); border-color: var(--ok)"
+            >
+              Start
+            </button>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <h3 class="text-[#9aa3b2] mb-2">Devices</h3>
+          <div id="amDevices" class="text-sm"></div>
+        </div>
+        <!-- Modal for user requests -->
+        <div
+          id="amModal"
+          class="hidden"
+          style="
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div class="card" style="width: 840px; max-height: 70vh; overflow: auto">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-[#9aa3b2]">User Requests</h3>
+              <button id="amModalClose" class="btn secondary">Close</button>
+            </div>
+            <div id="amUserTitle" class="text-sm mb-2"></div>
+            <div id="amUserRequests" class="text-sm"></div>
+          </div>
         </div>
       </section>
     </div>
@@ -1196,6 +1276,315 @@
         });
       }
 
+      // -------- Capture Manager --------
+      async function loadCaptureStatus() {
+        const res = await fetch('/network/capture/status', { cache: 'no-store' });
+        const data = await res.json();
+        document.getElementById('captureStatus').textContent = JSON.stringify(data, null, 2);
+        const audit = (data.audit || [])
+          .slice(-50)
+          .map((l) => `<div>${l}</div>`)
+          .join('');
+        document.getElementById('captureAudit').innerHTML =
+          audit || '<div class="text-[#9aa3b2]">No audit yet</div>';
+        document.getElementById('privacyMask').checked = !!data.privacy_mask;
+      }
+
+      function setupCapture() {
+        document.getElementById('refreshCapture').addEventListener('click', loadCaptureStatus);
+        document.getElementById('startCapture').addEventListener('click', async () => {
+          const payload = {
+            privacy_mask: document.getElementById('privacyMask').checked,
+            iface: document.getElementById('capIface').value,
+            bpf: document.getElementById('capBpf').value,
+          };
+          const res = await fetch('/network/capture/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) alert('Start failed (consent?)');
+          await loadCaptureStatus();
+        });
+        document.getElementById('stopCapture').addEventListener('click', async () => {
+          await fetch('/network/capture/stop', { method: 'POST' });
+          await loadCaptureStatus();
+        });
+      }
+
+      let amSocket = null;
+      function renderAmDevices(list) {
+        const wrap = document.getElementById('amDevices');
+        if (!wrap) return;
+        if (!list || !list.length) {
+          wrap.innerHTML = '<div class="text-[#9aa3b2]">No devices</div>';
+          return;
+        }
+        const rows = list
+          .map(
+            (d) => `
+          <div class="grid hover:bg-[#171b29] cursor-pointer" data-ip="${
+            d.ip || ''
+          }" style="grid-template-columns: 140px 180px 120px 1fr; gap: 8px; padding:6px 0; border-bottom:1px solid var(--border)">
+            <div>${d.ip || ''}</div>
+            <div class="font-mono text-xs">${d.mac || ''}</div>
+            <div>${d.vendor || 'Unknown'}</div>
+            <div>${d.hostname || ''}</div>
+          </div>`
+          )
+          .join('');
+        wrap.innerHTML = `<div class="grid" style="grid-template-columns: 140px 180px 120px 1fr; gap: 8px; font-weight:600; border-bottom:1px solid var(--border); padding-bottom:6px"><div>IP</div><div>MAC</div><div>Vendor</div><div>Hostname</div></div>${rows}`;
+        // bind clicks
+        wrap.querySelectorAll('[data-ip]').forEach((row) => {
+          row.addEventListener('click', () => {
+            const ip = row.getAttribute('data-ip');
+            if (ip) showAmUser(ip);
+            if (ip) startHttpSniff(ip);
+          });
+        });
+      }
+
+      function setupActivity() {
+        const toggle = document.getElementById('amToggle');
+        let running = false;
+        const setState = (isRunning) => {
+          running = isRunning;
+          if (isRunning) {
+            toggle.textContent = 'Stop';
+            toggle.style.background = 'var(--crit)';
+            toggle.style.borderColor = 'var(--crit)';
+          } else {
+            toggle.textContent = 'Start';
+            toggle.style.background = 'var(--ok)';
+            toggle.style.borderColor = 'var(--ok)';
+          }
+        };
+        toggle.addEventListener('click', () => {
+          if (!running) {
+            if (amSocket && amSocket.readyState === WebSocket.OPEN) return;
+            amSocket = new WebSocket(
+              (location.protocol === 'https:' ? 'wss' : 'ws') +
+                '://' +
+                location.host +
+                '/network/monitor/ws'
+            );
+            amSocket.onopen = () => {
+              amSocket.send('start');
+              setState(true);
+            };
+            amSocket.onmessage = (ev) => {
+              try {
+                const msg = JSON.parse(ev.data);
+                if (msg.type === 'devices') renderAmDevices(msg.devices);
+              } catch (e) {}
+            };
+            amSocket.onclose = () => {
+              amSocket = null;
+              setState(false);
+              document.getElementById('amDevices').innerHTML = '';
+            };
+          } else {
+            if (amSocket) {
+              try {
+                amSocket.send('stop');
+              } catch (e) {}
+              amSocket.close();
+            }
+          }
+        });
+        document.getElementById('amModalClose').addEventListener('click', closeAmModal);
+        // Close modal on outside click and Esc
+        const modal = document.getElementById('amModal');
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeAmModal();
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeAmModal();
+        });
+      }
+
+      async function showAmUser(ip) {
+        const modal = document.getElementById('amModal');
+        document.getElementById('amUserTitle').textContent = `Requests for ${ip}`;
+        // fetch flows and filter
+        try {
+          const res = await fetch('/network/traffic/flows', { cache: 'no-store' });
+          const data = await res.json();
+          const flows = (data.flows || []).filter((f) => f.local_ip === ip || f.remote_ip === ip);
+          const rows = flows
+            .map((f) => {
+              const isHttp = f.local_port == 80 || f.remote_port == 80;
+              const isHttps = f.local_port == 443 || f.remote_port == 443;
+              const proto = isHttp ? 'HTTP' : isHttps ? 'HTTPS' : f.proto;
+              return `<div class="grid" style="grid-template-columns: 80px 1fr 1fr 80px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>${proto}</div><div>${f.local_ip}:${f.local_port}</div><div>${f.remote_ip}:${f.remote_port}</div><div>${f.count}</div></div>`;
+            })
+            .join('');
+          document.getElementById(
+            'amUserRequests'
+          ).innerHTML = `<div class="grid" style="grid-template-columns: 80px 1fr 1fr 80px; gap:8px; font-weight:600; border-bottom:1px solid var(--border); padding-bottom:6px"><div>Protocol</div><div>Local</div><div>Remote</div><div>Hits</div></div>${
+            rows || '<div class="text-[#9aa3b2]">No data</div>'
+          }`;
+        } catch (e) {
+          document.getElementById('amUserRequests').innerHTML =
+            '<div class="text-[#9aa3b2]">Error loading flows</div>';
+        }
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+      }
+      function closeAmModal() {
+        const m = document.getElementById('amModal');
+        m.classList.add('hidden');
+        m.style.display = 'none';
+        stopHttpSniff();
+      }
+
+      // Live HTTP sniff (port 80 only)
+      let httpSocket = null;
+      function startHttpSniff(ip) {
+        stopHttpSniff();
+        const url =
+          (location.protocol === 'https:' ? 'wss' : 'ws') +
+          '://' +
+          location.host +
+          `/network/sniff/ws?ip=${encodeURIComponent(ip)}`;
+        httpSocket = new WebSocket(url);
+        httpSocket.onmessage = (ev) => {
+          try {
+            const msg = JSON.parse(ev.data);
+            if (msg.type === 'http') appendHttpRow(msg);
+            else if (msg.type === 'tls') appendTlsRow(msg);
+            else if (msg.type === 'conn') appendConnRow(msg);
+            else if (msg.type === 'dns') appendDnsRow(msg);
+          } catch {}
+        };
+        httpSocket.onclose = () => {
+          httpSocket = null;
+        };
+      }
+      function stopHttpSniff() {
+        if (httpSocket) {
+          try {
+            httpSocket.close();
+          } catch {}
+          httpSocket = null;
+        }
+      }
+
+      // Aggregation state
+      const agg = { byHost: new Map(), byPort: new Map(), maxRows: 200 };
+      function bump(map, key) {
+        map.set(key, (map.get(key) || 0) + 1);
+      }
+      function renderAgg() {
+        const hosts = Array.from(agg.byHost.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 50);
+        const ports = Array.from(agg.byPort.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 50);
+        let box = document.getElementById('amUserRequests');
+        const header = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; font-weight:600; border-bottom:1px solid var(--border); padding-bottom:6px"><div>Type</div><div>Host/Local</div><div>Path/Remote</div><div>Dir</div></div>`;
+        // Keep existing stream rows, and append two mini tables at top
+        const hostTable = `<div class="mt-3"><div class="text-[#9aa3b2] mb-1">Top Hosts</div>${
+          hosts
+            .map(
+              ([h, c]) =>
+                `<div class="flex justify-between text-sm"><span>${h}</span><span>${c}</span></div>`
+            )
+            .join('') || '<div class="text-[#9aa3b2]">-</div>'
+        }</div>`;
+        const portTable = `<div class="mt-3"><div class="text-[#9aa3b2] mb-1">Top Ports</div>${
+          ports
+            .map(
+              ([p, c]) =>
+                `<div class="flex justify-between text-sm"><span>${p}</span><span>${c}</span></div>`
+            )
+            .join('') || '<div class="text-[#9aa3b2]">-</div>'
+        }</div>`;
+        // If box is empty, seed header
+        if (!box.innerHTML.includes('grid-template-columns')) {
+          box.innerHTML = header;
+        }
+        // Attach/replace summary sections above stream rows
+        const summaries = document.getElementById('amAggSummaries');
+        if (summaries) summaries.remove();
+        const container = document.createElement('div');
+        container.id = 'amAggSummaries';
+        container.innerHTML = hostTable + portTable;
+        box.prepend(container);
+      }
+
+      function appendHttpRow(evt) {
+        bump(agg.byHost, evt.host || '(no-host)');
+        const dstPort = (evt.dst || '').split('.').pop() || '';
+        bump(agg.byPort, dstPort);
+        renderAgg();
+        const box = document.getElementById('amUserRequests');
+        const host = evt.host || '';
+        const path = evt.path || '/';
+        const row = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>${
+          evt.method || ''
+        }</div><div>${host}</div><div class="font-mono text-xs">${path}</div><div>${
+          evt.direction || ''
+        }</div></div>`;
+        box.innerHTML += row;
+        trimStream(box);
+      }
+      function appendTlsRow(evt) {
+        bump(agg.byHost, evt.host || '(no-sni)');
+        const dstPort = (evt.dst || '').split('.').pop() || '';
+        bump(agg.byPort, dstPort);
+        renderAgg();
+        const box = document.getElementById('amUserRequests');
+        const row = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>TLS</div><div>${
+          evt.host || ''
+        }</div><div class="font-mono text-xs">(SNI)</div><div>${evt.direction || ''}</div></div>`;
+        box.innerHTML += row;
+        trimStream(box);
+      }
+      function appendConnRow(evt) {
+        const dstPort = (evt.dst || '').split('.').pop() || '';
+        bump(agg.byPort, dstPort);
+        renderAgg();
+        const box = document.getElementById('amUserRequests');
+        const row = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>${
+          evt.proto || 'CONN'
+        }</div><div>${evt.src || ''}</div><div class="font-mono text-xs">${
+          evt.dst || ''
+        }</div><div>${evt.direction || ''}</div></div>`;
+        box.innerHTML += row;
+        trimStream(box);
+      }
+      function trimStream(box) {
+        const max = 400;
+        // keep header + summaries + last rows
+        const children = Array.from(box.children);
+        const headerIdx = children.findIndex(
+          (el) => el.style && el.style.cssText && el.style.cssText.includes('grid-template-columns')
+        );
+        // simple trim if too many children
+        if (box.children.length > max) {
+          const toKeep = Array.from(box.children).slice(-200);
+          box.innerHTML = '';
+          toKeep.forEach((n) => box.appendChild(n));
+        }
+      }
+
+      function appendDnsRow(evt) {
+        bump(agg.byHost, evt.q || '(dns)');
+        const dstPort = (evt.dst || '').split('.').pop() || '';
+        bump(agg.byPort, dstPort || '53');
+        renderAgg();
+        const box = document.getElementById('amUserRequests');
+        const row = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>DNS</div><div>${
+          evt.q || ''
+        }</div><div class="font-mono text-xs">${evt.dst || ''}</div><div>${
+          evt.direction || ''
+        }</div></div>`;
+        box.innerHTML += row;
+        trimStream(box);
+      }
+
       function drawMap() {
         const canvas = document.getElementById('mapCanvas');
         const rect = canvas.getBoundingClientRect();
@@ -1302,6 +1691,8 @@
         setupDeviceDiscovery();
         setupMap();
         setupTraffic();
+        setupCapture();
+        setupActivity();
 
         // Draw initial chart (no data until Refresh is clicked)
         drawThroughputChart();

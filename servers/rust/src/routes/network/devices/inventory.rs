@@ -42,7 +42,7 @@ pub async fn get_device_summary() -> Result<Json<Value>, StatusCode> {
 pub async fn get_topology() -> Result<Json<Value>, StatusCode> {
     // Always build topology from fresh discovery data
     let discover = discover_devices().await?;
-    let mut devices: Vec<NetworkDevice> = serde_json::from_value(discover.0["devices"].clone()).unwrap_or_default();
+    let devices: Vec<NetworkDevice> = serde_json::from_value(discover.0["devices"].clone()).unwrap_or_default();
 
     // Group by subnet /24
     let mut subnets: std::collections::BTreeMap<String, Vec<&NetworkDevice>> = std::collections::BTreeMap::new();

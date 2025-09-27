@@ -10,6 +10,12 @@ pub mod overview;
 pub mod devices;
 #[path = "traffic.rs"]
 pub mod traffic;
+#[path = "capture.rs"]
+pub mod capture;
+#[path = "monitor.rs"]
+pub mod monitor;
+#[path = "sniff.rs"]
+pub mod sniff;
 
 pub fn create_routes() -> Router {
     Router::new()
@@ -25,6 +31,12 @@ pub fn create_routes() -> Router {
         .route("/network/traffic/instant", get(traffic::get_instant))
         .route("/network/traffic/flows", get(traffic::get_flows))
         .route("/network/traffic/summary", get(traffic::get_summary))
+        .route("/network/capture/consent", get(|| async { StatusCode::METHOD_NOT_ALLOWED })).route("/network/capture/consent", axum::routing::post(capture::set_consent))
+        .route("/network/capture/start", axum::routing::post(capture::start_capture))
+        .route("/network/capture/stop", axum::routing::post(|| async { capture::stop_capture().await }))
+        .route("/network/capture/status", get(capture::get_status))
+        .route("/network/monitor/ws", axum::routing::get(|ws: axum::extract::ws::WebSocketUpgrade| async move { monitor::ws_handler(ws).await }))
+        .route("/network/sniff/ws", axum::routing::get(sniff::ws_sniff))
 }
 
 async fn get_network_overview() -> Result<Json<Value>, StatusCode> {
