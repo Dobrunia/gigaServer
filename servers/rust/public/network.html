@@ -44,307 +44,188 @@
         z-index: 1;
         padding: var(--pad);
       }
-      .grid {
-        display: grid;
-        gap: var(--gap);
-      }
-      .cols-3 {
-        grid-template-columns: repeat(3, 1fr);
-      }
-      @media (max-width: 1199px) {
-        .cols-3 {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-      @media (max-width: 959px) {
-        .cols-3 {
-          grid-template-columns: 1fr;
-        }
-      }
-      .card {
-        background: var(--bg-elev);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--pad);
-      }
-      .badge {
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: #1d2330;
-        color: var(--muted);
-        border: 1px solid var(--border);
-      }
-      .kpi {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      .kpi h3 {
-        margin: 0;
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .kpi .val {
-        font: 600 20px/1 var(--font-mono);
-      }
 
-      /* Sidebar tabs */
-      .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 200px;
-        height: 100vh;
-        background: var(--bg-elev);
-        border-right: 1px solid var(--border);
-        padding: var(--pad);
-        z-index: 10;
-      }
-
-      .sidebar-tab {
-        display: block;
-        width: 100%;
-        background: transparent;
-        color: var(--text);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 8px 12px;
-        margin-bottom: 8px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        text-align: left;
-      }
-
-      .sidebar-tab.active {
+      .startBtn {
         background: var(--accent);
-        color: white;
-        border-color: var(--accent);
-      }
-
-      .sidebar-tab:hover:not(.active) {
-        background: var(--border);
-      }
-
-      .refresh-btn {
-        background: var(--ok);
-        color: white;
-        border: 1px solid var(--ok);
+        color: var(--bg);
+        border: none;
         border-radius: var(--radius);
-        padding: 6px 12px;
+        padding: 12px 24px;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.15s ease;
-        font-size: 12px;
-      }
-
-      .refresh-btn:hover {
-        background: #2d8f47;
-        border-color: #2d8f47;
-      }
-
-      .refresh-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      .main-content {
-        margin-left: 200px;
-        padding: var(--pad);
-      }
-
-      .panel {
-        display: none;
-      }
-      .panel.active {
-        display: block;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      th,
-      td {
-        padding: 8px;
-        border-bottom: 1px solid var(--border);
-        text-align: left;
-      }
-      thead th {
-        position: sticky;
-        top: 0;
-        background: var(--bg-elev);
-        z-index: 5;
-        box-shadow: 0 1px 0 var(--border);
-      }
-
-      .wifi-status-card {
-        background: var(--bg-elev);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 16px;
-        margin-bottom: 16px;
-      }
-      .wifi-icon {
-        width: 24px;
-        height: 24px;
-        margin-right: 8px;
-      }
-      .signal-strength {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .signal-bar {
-        width: 3px;
-        background: var(--muted);
-        border-radius: 1px;
-      }
-      .signal-bar.active {
-        background: var(--ok);
-      }
-      .throughput-sparkline {
-        height: 60px;
-        width: 100%;
-        background: linear-gradient(90deg, #192033, #0f1320);
-        border-radius: 4px;
-        margin: 8px 0;
-        display: block;
-      }
-
-      /* Device Discovery Styles */
-      .device-card {
-        background: var(--bg-elev);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 16px;
         transition: all 0.2s ease;
-        cursor: pointer;
-        margin-bottom: 12px;
+        margin: var(--pad);
+        font-size: 14px;
       }
-      .device-card:hover {
-        border-color: var(--accent);
+
+      .startBtn:hover {
+        background: #5a94e6;
         transform: translateY(-1px);
       }
-      .device-card.trusted {
-        border-left: 4px solid var(--ok);
+
+      .startBtnActive {
+        background: var(--warn) !important;
+        animation: pulse 2s infinite;
       }
-      .device-card.blocked {
-        border-left: 4px solid var(--crit);
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
       }
-      .device-card.investigate {
-        border-left: 4px solid var(--warn);
+
+      #devices {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--gap);
+        padding: var(--pad);
       }
-      .tag {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 500;
-        margin: 2px 4px 2px 0;
+
+      .deviceCard {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--pad);
+        cursor: pointer;
+        transition: all 0.2s ease;
       }
-      .tag.trusted {
-        background: rgba(60, 195, 106, 0.2);
-        color: var(--ok);
-        border: 1px solid var(--ok);
+
+      .deviceCard:hover {
+        border-color: var(--accent);
+        background: #161825;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(110, 168, 254, 0.1);
       }
-      .tag.blocked {
-        background: rgba(255, 107, 107, 0.2);
-        color: var(--crit);
-        border: 1px solid var(--crit);
+
+      .deviceCard div {
+        margin: 4px 0;
+        font-family: var(--font-mono);
+        font-size: 13px;
       }
-      .tag.investigate {
-        background: rgba(247, 185, 85, 0.2);
-        color: var(--warn);
-        border: 1px solid var(--warn);
-      }
-      .tag.local {
-        background: rgba(110, 168, 254, 0.2);
+
+      .deviceCard div:first-child {
         color: var(--accent);
-        border: 1px solid var(--accent);
+        font-weight: 600;
+        font-size: 14px;
       }
-      .status-dot {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        margin-right: 6px;
+
+      #packets {
+        padding: var(--pad);
+        max-height: 60vh;
+        overflow-y: auto;
       }
-      .status-dot.online {
-        background: var(--ok);
+
+      .packet {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--pad);
+        margin-bottom: var(--gap);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        animation: slideIn 0.3s ease;
       }
-      .status-dot.offline {
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .packet div {
+        margin: 3px 0;
+        padding: 2px 0;
+      }
+
+      .packet div:first-child {
+        color: var(--ok);
+        font-weight: 600;
+      }
+
+      .packet div:nth-child(2),
+      .packet div:nth-child(3) {
+        color: var(--accent);
+      }
+
+      .packet div:nth-child(4) {
+        color: var(--warn);
+        text-transform: uppercase;
+      }
+
+      .packet div:nth-child(5) {
+        color: var(--muted);
+      }
+
+      .packet div:last-child {
+        color: var(--text);
+        word-break: break-word;
+      }
+
+      /* Scrollbar styling */
+      #packets::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      #packets::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+
+      #packets::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+
+      #packets::-webkit-scrollbar-thumb:hover {
         background: var(--muted);
       }
-      .filter-bar {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        background: var(--bg-elev);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 12px;
-        margin-bottom: 16px;
-        flex-wrap: wrap;
+
+      /* Section containers */
+      body > div {
+        margin: var(--pad) 0;
       }
-      .filter-select,
-      .filter-input {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 6px 10px;
+
+      h3 {
         color: var(--text);
-        font-size: 13px;
-      }
-      .filter-select:focus,
-      .filter-input:focus {
-        outline: none;
-        border-color: var(--accent);
-      }
-      .btn {
-        background: var(--accent);
-        color: white;
-        border: 1px solid var(--accent);
-        border-radius: 6px;
-        padding: 6px 12px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        font-size: 13px;
-        text-decoration: none;
-        display: inline-block;
-      }
-      .btn:hover {
-        background: #5a8fd8;
-        border-color: #5a8fd8;
-      }
-      .btn.secondary {
-        background: transparent;
-        color: var(--text);
-        border-color: var(--border);
-      }
-      .btn.secondary:hover {
-        background: var(--border);
-      }
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 12px;
-        margin-bottom: 24px;
-      }
-      .stat-card {
-        background: var(--bg-elev);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 12px;
-        text-align: center;
-      }
-      .stat-value {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 600;
-        color: var(--accent);
-        margin-bottom: 4px;
+        margin: 0 0 var(--gap) var(--pad);
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--border);
+        position: relative;
       }
-      .stat-label {
-        font-size: 11px;
+
+      h3::before {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 40px;
+        height: 2px;
+        background: var(--accent);
+      }
+
+      /* Empty state styling */
+      #devices:empty::before,
+      #packets:empty::before {
+        content: 'Нет данных для отображения';
+        display: block;
+        text-align: center;
         color: var(--muted);
+        font-style: italic;
+        padding: 40px;
+        background: var(--bg-elev);
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        margin: var(--pad);
       }
     </style>
   </head>
@@ -356,1346 +237,54 @@
         <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span>
         <span class="text-sm text-green-400">Network Monitor</span>
       </div>
-      <div class="flex items-center gap-2">
-        <!-- Buttons moved to individual tabs -->
-      </div>
       <a href="/navigation" class="text-sm text-[#6ea8fe] underline">Back</a>
     </header>
-
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <button class="sidebar-tab active" data-tab="overview">📡 Network Overview</button>
-      <button class="sidebar-tab" data-tab="devices">🔍 Device Discovery</button>
-      <button class="sidebar-tab" data-tab="map">🗺️ Network Map</button>
-      <button class="sidebar-tab" data-tab="traffic">📈 Traffic & Flows</button>
-      <button class="sidebar-tab" data-tab="capture">🧪 Capture</button>
-      <button class="sidebar-tab" data-tab="activity">📡 Activity Monitor</button>
+    <button id="startBtn" class="startBtn">Начать собирать данные</button>
+    <div>
+      <h3>Devices</h3>
+      <div id="devices"></div>
     </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-      <section id="panel-overview" class="panel active">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-[#e6e9ef]">Network Overview</h2>
-          <button
-            id="refreshOverview"
-            class="btn"
-            style="
-              background: var(--ok);
-              color: white;
-              border: 1px solid var(--ok);
-              border-radius: var(--radius);
-              padding: 6px 12px;
-              cursor: pointer;
-              font-size: 12px;
-            "
-          >
-            🔎 Get Data
-          </button>
-        </div>
-        <div
-          id="overviewNotice"
-          class="hidden mb-3 text-sm text-[#f7b955] bg-[#2a2f3a] border border-[#2a2f3a] rounded px-3 py-2"
-        ></div>
-        <!-- Wi-Fi Status Card -->
-        <div class="wifi-status-card">
-          <h3 class="text-[#9aa3b2] mb-3 flex items-center">
-            <svg class="wifi-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.07 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"
-              />
-            </svg>
-            Wi-Fi Status
-          </h3>
-          <div class="grid cols-3 gap-4">
-            <div class="kpi">
-              <h3>SSID</h3>
-              <div id="wifiSSID" class="val">-</div>
-            </div>
-            <div class="kpi">
-              <h3>Channel</h3>
-              <div id="wifiChannel" class="val">-</div>
-            </div>
-            <div class="kpi">
-              <h3>Gateway IP</h3>
-              <div id="wifiGateway" class="val">-</div>
-            </div>
-          </div>
-          <div class="grid cols-3 gap-4 mt-3">
-            <div class="kpi">
-              <h3>BSSID</h3>
-              <div id="wifiBSSID" class="val text-sm">-</div>
-            </div>
-            <div class="kpi">
-              <h3>Mode</h3>
-              <div id="wifiMode" class="val">-</div>
-            </div>
-            <div class="kpi">
-              <h3>Signal Strength</h3>
-              <div class="signal-strength">
-                <div id="signalBars" class="flex gap-1">
-                  <div class="signal-bar h-2"></div>
-                  <div class="signal-bar h-3"></div>
-                  <div class="signal-bar h-4"></div>
-                  <div class="signal-bar h-5"></div>
-                </div>
-                <span id="signalRSSI" class="text-sm">- dBm</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Throughput Sparkline -->
-        <div class="card">
-          <h3 class="text-[#9aa3b2] mb-2">Network Throughput</h3>
-          <div class="flex items-center gap-4 mb-2 text-sm text-[#e6e9ef]">
-            <div class="flex items-center gap-2">
-              <div class="w-4 h-4 bg-[#6ea8fe] rounded border border-[#6ea8fe]"></div>
-              <span class="font-medium">Download</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-4 h-4 bg-[#3cc36a] rounded border border-[#3cc36a]"></div>
-              <span class="font-medium">Upload</span>
-            </div>
-            <span class="ml-auto text-[#9aa3b2] font-medium">Mbps</span>
-          </div>
-          <div class="relative">
-            <canvas id="throughputChart" class="throughput-sparkline w-full"></canvas>
-          </div>
-          <div class="grid cols-3 gap-4 mt-3">
-            <div class="kpi">
-              <h3>Current Download</h3>
-              <div id="currentDownload" class="val">-</div>
-            </div>
-            <div class="kpi">
-              <h3>Current Upload</h3>
-              <div id="currentUpload" class="val">-</div>
-            </div>
-            <div class="kpi">
-              <h3>Avg RTT</h3>
-              <div id="avgRTT" class="val">- ms</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Nearby APs -->
-        <div class="card">
-          <h3 class="text-[#9aa3b2] mb-2">Nearby Access Points</h3>
-          <table id="nearbyAPsTable" class="table-fixed text-sm">
-            <thead>
-              <tr>
-                <th>SSID</th>
-                <th>BSSID</th>
-                <th>RSSI</th>
-                <th>Channel</th>
-                <th>Width</th>
-                <th>Security</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Device Discovery Panel -->
-      <section id="panel-devices" class="panel">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-[#e6e9ef]">Device Discovery & Inventory</h2>
-          <div class="flex gap-2">
-            <button id="refreshDevices" class="btn">🔎 Get Data</button>
-          </div>
-        </div>
-        <!-- Summary Stats -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div id="totalDevices" class="stat-value">-</div>
-            <div class="stat-label">Total Devices</div>
-          </div>
-          <div class="stat-card">
-            <div id="onlineDevices" class="stat-value">-</div>
-            <div class="stat-label">Online</div>
-          </div>
-          <div class="stat-card">
-            <div id="offlineDevices" class="stat-value">-</div>
-            <div class="stat-label">Offline</div>
-          </div>
-          <div class="stat-card">
-            <div id="investigateDevices" class="stat-value">-</div>
-            <div class="stat-label">Investigate</div>
-          </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="filter-bar">
-          <label class="text-sm">Type:</label>
-          <select id="filterType" class="filter-select">
-            <option value="">All Types</option>
-            <option value="Computer">Computer</option>
-            <option value="Phone">Phone</option>
-            <option value="Router">Router</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-
-          <label class="text-sm">Vendor:</label>
-          <select id="filterVendor" class="filter-select">
-            <option value="">All Vendors</option>
-            <option value="Apple">Apple</option>
-            <option value="Microsoft">Microsoft</option>
-            <option value="VMware">VMware</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-
-          <label class="text-sm">Status:</label>
-          <select id="filterStatus" class="filter-select">
-            <option value="">All Status</option>
-            <option value="online">Online</option>
-            <option value="offline">Offline</option>
-          </select>
-
-          <label class="text-sm">Sort:</label>
-          <select id="sortBy" class="filter-select">
-            <option value="last_seen_desc">Last seen</option>
-            <option value="hostname_asc">Hostname</option>
-            <option value="vendor_asc">Vendor</option>
-            <option value="ip_asc">IP</option>
-          </select>
-
-          <input
-            id="searchInput"
-            type="text"
-            placeholder="Search IP, MAC, hostname..."
-            class="filter-input"
-            style="flex: 1; min-width: 200px"
-          />
-
-          <button id="applyFilters" class="btn" style="display: none">Apply</button>
-        </div>
-
-        <!-- Device List -->
-        <div id="deviceList">
-          <!-- Devices will be loaded here -->
-        </div>
-
-        <!-- Loading indicator -->
-        <div id="deviceLoadingIndicator" class="text-center py-8 hidden">
-          <div class="text-[#9aa3b2]">🔄 Scanning network...</div>
-        </div>
-      </section>
-
-      <!-- Network Map Panel -->
-      <section id="panel-map" class="panel">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-[#e6e9ef]">Network Map</h2>
-          <div class="flex gap-2">
-            <button id="refreshMap" class="btn">🔎 Get Data</button>
-          </div>
-        </div>
-
-        <div class="card mb-3 text-sm text-[#9aa3b2]">
-          AP/Router → клиенты. Группировка по подсети /24. Клик по узлу — детали.
-        </div>
-
-        <div
-          id="mapContainer"
-          class="card"
-          style="height: 420px; position: relative; overflow: hidden"
-        >
-          <canvas id="mapCanvas" style="width: 100%; height: 100%; display: block"></canvas>
-        </div>
-        <div
-          id="nodeDrawer"
-          class="card hidden"
-          style="position: absolute; right: 16px; top: 120px; width: 320px"
-        >
-          <div id="drawerContent" class="text-sm"></div>
-        </div>
-      </section>
-
-      <!-- Traffic & Flows Panel -->
-      <section id="panel-traffic" class="panel">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-[#e6e9ef]">Traffic & Flows</h2>
-          <div class="flex gap-2">
-            <button id="refreshTraffic" class="btn">🔎 Get Data</button>
-          </div>
-        </div>
-
-        <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 12px">
-          <div class="card">
-            <h3 class="text-[#9aa3b2] mb-2">Traffic Timeline (snapshot)</h3>
-            <canvas id="trafficTimeline" class="throughput-sparkline w-full"></canvas>
-            <div class="grid cols-3 gap-4 mt-3">
-              <div class="kpi">
-                <h3>Download</h3>
-                <div id="trafDown" class="val">-</div>
-              </div>
-              <div class="kpi">
-                <h3>Upload</h3>
-                <div id="trafUp" class="val">-</div>
-              </div>
-              <div class="kpi">
-                <h3>Flows</h3>
-                <div id="trafFlows" class="val">-</div>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <h3 class="text-[#9aa3b2] mb-2">Top Protocols</h3>
-            <ul id="topProtocols" class="text-sm"></ul>
-            <h3 class="text-[#9aa3b2] mt-3 mb-2">Top Ports</h3>
-            <ul id="topPorts" class="text-sm"></ul>
-          </div>
-        </div>
-
-        <div class="card mt-3">
-          <h3 class="text-[#9aa3b2] mb-2">Flow Table</h3>
-          <div id="flowTable" class="text-sm"></div>
-        </div>
-      </section>
-
-      <!-- Capture Panel -->
-      <section id="panel-capture" class="panel">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-[#e6e9ef]">Capture Manager</h2>
-          <div class="flex gap-2">
-            <button id="refreshCapture" class="btn secondary">Refresh</button>
-          </div>
-        </div>
-
-        <div class="card mb-3">
-          <!-- Consent removed per lab policy -->
-          <div class="mt-2 flex gap-2">
-            <label class="flex items-center gap-2"
-              ><input type="checkbox" id="privacyMask" checked /> Privacy mask</label
-            >
-            <input id="capIface" class="filter-input" placeholder="iface (optional)" />
-            <input id="capBpf" class="filter-input" placeholder="bpf filter (optional)" />
-          </div>
-          <div class="mt-3 flex gap-2">
-            <button id="startCapture" class="btn">Start</button>
-            <button id="stopCapture" class="btn secondary">Stop</button>
-          </div>
-        </div>
-
-        <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 12px">
-          <div class="card">
-            <h3 class="text-[#9aa3b2] mb-2">Status</h3>
-            <pre id="captureStatus" class="text-sm"></pre>
-          </div>
-          <div class="card">
-            <h3 class="text-[#9aa3b2] mb-2">Audit Log</h3>
-            <div id="captureAudit" class="text-sm"></div>
-          </div>
-        </div>
-      </section>
-
-      <section id="panel-activity" class="panel">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-[#e6e9ef]">Activity Monitor</h2>
-          <div class="flex gap-2">
-            <button
-              id="amToggle"
-              class="btn"
-              style="background: var(--ok); border-color: var(--ok)"
-            >
-              Start
-            </button>
-          </div>
-        </div>
-
-        <div class="card mb-3">
-          <h3 class="text-[#9aa3b2] mb-2">Devices</h3>
-          <div id="amDevices" class="text-sm"></div>
-        </div>
-        <!-- Modal for user requests -->
-        <div
-          id="amModal"
-          class="hidden"
-          style="
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-          "
-        >
-          <div class="card" style="width: 840px; max-height: 70vh; overflow: auto">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="text-[#9aa3b2]">User Requests</h3>
-              <button id="amModalClose" class="btn secondary">Close</button>
-            </div>
-            <div id="amUserTitle" class="text-sm mb-2"></div>
-            <div id="amUserRequests" class="text-sm"></div>
-          </div>
-        </div>
-      </section>
+    <div>
+      <h3>Packets</h3>
+      <div id="packets"></div>
     </div>
-
     <script defer>
-      let polling;
-      let throughputHistory = [];
-
-      // Session storage for throughput data
-      const sessionData = {
-        throughputHistory: [],
-        maxHistoryLength: 60,
-      };
-
-      function setupTabs() {
-        const tabs = Array.from(document.querySelectorAll('.sidebar-tab[data-tab]'));
-        const panels = Array.from(document.querySelectorAll('.panel'));
-        function activate(name) {
-          tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
-          panels.forEach((p) => p.classList.toggle('active', p.id === `panel-${name}`));
-        }
-        tabs.forEach((t) => t.addEventListener('click', () => activate(t.dataset.tab)));
-        activate('overview');
-      }
-
-      function setupRefreshButton() {
-        const refreshOverviewBtn = document.getElementById('refreshOverview');
-        if (refreshOverviewBtn) {
-          refreshOverviewBtn.addEventListener('click', async () => {
-            refreshOverviewBtn.textContent = '⏳ Thinking...';
-            refreshOverviewBtn.disabled = true;
-            try {
-              await loadNetworkOverview();
-              await loadThroughputData();
-              drawThroughputChart();
-            } finally {
-              refreshOverviewBtn.textContent = '🔎 Get Data';
-              refreshOverviewBtn.disabled = false;
-            }
-          });
-        }
-      }
-
-      async function loadNetworkOverview() {
-        try {
-          const response = await fetch('/network/overview', { cache: 'no-store' });
-          const data = await response.json();
-          const notice = document.getElementById('overviewNotice');
-          const messages = [];
-
-          // Update Wi-Fi status
-          if (data.wifi_status && Object.keys(data.wifi_status).length) {
-            const s = data.wifi_status;
-            document.getElementById('wifiSSID').textContent = s.ssid ?? '-';
-            document.getElementById('wifiChannel').textContent =
-              (s.channel ?? '-') === 0 ? '-' : s.channel ?? '-';
-            document.getElementById('wifiGateway').textContent = s.gateway_ip ?? '-';
-            document.getElementById('wifiBSSID').textContent = s.bssid ?? '-';
-            document.getElementById('wifiMode').textContent = s.mode ?? '-';
-
-            // Update signal strength
-            const rssi = typeof s.signal_strength === 'number' ? s.signal_strength : null;
-            document.getElementById('signalRSSI').textContent =
-              rssi !== null ? `${rssi} dBm` : '- dBm';
-            updateSignalBars(rssi ?? -100);
-          } else {
-            messages.push('Wi‑Fi status недоступен.');
-          }
-
-          // Update throughput
-          if (data.clients && data.clients.throughput) {
-            const t = data.clients.throughput;
-            const dl = typeof t.download === 'number' ? `${t.download} Mbps` : '-';
-            const ul = typeof t.upload === 'number' ? `${t.upload} Mbps` : '-';
-            const rtt =
-              typeof data.clients.avg_rtt === 'number' ? `${data.clients.avg_rtt} ms` : '- ms';
-            document.getElementById('currentDownload').textContent = dl;
-            document.getElementById('currentUpload').textContent = ul;
-            document.getElementById('avgRTT').textContent = rtt;
-          } else {
-            messages.push('Throughput недоступен.');
-          }
-
-          // Update nearby APs
-          if (data.nearby_aps && Array.isArray(data.nearby_aps)) {
-            const tbody = document.querySelector('#nearbyAPsTable tbody');
-            tbody.innerHTML = '';
-
-            if (data.nearby_aps.length === 0) {
-              const row = document.createElement('tr');
-              row.innerHTML =
-                '<td colspan="6" class="text-center text-gray-500">No nearby access points found</td>';
-              tbody.appendChild(row);
-            } else {
-              data.nearby_aps.forEach((ap) => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-[#171b29]';
-                row.innerHTML = `
-                  <td>${ap.ssid || '-'}</td>
-                  <td class="font-mono text-xs">${ap.bssid || '-'}</td>
-                  <td>${ap.rssi || '-'} dBm</td>
-                  <td>${ap.channel || '-'}</td>
-                  <td>${ap.width || '-'}</td>
-                  <td><span class="badge">${ap.security || 'Unknown'}</span></td>
-                `;
-                tbody.appendChild(row);
-              });
-            }
-          } else {
-            const tbody = document.querySelector('#nearbyAPsTable tbody');
-            tbody.innerHTML =
-              '<tr><td colspan="6" class="text-center text-gray-500">No data available</td></tr>';
-            messages.push('Nearby APs недоступны.');
-          }
-          if (messages.length) {
-            notice.textContent = messages.join(' ');
-            notice.classList.remove('hidden');
-          } else {
-            notice.textContent = '';
-            notice.classList.add('hidden');
-          }
-        } catch (error) {
-          console.error('Error loading network overview:', error);
-          const notice = document.getElementById('overviewNotice');
-          notice.textContent = 'Не удалось загрузить данные Network Overview.';
-          notice.classList.remove('hidden');
-        }
-      }
-
-      async function loadThroughputData() {
-        try {
-          const response = await fetch('/network/throughput', { cache: 'no-store' });
-          const data = await response.json();
-
-          // Add current data point to history
-          if (data.current_download !== undefined && data.current_upload !== undefined) {
-            sessionData.throughputHistory.push({
-              timestamp: data.timestamp || Date.now(),
-              download: data.current_download,
-              upload: data.current_upload,
+      let isCollecting = false;
+      function startGetingDevicePackets(ip) {
+        fetch(`http://127.0.0.1:3002/go/network/packets?ip=${encodeURIComponent(ip)}`)
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById('packets').innerHTML = '';
+            data.forEach((packet) => {
+              document.getElementById(
+                'packets'
+              ).innerHTML += `<div class="packet"> <div>Time: ${packet.time}</div> <div>Source: ${packet.source}</div> <div>Destination: ${packet.destination}</div> <div>Protocol: ${packet.protocol}</div> <div>Size: ${packet.size}</div> <div>Info: ${packet.info}</div></div>`;
             });
-
-            // Keep only last 60 points
-            if (sessionData.throughputHistory.length > sessionData.maxHistoryLength) {
-              sessionData.throughputHistory = sessionData.throughputHistory.slice(
-                -sessionData.maxHistoryLength
-              );
-            }
-
-            // Draw chart
-            drawThroughputChart();
-          }
-        } catch (error) {
-          console.error('Error loading throughput data:', error);
-        }
-      }
-
-      function updateSignalBars(rssi) {
-        const bars = document.querySelectorAll('.signal-bar');
-        const activeBars = rssi > -50 ? 4 : rssi > -60 ? 3 : rssi > -70 ? 2 : rssi > -80 ? 1 : 0;
-
-        bars.forEach((bar, index) => {
-          if (index < activeBars) {
-            bar.classList.add('active');
-          } else {
-            bar.classList.remove('active');
-          }
-        });
-      }
-
-      function drawThroughputChart() {
-        const canvas = document.getElementById('throughputChart');
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-
-        // Set canvas size
-        const rect = canvas.getBoundingClientRect();
-        const w = (canvas.width = rect.width);
-        const h = (canvas.height = rect.height);
-
-        ctx.clearRect(0, 0, w, h);
-
-        if (!sessionData.throughputHistory.length) {
-          // Draw empty state
-          ctx.strokeStyle = '#333';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(0, h / 2);
-          ctx.lineTo(w, h / 2);
-          ctx.stroke();
-          return;
-        }
-
-        const maxValue = Math.max(
-          1,
-          ...sessionData.throughputHistory.map((p) => Math.max(p.download || 0, p.upload || 0))
-        );
-
-        // Draw download line
-        ctx.strokeStyle = '#6ea8fe';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        sessionData.throughputHistory.forEach((point, i) => {
-          const x = (i / (sessionData.throughputHistory.length - 1)) * w;
-          const y = h - (point.download / maxValue) * h;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-
-        // Draw upload line
-        ctx.strokeStyle = '#3cc36a';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        sessionData.throughputHistory.forEach((point, i) => {
-          const x = (i / (sessionData.throughputHistory.length - 1)) * w;
-          const y = h - (point.upload / maxValue) * h;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      }
-
-      // Device Discovery Functions
-      let currentDevices = [];
-
-      async function loadDeviceSummary() {
-        try {
-          const response = await fetch('/network/devices/summary', { cache: 'no-store' });
-          const data = await response.json();
-
-          document.getElementById('totalDevices').textContent = data.summary.total_devices || 0;
-          document.getElementById('onlineDevices').textContent = data.summary.online_devices || 0;
-          document.getElementById('offlineDevices').textContent =
-            data.summary.offline_devices ||
-            Math.max(0, (data.summary.total_devices || 0) - (data.summary.online_devices || 0));
-          document.getElementById('investigateDevices').textContent =
-            data.summary.investigate_devices || 0;
-        } catch (error) {
-          console.error('Error loading device summary:', error);
-        }
-      }
-
-      async function loadDevices(filters = {}) {
-        try {
-          const params = new URLSearchParams();
-          Object.entries(filters).forEach(([key, value]) => {
-            if (value) params.append(key, value);
-          });
-
-          const response = await fetch(`/network/devices/filtered?${params}`, {
-            cache: 'no-store',
-          });
-          const data = await response.json();
-          currentDevices = data.devices || [];
-
-          applyLocalSort();
-          renderDevices(currentDevices);
-        } catch (error) {
-          console.error('Error loading devices:', error);
-          document.getElementById('deviceList').innerHTML =
-            '<div class="text-center text-[#9aa3b2]">Error loading devices</div>';
-        }
-      }
-
-      function applyLocalSort() {
-        const sort = document.getElementById('sortBy')?.value || 'last_seen_desc';
-        const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-        switch (sort) {
-          case 'hostname_asc':
-            currentDevices.sort((a, b) => collator.compare(a.hostname || '', b.hostname || ''));
-            break;
-          case 'vendor_asc':
-            currentDevices.sort((a, b) => collator.compare(a.vendor || '', b.vendor || ''));
-            break;
-          case 'ip_asc':
-            currentDevices.sort((a, b) => collator.compare(a.ip || '', b.ip || ''));
-            break;
-          case 'last_seen_desc':
-          default:
-            currentDevices.sort((a, b) => (b.last_seen || 0) - (a.last_seen || 0));
-        }
-      }
-
-      function renderDevices(devices) {
-        const list = document.getElementById('deviceList');
-
-        if (devices.length === 0) {
-          list.innerHTML = '<div class="text-center text-[#9aa3b2]">No devices found</div>';
-          return;
-        }
-
-        list.innerHTML = devices
-          .map((device) => {
-            const tagClasses = device.tags.join(' ');
-            const statusDot = device.status === 'online' ? 'online' : 'offline';
-            const timeAgo = formatTimeAgo(device.last_seen);
-
-            return `
-            <div class="device-card ${tagClasses}">
-              <div class="flex items-center justify-between mb-3">
-                <div>
-                  <div class="text-lg font-mono font-semibold">${device.ip}</div>
-                  <div class="text-sm text-[#9aa3b2]">${device.hostname || 'Unknown hostname'}</div>
-                </div>
-                <div class="flex items-center text-sm">
-                  <span class="status-dot ${statusDot}"></span>
-                  ${device.status}
-                </div>
-              </div>
-              
-              <div class="grid grid-cols-2 gap-4 text-sm mb-3">
-                <div><strong>MAC:</strong> ${device.mac}</div>
-                <div><strong>Vendor:</strong> ${device.vendor}</div>
-                <div><strong>Type:</strong> ${device.device_type}</div>
-                <div><strong>Last seen:</strong> ${timeAgo}</div>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <div class="flex flex-wrap">
-                  ${device.tags.map((tag) => `<span class="tag ${tag}">${tag}</span>`).join('')}
-                </div>
-              </div>
-              
-              ${
-                device.notes ? `<div class="text-xs text-[#9aa3b2] mt-2">${device.notes}</div>` : ''
-              }
-            </div>
-          `;
           })
-          .join('');
+          .catch((error) => console.error('Error:', error));
       }
-
-      function formatTimeAgo(timestamp) {
-        const now = Math.floor(Date.now() / 1000);
-        const diff = now - timestamp;
-
-        if (diff < 60) return 'just now';
-        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-        return `${Math.floor(diff / 86400)}d ago`;
-      }
-
-      // tagging removed
-
-      function applyCurrentFilters() {
-        // Local filter only (no new requests)
-        const typeVal = document.getElementById('filterType').value;
-        const vendorVal = document.getElementById('filterVendor').value;
-        const statusVal = document.getElementById('filterStatus').value;
-        const searchVal = document.getElementById('searchInput').value.toLowerCase();
-
-        let filtered = currentDevices.slice();
-        if (typeVal)
-          filtered = filtered.filter((d) =>
-            (d.device_type || '').toLowerCase().includes(typeVal.toLowerCase())
-          );
-        if (vendorVal)
-          filtered = filtered.filter((d) =>
-            (d.vendor || '').toLowerCase().includes(vendorVal.toLowerCase())
-          );
-        if (statusVal) filtered = filtered.filter((d) => (d.status || '') === statusVal);
-        if (searchVal)
-          filtered = filtered.filter(
-            (d) =>
-              (d.hostname || '').toLowerCase().includes(searchVal) ||
-              (d.ip || '').includes(searchVal) ||
-              (d.mac || '').toLowerCase().includes(searchVal) ||
-              (d.vendor || '').toLowerCase().includes(searchVal)
-          );
-
-        // Sort and render
-        const original = currentDevices;
-        currentDevices = filtered;
-        applyLocalSort();
-        renderDevices(currentDevices);
-        currentDevices = original;
-      }
-
-      async function scanNetwork() {
-        const loadingIndicator = document.getElementById('deviceLoadingIndicator');
-        const scanBtn = document.getElementById('scanDevices');
-
-        loadingIndicator.classList.remove('hidden');
-        scanBtn.disabled = true;
-        scanBtn.textContent = '🔄 Scanning...';
-
-        try {
-          await fetch('/network/devices/discover', { cache: 'no-store' });
-          await loadDeviceSummary();
-          await applyCurrentFilters();
-        } catch (error) {
-          console.error('Error scanning network:', error);
-        } finally {
-          loadingIndicator.classList.add('hidden');
-          scanBtn.disabled = false;
-          scanBtn.textContent = '🔍 Scan';
-        }
-      }
-
-      // Setup device discovery event listeners
-      function setupDeviceDiscovery() {
-        document.getElementById('refreshDevices').addEventListener('click', async () => {
-          const btn = document.getElementById('refreshDevices');
-          btn.textContent = '⏳ Thinking...';
-          btn.disabled = true;
-          try {
-            await fetch('/network/devices/discover', { cache: 'no-store' });
-            await loadDeviceSummary();
-            await loadDevices();
-          } finally {
-            btn.textContent = '🔎 Get Data';
-            btn.disabled = false;
-          }
-        });
-        const hiddenApply = document.getElementById('applyFilters');
-        if (hiddenApply) hiddenApply.addEventListener('click', applyCurrentFilters);
-        document.getElementById('sortBy').addEventListener('change', () => {
-          applyLocalSort();
-          renderDevices(currentDevices);
-        });
-        document.getElementById('filterType').addEventListener('change', applyCurrentFilters);
-        document.getElementById('filterVendor').addEventListener('change', applyCurrentFilters);
-        document.getElementById('filterStatus').addEventListener('change', applyCurrentFilters);
-        document.getElementById('searchInput').addEventListener('input', () => {
-          // debounce? keep simple for now
-          applyCurrentFilters();
-        });
-        document.getElementById('searchInput').addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') applyCurrentFilters();
-        });
-      }
-
-      // -------- Network Map --------
-      let mapData = { nodes: [], links: [] };
-      function setupMap() {
-        const btn = document.getElementById('refreshMap');
-        if (!btn) return;
-        btn.addEventListener('click', async () => {
-          btn.textContent = '⏳ Thinking...';
-          btn.disabled = true;
-          try {
-            const res = await fetch('/network/map', { cache: 'no-store' });
-            mapData = await res.json();
-            drawMap();
-          } finally {
-            btn.textContent = '🔎 Get Data';
-            btn.disabled = false;
-          }
-        });
-      }
-
-      // -------- Traffic & Flows --------
-      const timeline = { points: [], max: 60 };
-      async function refreshTrafficData() {
-        const [instantRes, flowsRes, sumRes] = await Promise.all([
-          fetch('/network/traffic/instant', { cache: 'no-store' }),
-          fetch('/network/traffic/flows', { cache: 'no-store' }),
-          fetch('/network/traffic/summary', { cache: 'no-store' }),
-        ]);
-        const instant = await instantRes.json();
-        const flows = await flowsRes.json();
-        const summary = await sumRes.json();
-
-        // Update KPIs
-        document.getElementById('trafDown').textContent = `${(instant.download_mbps || 0).toFixed(
-          2
-        )} Mbps`;
-        document.getElementById('trafUp').textContent = `${(instant.upload_mbps || 0).toFixed(
-          2
-        )} Mbps`;
-        document.getElementById('trafFlows').textContent = (flows.flows || []).length;
-
-        // Update lists
-        const tp = document.getElementById('topProtocols');
-        tp.innerHTML = (summary.top_protocols || [])
-          .slice(0, 8)
-          .map((it) => `<li>${it.name}: ${it.count}</li>`)
-          .join('');
-        const tports = document.getElementById('topPorts');
-        tports.innerHTML = (summary.top_ports || [])
-          .slice(0, 8)
-          .map((it) => `<li>${it.port}: ${it.count}</li>`)
-          .join('');
-
-        // Timeline
-        timeline.points.push({ d: instant.download_mbps || 0, u: instant.upload_mbps || 0 });
-        if (timeline.points.length > timeline.max) timeline.points.shift();
-        drawTrafficTimeline();
-
-        // Flow table
-        const tbl = document.getElementById('flowTable');
-        const rows = (flows.flows || [])
-          .slice(0, 100)
-          .map(
-            (f) =>
-              `<div class="grid" style="grid-template-columns: 60px 1fr 1fr 80px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>${f.proto}</div><div>${f.local_ip}:${f.local_port}</div><div>${f.remote_ip}:${f.remote_port}</div><div>${f.count}</div></div>`
-          )
-          .join('');
-        tbl.innerHTML = `<div class="grid" style="grid-template-columns: 60px 1fr 1fr 80px; gap:8px; font-weight:600; border-bottom:1px solid var(--border); padding-bottom:6px"><div>Proto</div><div>Local</div><div>Remote</div><div>Hits</div></div>${
-          rows || '<div class="text-[#9aa3b2]">No flows</div>'
-        }`;
-      }
-
-      function drawTrafficTimeline() {
-        const canvas = document.getElementById('trafficTimeline');
-        const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const maxVal = Math.max(1, ...timeline.points.map((p) => Math.max(p.d, p.u)));
-        ctx.strokeStyle = '#6ea8fe';
-        ctx.beginPath();
-        timeline.points.forEach((p, i) => {
-          const x = (i / (timeline.points.length - 1 || 1)) * canvas.width;
-          const y = canvas.height - (p.d / maxVal) * canvas.height;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-        ctx.strokeStyle = '#3cc36a';
-        ctx.beginPath();
-        timeline.points.forEach((p, i) => {
-          const x = (i / (timeline.points.length - 1 || 1)) * canvas.width;
-          const y = canvas.height - (p.u / maxVal) * canvas.height;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      }
-
-      function setupTraffic() {
-        const btn = document.getElementById('refreshTraffic');
-        if (!btn) return;
-        btn.addEventListener('click', async () => {
-          btn.textContent = '⏳ Thinking...';
-          btn.disabled = true;
-          try {
-            await refreshTrafficData();
-          } finally {
-            btn.textContent = '🔎 Get Data';
-            btn.disabled = false;
-          }
-        });
-      }
-
-      // -------- Capture Manager --------
-      async function loadCaptureStatus() {
-        const res = await fetch('/network/capture/status', { cache: 'no-store' });
-        const data = await res.json();
-        document.getElementById('captureStatus').textContent = JSON.stringify(data, null, 2);
-        const audit = (data.audit || [])
-          .slice(-50)
-          .map((l) => `<div>${l}</div>`)
-          .join('');
-        document.getElementById('captureAudit').innerHTML =
-          audit || '<div class="text-[#9aa3b2]">No audit yet</div>';
-        document.getElementById('privacyMask').checked = !!data.privacy_mask;
-      }
-
-      function setupCapture() {
-        document.getElementById('refreshCapture').addEventListener('click', loadCaptureStatus);
-        document.getElementById('startCapture').addEventListener('click', async () => {
-          const payload = {
-            privacy_mask: document.getElementById('privacyMask').checked,
-            iface: document.getElementById('capIface').value,
-            bpf: document.getElementById('capBpf').value,
-          };
-          const res = await fetch('/network/capture/start', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) alert('Start failed (consent?)');
-          await loadCaptureStatus();
-        });
-        document.getElementById('stopCapture').addEventListener('click', async () => {
-          await fetch('/network/capture/stop', { method: 'POST' });
-          await loadCaptureStatus();
-        });
-      }
-
-      let amSocket = null;
-      function renderAmDevices(list) {
-        const wrap = document.getElementById('amDevices');
-        if (!wrap) return;
-        if (!list || !list.length) {
-          wrap.innerHTML = '<div class="text-[#9aa3b2]">No devices</div>';
+      document.getElementById('startBtn').addEventListener('click', () => {
+        if (isCollecting) {
+          // nothing to stop on Go side; just toggle UI
+          document.getElementById('startBtn').classList.remove('startBtnActive');
+          document.getElementById('startBtn').textContent = 'Начать собирать данные';
+          isCollecting = false;
           return;
         }
-        const rows = list
-          .map(
-            (d) => `
-          <div class="grid hover:bg-[#171b29] cursor-pointer" data-ip="${
-            d.ip || ''
-          }" style="grid-template-columns: 140px 180px 120px 1fr; gap: 8px; padding:6px 0; border-bottom:1px solid var(--border)">
-            <div>${d.ip || ''}</div>
-            <div class="font-mono text-xs">${d.mac || ''}</div>
-            <div>${d.vendor || 'Unknown'}</div>
-            <div>${d.hostname || ''}</div>
-          </div>`
-          )
-          .join('');
-        wrap.innerHTML = `<div class="grid" style="grid-template-columns: 140px 180px 120px 1fr; gap: 8px; font-weight:600; border-bottom:1px solid var(--border); padding-bottom:6px"><div>IP</div><div>MAC</div><div>Vendor</div><div>Hostname</div></div>${rows}`;
-        // bind clicks
-        wrap.querySelectorAll('[data-ip]').forEach((row) => {
-          row.addEventListener('click', () => {
-            const ip = row.getAttribute('data-ip');
-            if (ip) showAmUser(ip);
-            if (ip) startHttpSniff(ip);
-          });
-        });
-      }
-
-      function setupActivity() {
-        const toggle = document.getElementById('amToggle');
-        let running = false;
-        const setState = (isRunning) => {
-          running = isRunning;
-          if (isRunning) {
-            toggle.textContent = 'Stop';
-            toggle.style.background = 'var(--crit)';
-            toggle.style.borderColor = 'var(--crit)';
-          } else {
-            toggle.textContent = 'Start';
-            toggle.style.background = 'var(--ok)';
-            toggle.style.borderColor = 'var(--ok)';
-          }
-        };
-        toggle.addEventListener('click', () => {
-          if (!running) {
-            if (amSocket && amSocket.readyState === WebSocket.OPEN) return;
-            amSocket = new WebSocket(
-              (location.protocol === 'https:' ? 'wss' : 'ws') +
-                '://' +
-                location.host +
-                '/network/monitor/ws'
-            );
-            amSocket.onopen = () => {
-              amSocket.send('start');
-              setState(true);
-            };
-            amSocket.onmessage = (ev) => {
-              try {
-                const msg = JSON.parse(ev.data);
-                if (msg.type === 'devices') renderAmDevices(msg.devices);
-              } catch (e) {}
-            };
-            amSocket.onclose = () => {
-              amSocket = null;
-              setState(false);
-              document.getElementById('amDevices').innerHTML = '';
-            };
-          } else {
-            if (amSocket) {
-              try {
-                amSocket.send('stop');
-              } catch (e) {}
-              amSocket.close();
-            }
-          }
-        });
-        document.getElementById('amModalClose').addEventListener('click', closeAmModal);
-        // Close modal on outside click and Esc
-        const modal = document.getElementById('amModal');
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) closeAmModal();
-        });
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeAmModal();
-        });
-      }
-
-      async function showAmUser(ip) {
-        const modal = document.getElementById('amModal');
-        document.getElementById('amUserTitle').textContent = `Requests for ${ip}`;
-        // fetch flows and filter
-        try {
-          const res = await fetch('/network/traffic/flows', { cache: 'no-store' });
-          const data = await res.json();
-          const flows = (data.flows || []).filter((f) => f.local_ip === ip || f.remote_ip === ip);
-          const rows = flows
-            .map((f) => {
-              const isHttp = f.local_port == 80 || f.remote_port == 80;
-              const isHttps = f.local_port == 443 || f.remote_port == 443;
-              const proto = isHttp ? 'HTTP' : isHttps ? 'HTTPS' : f.proto;
-              return `<div class="grid" style="grid-template-columns: 80px 1fr 1fr 80px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>${proto}</div><div>${f.local_ip}:${f.local_port}</div><div>${f.remote_ip}:${f.remote_port}</div><div>${f.count}</div></div>`;
-            })
-            .join('');
-          document.getElementById(
-            'amUserRequests'
-          ).innerHTML = `<div class="grid" style="grid-template-columns: 80px 1fr 1fr 80px; gap:8px; font-weight:600; border-bottom:1px solid var(--border); padding-bottom:6px"><div>Protocol</div><div>Local</div><div>Remote</div><div>Hits</div></div>${
-            rows || '<div class="text-[#9aa3b2]">No data</div>'
-          }`;
-        } catch (e) {
-          document.getElementById('amUserRequests').innerHTML =
-            '<div class="text-[#9aa3b2]">Error loading flows</div>';
-        }
-        modal.classList.remove('hidden');
-        modal.style.display = 'flex';
-      }
-      function closeAmModal() {
-        const m = document.getElementById('amModal');
-        m.classList.add('hidden');
-        m.style.display = 'none';
-        stopHttpSniff();
-      }
-
-      // Live HTTP sniff (port 80 only)
-      let httpSocket = null;
-      function startHttpSniff(ip) {
-        stopHttpSniff();
-        const url =
-          (location.protocol === 'https:' ? 'wss' : 'ws') +
-          '://' +
-          location.host +
-          `/network/sniff/ws?ip=${encodeURIComponent(ip)}`;
-        httpSocket = new WebSocket(url);
-        httpSocket.onmessage = (ev) => {
-          try {
-            const msg = JSON.parse(ev.data);
-            if (msg.type === 'http') appendHttpRow(msg);
-            else if (msg.type === 'tls') appendTlsRow(msg);
-            else if (msg.type === 'conn') appendConnRow(msg);
-            else if (msg.type === 'dns') appendDnsRow(msg);
-          } catch {}
-        };
-        httpSocket.onclose = () => {
-          httpSocket = null;
-        };
-      }
-      function stopHttpSniff() {
-        if (httpSocket) {
-          try {
-            httpSocket.close();
-          } catch {}
-          httpSocket = null;
-        }
-      }
-
-      // Aggregation state
-      const agg = { byHost: new Map(), byPort: new Map(), maxRows: 200 };
-      function bump(map, key) {
-        map.set(key, (map.get(key) || 0) + 1);
-      }
-      function renderAgg() {
-        const hosts = Array.from(agg.byHost.entries())
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 50);
-        const ports = Array.from(agg.byPort.entries())
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 50);
-        let box = document.getElementById('amUserRequests');
-        const header = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; font-weight:600; border-bottom:1px solid var(--border); padding-bottom:6px"><div>Type</div><div>Host/Local</div><div>Path/Remote</div><div>Dir</div></div>`;
-        // Keep existing stream rows, and append two mini tables at top
-        const hostTable = `<div class="mt-3"><div class="text-[#9aa3b2] mb-1">Top Hosts</div>${
-          hosts
-            .map(
-              ([h, c]) =>
-                `<div class="flex justify-between text-sm"><span>${h}</span><span>${c}</span></div>`
-            )
-            .join('') || '<div class="text-[#9aa3b2]">-</div>'
-        }</div>`;
-        const portTable = `<div class="mt-3"><div class="text-[#9aa3b2] mb-1">Top Ports</div>${
-          ports
-            .map(
-              ([p, c]) =>
-                `<div class="flex justify-between text-sm"><span>${p}</span><span>${c}</span></div>`
-            )
-            .join('') || '<div class="text-[#9aa3b2]">-</div>'
-        }</div>`;
-        // If box is empty, seed header
-        if (!box.innerHTML.includes('grid-template-columns')) {
-          box.innerHTML = header;
-        }
-        // Attach/replace summary sections above stream rows
-        const summaries = document.getElementById('amAggSummaries');
-        if (summaries) summaries.remove();
-        const container = document.createElement('div');
-        container.id = 'amAggSummaries';
-        container.innerHTML = hostTable + portTable;
-        box.prepend(container);
-      }
-
-      function appendHttpRow(evt) {
-        bump(agg.byHost, evt.host || '(no-host)');
-        const dstPort = (evt.dst || '').split('.').pop() || '';
-        bump(agg.byPort, dstPort);
-        renderAgg();
-        const box = document.getElementById('amUserRequests');
-        const host = evt.host || '';
-        const path = evt.path || '/';
-        const row = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>${
-          evt.method || ''
-        }</div><div>${host}</div><div class="font-mono text-xs">${path}</div><div>${
-          evt.direction || ''
-        }</div></div>`;
-        box.innerHTML += row;
-        trimStream(box);
-      }
-      function appendTlsRow(evt) {
-        bump(agg.byHost, evt.host || '(no-sni)');
-        const dstPort = (evt.dst || '').split('.').pop() || '';
-        bump(agg.byPort, dstPort);
-        renderAgg();
-        const box = document.getElementById('amUserRequests');
-        const row = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>TLS</div><div>${
-          evt.host || ''
-        }</div><div class="font-mono text-xs">(SNI)</div><div>${evt.direction || ''}</div></div>`;
-        box.innerHTML += row;
-        trimStream(box);
-      }
-      function appendConnRow(evt) {
-        const dstPort = (evt.dst || '').split('.').pop() || '';
-        bump(agg.byPort, dstPort);
-        renderAgg();
-        const box = document.getElementById('amUserRequests');
-        const row = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>${
-          evt.proto || 'CONN'
-        }</div><div>${evt.src || ''}</div><div class="font-mono text-xs">${
-          evt.dst || ''
-        }</div><div>${evt.direction || ''}</div></div>`;
-        box.innerHTML += row;
-        trimStream(box);
-      }
-      function trimStream(box) {
-        const max = 400;
-        // keep header + summaries + last rows
-        const children = Array.from(box.children);
-        const headerIdx = children.findIndex(
-          (el) => el.style && el.style.cssText && el.style.cssText.includes('grid-template-columns')
-        );
-        // simple trim if too many children
-        if (box.children.length > max) {
-          const toKeep = Array.from(box.children).slice(-200);
-          box.innerHTML = '';
-          toKeep.forEach((n) => box.appendChild(n));
-        }
-      }
-
-      function appendDnsRow(evt) {
-        bump(agg.byHost, evt.q || '(dns)');
-        const dstPort = (evt.dst || '').split('.').pop() || '';
-        bump(agg.byPort, dstPort || '53');
-        renderAgg();
-        const box = document.getElementById('amUserRequests');
-        const row = `<div class="grid" style="grid-template-columns: 120px 1fr 1fr 60px; gap:8px; padding:6px 0; border-bottom:1px solid var(--border)"><div>DNS</div><div>${
-          evt.q || ''
-        }</div><div class="font-mono text-xs">${evt.dst || ''}</div><div>${
-          evt.direction || ''
-        }</div></div>`;
-        box.innerHTML += row;
-        trimStream(box);
-      }
-
-      function drawMap() {
-        const canvas = document.getElementById('mapCanvas');
-        const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Simple radial layout: subnets near top, routers center, clients around
-        const centerX = canvas.width / 2,
-          centerY = canvas.height / 2;
-        const nodes = mapData.nodes || [];
-        const links = mapData.links || [];
-
-        // Precompute positions
-        const pos = {};
-        let subnetCount = nodes.filter((n) => n.type === 'subnet').length;
-        let subnetIdx = 0;
-        nodes.forEach((n) => {
-          if (n.type === 'subnet') {
-            const angle = (subnetIdx / Math.max(1, subnetCount)) * Math.PI * 2;
-            pos[n.id] = {
-              x: centerX + Math.cos(angle) * 180,
-              y: centerY - 140 + Math.sin(angle) * 140,
-            };
-            subnetIdx++;
-          }
-        });
-        nodes.forEach((n) => {
-          if (!pos[n.id])
-            pos[n.id] = {
-              x: centerX + (Math.random() - 0.5) * 280,
-              y: centerY + (Math.random() - 0.5) * 180,
-            };
-        });
-
-        // Draw links
-        ctx.strokeStyle = '#2a2f3a';
-        ctx.lineWidth = 1.2;
-        links.forEach((l) => {
-          const a = pos[l.source],
-            b = pos[l.target];
-          if (!a || !b) return;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
-        });
-
-        // Draw nodes
-        nodes.forEach((n) => {
-          const p = pos[n.id];
-          if (!p) return;
-          ctx.fillStyle =
-            n.type === 'router' ? '#6ea8fe' : n.type === 'subnet' ? '#9aa3b2' : '#3cc36a';
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#e6e9ef';
-          ctx.font = '12px system-ui';
-          ctx.fillText(n.name || n.ip || 'node-' + n.id, p.x + 10, p.y + 4);
-        });
-
-        // Hit detection
-        canvas.onclick = (ev) => {
-          const x = ev.offsetX,
-            y = ev.offsetY;
-          for (const n of nodes) {
-            const p = pos[n.id];
-            if (!p) continue;
-            const dx = x - p.x,
-              dy = y - p.y;
-            if (dx * dx + dy * dy < 10 * 10) {
-              openDrawer(n);
-              return;
-            }
-          }
-          closeDrawer();
-        };
-      }
-
-      function openDrawer(node) {
-        const box = document.getElementById('nodeDrawer');
-        const el = document.getElementById('drawerContent');
-        const lines = [];
-        lines.push(
-          `<div class="text-[#e6e9ef] font-semibold mb-1">${node.name || node.ip || 'Node'}</div>`
-        );
-        if (node.ip) lines.push(`<div><b>IP:</b> ${node.ip}</div>`);
-        if (node.vendor) lines.push(`<div><b>Vendor:</b> ${node.vendor}</div>`);
-        if (node.os) lines.push(`<div><b>OS:</b> ${node.os}</div>`);
-        if (node.type) lines.push(`<div><b>Type:</b> ${node.type}</div>`);
-        if (node.status) lines.push(`<div><b>Status:</b> ${node.status}</div>`);
-        el.innerHTML = lines.join('');
-        box.classList.remove('hidden');
-      }
-      function closeDrawer() {
-        document.getElementById('nodeDrawer').classList.add('hidden');
-      }
-
-      addEventListener('DOMContentLoaded', async () => {
-        setupTabs();
-        setupRefreshButton();
-        setupDeviceDiscovery();
-        setupMap();
-        setupTraffic();
-        setupCapture();
-        setupActivity();
-
-        // Draw initial chart (no data until Refresh is clicked)
-        drawThroughputChart();
+        fetch('http://127.0.0.1:3002/go/network/devices')
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById('devices').innerHTML = '';
+            data.forEach((device) => {
+              document.getElementById(
+                'devices'
+              ).innerHTML += `<div class="deviceCard" onclick="startGetingDevicePackets('${device.ip}')"> <div>IP: ${device.ip}</div> <div>MAC: ${device.mac}</div> <div>Vendor: ${device.vendor}</div> <div>Hostname: ${device.hostname}</div> <div>Type: ${device.device_type}</div></div>`;
+            });
+          })
+          .catch((error) => console.error('Error:', error));
+        document.getElementById('startBtn').classList.add('startBtnActive');
+        document.getElementById('startBtn').textContent = 'Собираем данные...';
+        isCollecting = true;
       });
     </script>
   </body>

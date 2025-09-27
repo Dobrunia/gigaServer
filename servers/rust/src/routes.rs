@@ -11,8 +11,8 @@ pub mod navigation;
 pub mod ajax;
 #[path = "routes/snippets.rs"]
 pub mod snippets;
-#[path = "routes/network/network.rs"]
-pub mod network;
+// #[path = "routes/network/network.rs"]
+// pub mod network;
 
 use axum::{Router, routing::get_service};
 use tower_http::services::ServeFile;
@@ -25,7 +25,7 @@ pub fn create_task_routes() -> Router {
         .merge(navigation::create_routes())
         .merge(ajax::create_routes())
         .merge(snippets::create_routes())
-        .merge(network::create_routes())
+        // .merge(network::network_routes())
         .merge(week2::create_routes())
         .merge(week3::create_routes())
         .route_service("/dashboard", get_service(ServeFile::new("public/dashboard.html")))

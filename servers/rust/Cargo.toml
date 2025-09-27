@@ -22,4 +22,6 @@ rand = "0.8"
 once_cell = "1"
 futures-util = "0.3"
 dns-parser = "0.8"
-pnet = { version = "0.35.0", default-features = false, features = ["std"] }
+dns-lookup = "2.0"
+pnet = "*"
+pcap = "1.2"
