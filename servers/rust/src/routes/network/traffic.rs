@@ -81,7 +81,13 @@ pub async fn get_flows() -> Result<Json<Value>, StatusCode> {
 
     #[cfg(not(target_os = "windows"))]
     {
-        let out = Command::new("ss").arg("-tunap").output().unwrap_or_else(|_| Default::default());
+        let out = Command::new("ss").arg("-tunap").output().unwrap_or_else(|_| {
+            std::process::Output {
+                status: std::process::Command::new("true").status().unwrap(),
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            }
+        });
         let s = String::from_utf8_lossy(&out.stdout);
         for line in s.lines() {
             let t = line.trim();
@@ -124,7 +130,11 @@ pub async fn get_summary() -> Result<Json<Value>, StatusCode> {
     for f in &flows { *proto_counts.entry(f.proto.clone()).or_insert(0) += f.count; *port_counts.entry(f.remote_port).or_insert(0) += f.count; }
 
     // Hostnames best-effort (Windows DNS cache)
+    #[cfg(target_os = "windows")]
     let mut hosts: Vec<String> = Vec::new();
+    #[cfg(not(target_os = "windows"))]
+    let hosts: Vec<String> = Vec::new();
+    
     #[cfg(target_os = "windows")]
     {
         if let Ok(out) = Command::new("ipconfig").arg("/displaydns").output() {
