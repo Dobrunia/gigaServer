@@ -12,7 +12,8 @@ async fn list_routes() -> impl IntoResponse {
         "routes": [
             { "name": "Dashboard", "path": "/dashboard", "desc": "Server monitoring dashboard" },
             { "name": "Ajax Mini", "path": "/ajax", "desc": "Minimal Postman-like client" },
-            { "name": "Snippet Manager", "path": "/snippets", "desc": "Code snippets manager with syntax highlighting" }
+            { "name": "Snippet Manager", "path": "/snippets", "desc": "Code snippets manager with syntax highlighting" },
+            { "name": "Network Monitor", "path": "/network", "desc": "Network monitor" },
         ]
     }))
 }

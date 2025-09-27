@@ -17,6 +17,7 @@ struct ProxyReq {
     body: Option<serde_json::Value>,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize)]
 struct ProxyResp {
     status: u16,

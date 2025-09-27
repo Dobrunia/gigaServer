@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::fs;
 use std::path::Path;
 use reqwest::Client;
-use tracing::{info, warn, error, debug};
+use tracing::{info, error, debug};
 
 const GO_SERVER_BASE: &str = "http://127.0.0.1:3002/go";
 
