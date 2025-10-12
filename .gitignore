@@ -18,3 +18,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+
+servers/nodejs/node_modules/
+servers/nodejs/package-lock.json
