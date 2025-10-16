@@ -22,3 +22,6 @@ Thumbs.db
 
 servers/nodejs/node_modules/
 servers/nodejs/package-lock.json
+
+scripts/rust/target/
+scripts/rust/Cargo.lock
