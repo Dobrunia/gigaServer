@@ -4,6 +4,7 @@ const { BUTTONS, MESSAGES } = require('../texts');
 const messageHandler = (bot) => {
   bot.on('message', (msg) => {
     const chatId = msg.chat.id;
+    const isAI = msg.from.id === 'ai_user';
 
     // Игнорируем команды и кнопки
     if (
@@ -22,16 +23,18 @@ const messageHandler = (bot) => {
       return;
     }
 
-    // Получаем всех пользователей кроме отправителя
+    // Получаем всех пользователей кроме отправителя и AI
     const allUsers = userStorage.getAllUsers();
-    const otherUsers = allUsers.filter((user) => user.chatId !== chatId);
+    const otherUsers = allUsers.filter(
+      (user) => user.chatId !== chatId && user.userId !== 'ai_user'
+    );
 
-    if (otherUsers.length === 0) {
-      bot.sendMessage(chatId, MESSAGES.onlyYouInChat);
-      return;
-    }
+    // if (otherUsers.length === 0) {
+    //   bot.sendMessage(chatId, MESSAGES.onlyYouInChat);
+    //   return;
+    // }
 
-    // Отправляем сообщение всем остальным пользователям
+    // Отправляем сообщение всем остальным пользователям (исключая AI)
     otherUsers.forEach((user) => {
       try {
         if (msg.text) {
@@ -61,7 +64,7 @@ const messageHandler = (bot) => {
       // Добавляем сообщение в историю
       userStorage.addMessage(msg.text);
 
-      if (chatId !== 'ai_user') {
+      if (!isAI) {
         // Если сообщение не от AI
         // Триггер AI ответа (только для текстовых сообщений)
         userStorage.triggerAIResponse(bot);

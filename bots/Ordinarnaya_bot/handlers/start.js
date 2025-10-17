@@ -5,9 +5,8 @@ const startHandler = (bot) => {
   // Обработчик команды /start
   bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    const userCount = userStorage.getUserCount();
-
-    const helpText = START.helpText(userCount);
+    const stats = userStorage.getStats();
+    const helpText = START.helpText(stats.users, stats.ai);
 
     const keyboard = {
       keyboard: [
@@ -17,20 +16,26 @@ const startHandler = (bot) => {
       resize_keyboard: true,
     };
 
-    bot.sendMessage(chatId, helpText, {
-      parse_mode: 'Markdown',
-      reply_markup: keyboard,
-    });
+    try {
+      bot.sendMessage(chatId, helpText, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+    } catch (error) {
+      console.error(`Ошибка отправки helpText пользователю ${chatId}:`, error.message);
+    }
   });
 
   // Обработчик нажатия кнопки "Посмотреть онлайн"
   bot.onText(new RegExp(`${BUTTONS.online}`), (msg) => {
     const chatId = msg.chat.id;
-    const allUsers = userStorage.getAllUsers();
-    const userCount = allUsers.length;
-
-    const onlineText = START.onlineText(userCount);
-    bot.sendMessage(chatId, onlineText, { parse_mode: 'Markdown' });
+    const stats = userStorage.getStats();
+    const onlineText = START.onlineText(stats.users, stats.ai);
+    try {
+      bot.sendMessage(chatId, onlineText, { parse_mode: 'Markdown' });
+    } catch (error) {
+      console.error(`Ошибка отправки onlineText пользователю ${chatId}:`, error.message);
+    }
   });
 
   // Обработчик кнопки "Подключиться"
@@ -40,26 +45,35 @@ const startHandler = (bot) => {
 
     // Проверяем, не подключен ли уже пользователь
     if (userStorage.isUserRegistered(chatId)) {
-      bot.sendMessage(chatId, START.alreadyConnected);
+      try {
+        bot.sendMessage(chatId, START.alreadyConnected);
+      } catch (error) {
+        console.error(`Ошибка отправки alreadyConnected пользователю ${chatId}:`, error.message);
+      }
       return;
     }
 
     // Подключаем пользователя
     userStorage.addUser(chatId, user);
 
-    // Уведомляем всех остальных пользователей
+    // Уведомляем всех остальных пользователей (исключая AI)
     const allUsers = userStorage.getAllUsers();
-    const otherUsers = allUsers.filter((u) => u.chatId !== chatId);
+    const otherUsers = allUsers.filter((u) => u.chatId !== chatId && u.userId !== 'ai_user');
 
     otherUsers.forEach((otherUser) => {
       try {
-        bot.sendMessage(otherUser.chatId, START.userJoinedBroadcast(allUsers.length));
+        const stats = userStorage.getStats();
+        bot.sendMessage(otherUser.chatId, START.userJoinedBroadcast(stats.users, stats.ai));
       } catch (error) {
         console.error(`Ошибка отправки уведомления пользователю ${otherUser.chatId}:`, error);
       }
     });
 
-    bot.sendMessage(chatId, START.connectSuccess);
+    try {
+      bot.sendMessage(chatId, START.connectSuccess);
+    } catch (error) {
+      console.error(`Ошибка отправки connectSuccess пользователю ${chatId}:`, error.message);
+    }
   });
 
   // Обработчик кнопки "Отключиться"
@@ -68,25 +82,35 @@ const startHandler = (bot) => {
 
     // Проверяем, подключен ли пользователь
     if (!userStorage.isUserRegistered(chatId)) {
-      bot.sendMessage(chatId, START.notConnected);
+      try {
+        bot.sendMessage(chatId, START.notConnected);
+      } catch (error) {
+        console.error(`Ошибка отправки notConnected пользователю ${chatId}:`, error.message);
+      }
       return;
     }
 
     // Отключаем пользователя
     userStorage.removeUser(chatId);
 
-    // Уведомляем всех остальных пользователей
+    // Уведомляем всех остальных пользователей (исключая AI)
     const allUsers = userStorage.getAllUsers();
+    const otherUsers = allUsers.filter((u) => u.userId !== 'ai_user');
 
-    allUsers.forEach((otherUser) => {
+    otherUsers.forEach((otherUser) => {
       try {
-        bot.sendMessage(otherUser.chatId, START.userLeftBroadcast(allUsers.length));
+        const stats = userStorage.getStats();
+        bot.sendMessage(otherUser.chatId, START.userLeftBroadcast(stats.users, stats.ai));
       } catch (error) {
         console.error(`Ошибка отправки уведомления пользователю ${otherUser.chatId}:`, error);
       }
     });
 
-    bot.sendMessage(chatId, START.disconnectSuccess);
+    try {
+      bot.sendMessage(chatId, START.disconnectSuccess);
+    } catch (error) {
+      console.error(`Ошибка отправки disconnectSuccess пользователю ${chatId}:`, error.message);
+    }
   });
 };
 

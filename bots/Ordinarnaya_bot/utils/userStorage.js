@@ -109,7 +109,7 @@ class UserStorage {
     this.users.set(chatId, record);
 
     console.log(`Пользователь онлайн: ${record.firstName} (${chatId})`);
-    console.log(`Онлайн пользователей: ${this.getUserCount()}`);
+    console.log(`Онлайн: ${this.getRealUserCount()} пользователей, ${this.getAICount()} AI`);
   }
 
   /**
@@ -128,7 +128,7 @@ class UserStorage {
     if (user) {
       this.users.delete(chatId);
       console.log(`Пользователь офлайн: ${user.firstName} (${chatId})`);
-      console.log(`Онлайн пользователей: ${this.getUserCount()}`);
+      console.log(`Онлайн: ${this.getRealUserCount()} пользователей, ${this.getAICount()} AI`);
     }
   }
 
@@ -168,6 +168,34 @@ class UserStorage {
   }
 
   /**
+   * Получает количество реальных пользователей (исключая AI)
+   * @returns {number} Количество реальных пользователей
+   */
+  getRealUserCount() {
+    return Array.from(this.users.values()).filter((user) => user.userId !== 'ai_user').length;
+  }
+
+  /**
+   * Получает количество AI пользователей
+   * @returns {number} Количество AI пользователей
+   */
+  getAICount() {
+    return Array.from(this.users.values()).filter((user) => user.userId === 'ai_user').length;
+  }
+
+  /**
+   * Получает статистику пользователей
+   * @returns {Object} Объект с количеством пользователей и AI
+   */
+  getStats() {
+    return {
+      users: this.getRealUserCount(),
+      ai: this.getAICount(),
+      total: this.getUserCount(),
+    };
+  }
+
+  /**
    * Инициализирует AI пользователя в чате
    * @param {Object} config - Конфигурация AI пользователя
    */
@@ -177,6 +205,7 @@ class UserStorage {
       this.addUser(aiUser.user.chatId, aiUser.user);
       this.aiInstances.set(aiUser.user.chatId, aiUser);
       console.log('✅ AI пользователь добавлен в чат: ' + config.chatId);
+      console.log(`Онлайн: ${this.getRealUserCount()} пользователей, ${this.getAICount()} AI`);
     } catch (error) {
       console.error('❌ Ошибка инициализации AI пользователя:', error.message);
     }
@@ -225,7 +254,14 @@ class UserStorage {
         const allUsers = this.getAllUsers();
         allUsers.forEach((user) => {
           if (user.userId !== 'ai_user') {
-            bot.sendMessage(user.chatId, response);
+            try {
+              bot.sendMessage(user.chatId, response);
+            } catch (error) {
+              console.error(
+                `Ошибка отправки AI ответа пользователю ${user.chatId}:`,
+                error.message
+              );
+            }
           }
         });
 
