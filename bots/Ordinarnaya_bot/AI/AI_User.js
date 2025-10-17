@@ -34,7 +34,6 @@ class AI_User {
    * @returns {Promise<string>} Ответ AI
    */
   async generateResponse(messages) {
-    // Проверяем, не обрабатывается ли уже запрос
     if (this.isProcessing) {
       console.log('🤖 AI уже обрабатывает запрос, пропускаем...');
       return null;
@@ -51,9 +50,63 @@ class AI_User {
         contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
       });
 
-      const response = result.response.text();
-      console.log('✅ AI завершил обработку');
-      return response.trim();
+      // 1) Попробовать стандартную форму SDK (если присутствует)
+      try {
+        if (result && result.response && typeof result.response.text === 'function') {
+          const t = result.response.text();
+          if (t) return String(t).trim();
+        }
+      } catch (e) {
+        // игнорируем и пробуем альтернативы
+      }
+
+      // 2) Явная обработка структуры, которую ты показал:
+      // result.candidates[0].content.parts[*].text
+      if (Array.isArray(result?.candidates) && result.candidates.length > 0) {
+        const cand = result.candidates[0];
+        // поддерживаем вариант: cand.content.parts -> [{text: "..."}]
+        const parts =
+          cand?.content?.parts ??
+          cand?.message?.parts ?? // возможный альтернативный путь
+          null;
+
+        if (Array.isArray(parts) && parts.length > 0) {
+          const text = parts
+            .map((p) => p && (p.text ?? p.content ?? ''))
+            .filter(Boolean)
+            .join('');
+          if (text) return String(text).trim();
+        }
+
+        // fallback: cand.content может быть объект с .text
+        if (typeof cand?.content?.text === 'string') {
+          return cand.content.text.trim();
+        }
+        if (typeof cand?.text === 'string') {
+          return cand.text.trim();
+        }
+      }
+
+      // 3) Ещё один возможный путь: result.output / result.outputs
+      if (Array.isArray(result?.output) && result.output.length > 0) {
+        const out = result.output[0];
+        if (Array.isArray(out?.content)) {
+          const text = out.content
+            .map((c) => c.text ?? '')
+            .filter(Boolean)
+            .join('');
+          if (text) return text.trim();
+        }
+        if (typeof out?.text === 'string') return out.text.trim();
+      }
+
+      // 4) Логируем структуру для дебага — сделай это один раз при проблеме
+      console.error(
+        '⚠️ Не удалось извлечь текст из ответа Google GenAI SDK. Полная структура:\n',
+        console.log(result, { depth: 4 })
+      );
+
+      return null;
     } catch (error) {
       console.error('❌ Ошибка генерации ответа AI:', error);
       return null;
