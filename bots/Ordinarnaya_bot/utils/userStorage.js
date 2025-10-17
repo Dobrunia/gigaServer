@@ -15,6 +15,9 @@ class UserStorage {
     this.initializeAI(AI_CONFIG_FIRST);
   }
 
+  /**
+   * Создает директорию data/ если она не существует
+   */
   ensureDataDir() {
     const dataDir = path.dirname(this.jsonFile);
     if (!fs.existsSync(dataDir)) {
@@ -22,6 +25,10 @@ class UserStorage {
     }
   }
 
+  /**
+   * Загружает пользователей из JSON файла
+   * В память поднимает только пользователей со статусом 'online'
+   */
   loadFromJson() {
     try {
       if (fs.existsSync(this.jsonFile)) {
@@ -47,7 +54,10 @@ class UserStorage {
     }
   }
 
-  // Реестр храним целиком на диске
+  /**
+   * Читает полный реестр пользователей из JSON файла
+   * @returns {Array} Массив всех пользователей (online и offline)
+   */
   readRegistry() {
     try {
       const data = fs.readFileSync(this.jsonFile, 'utf8');
@@ -57,6 +67,10 @@ class UserStorage {
     }
   }
 
+  /**
+   * Записывает полный реестр пользователей в JSON файл
+   * @param {Array} array - Массив всех пользователей
+   */
   writeRegistry(array) {
     try {
       fs.writeFileSync(this.jsonFile, JSON.stringify(array, null, 2));
@@ -65,6 +79,11 @@ class UserStorage {
     }
   }
 
+  /**
+   * Добавляет пользователя в чат или обновляет его статус на 'online'
+   * @param {string} chatId - ID чата пользователя
+   * @param {Object} userData - Данные пользователя
+   */
   addUser(chatId, userData) {
     const registry = this.readRegistry();
     const nowISO = new Date().toISOString();
@@ -90,6 +109,10 @@ class UserStorage {
     console.log(`Онлайн пользователей: ${this.getUserCount()}`);
   }
 
+  /**
+   * Удаляет пользователя из чата (устанавливает статус 'offline')
+   * @param {string} chatId - ID чата пользователя
+   */
   removeUser(chatId) {
     const registry = this.readRegistry();
     const idx = registry.findIndex((u) => u.chatId === chatId);
@@ -106,31 +129,64 @@ class UserStorage {
     }
   }
 
+  /**
+   * Проверяет, зарегистрирован ли пользователь в чате
+   * @param {string} chatId - ID чата пользователя
+   * @returns {boolean} true если пользователь онлайн
+   */
   isUserRegistered(chatId) {
     return this.users.has(chatId);
   }
 
+  /**
+   * Получает данные пользователя по chatId
+   * @param {string} chatId - ID чата пользователя
+   * @returns {Object|null} Данные пользователя или null
+   */
   getUser(chatId) {
     return this.users.get(chatId);
   }
 
+  /**
+   * Получает всех онлайн пользователей
+   * @returns {Array} Массив онлайн пользователей
+   */
   getAllUsers() {
     // В памяти только online
     return Array.from(this.users.values());
   }
 
+  /**
+   * Получает количество онлайн пользователей
+   * @returns {number} Количество онлайн пользователей
+   */
   getUserCount() {
     return this.users.size;
   }
 
-  // Инициализация AI пользователя
+  /**
+   * Инициализирует AI пользователя в чате
+   * @param {Object} config - Конфигурация AI пользователя
+   */
   initializeAI(config) {
     try {
       const aiUser = new AI_User(config);
       this.addUser(aiUser.user.chatId, aiUser.user);
-      console.log('✅ AI пользователь добавлен в чат ' + config.username);
+      console.log('✅ AI пользователь добавлен в чат: ' + config.username);
     } catch (error) {
       console.error('❌ Ошибка инициализации AI пользователя:', error.message);
+    }
+  }
+
+  /**
+   * Добавляет сообщение в историю (максимум 20 сообщений)
+   * @param {Object} messageData - Данные сообщения {content, timestamp, isAI}
+   */
+  addMessage(messageData) {
+    this.messages.push(messageData);
+    // Ограничиваем до 20 сообщений
+    if (this.messages.length > 20) {
+      this.messages = this.messages.slice(-20);
     }
   }
 }
