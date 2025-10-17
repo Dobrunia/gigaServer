@@ -12,6 +12,7 @@ const startHandler = (bot) => {
       keyboard: [
         [{ text: BUTTONS.online }],
         [{ text: BUTTONS.connect }, { text: BUTTONS.disconnect }],
+        [{ text: BUTTONS.restart }],
       ],
       resize_keyboard: true,
     };
@@ -110,6 +111,35 @@ const startHandler = (bot) => {
       bot.sendMessage(chatId, START.disconnectSuccess);
     } catch (error) {
       console.error(`Ошибка отправки disconnectSuccess пользователю ${chatId}:`, error.message);
+    }
+  });
+
+  // Обработчик кнопки "Перезагрузить бота"
+  bot.onText(new RegExp(`${BUTTONS.restart}`), (msg) => {
+    const chatId = msg.chat.id;
+
+    try {
+      // Выполняем команду /start в фоне
+      const stats = userStorage.getStats();
+      const helpText = START.helpText(stats.users, stats.ai);
+
+      const keyboard = {
+        keyboard: [
+          [{ text: BUTTONS.online }],
+          [{ text: BUTTONS.connect }, { text: BUTTONS.disconnect }],
+          [{ text: BUTTONS.restart }],
+        ],
+        resize_keyboard: true,
+      };
+
+      bot.sendMessage(chatId, helpText, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+
+      bot.sendMessage(chatId, START.restartSuccess);
+    } catch (error) {
+      console.error(`Ошибка перезагрузки бота для пользователя ${chatId}:`, error.message);
     }
   });
 };

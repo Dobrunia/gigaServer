@@ -1,5 +1,5 @@
 const userStorage = require('../utils/userStorage');
-const { BUTTONS, MESSAGES } = require('../texts');
+const { BUTTONS, MESSAGES, START } = require('../texts');
 
 const messageHandler = (bot) => {
   bot.on('message', (msg) => {
@@ -12,7 +12,8 @@ const messageHandler = (bot) => {
       (msg.text.startsWith('/') ||
         msg.text === BUTTONS.online ||
         msg.text === BUTTONS.connect ||
-        msg.text === BUTTONS.disconnect)
+        msg.text === BUTTONS.disconnect ||
+        msg.text === BUTTONS.restart)
     ) {
       return;
     }
