@@ -1,9 +1,9 @@
 const AI_CONFIG_FIRST = {
-  chatId: 'ai_user',
+  chatId: 'first',
   id: 'ai_user',
   first_name: 'ai_user',
   last_name: 'ai_user',
-  username: 'первый',
+  username: 'ai_user',
   model: 'gemini-2.5-pro',
   prompt: `
     Вы участник в групповом чате с множеством разных людей. Чат непринуждённый, весёлый и анонимный — никто не делится личными данными, а разговоры могут быть о чём угодно: шутки, советы, истории, споры или случайные темы

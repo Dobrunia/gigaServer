@@ -12,6 +12,7 @@ class UserStorage {
 
     //AI
     this.messages = [];
+    this.aiInstances = new Map(); // chatId -> AI_User instance
     this.initializeAI(AI_CONFIG_FIRST);
   }
 
@@ -172,7 +173,8 @@ class UserStorage {
     try {
       const aiUser = new AI_User(config);
       this.addUser(aiUser.user.chatId, aiUser.user);
-      console.log('✅ AI пользователь добавлен в чат: ' + config.username);
+      this.aiInstances.set(aiUser.user.chatId, aiUser);
+      console.log('✅ AI пользователь добавлен в чат: ' + config.chatId);
     } catch (error) {
       console.error('❌ Ошибка инициализации AI пользователя:', error.message);
     }
@@ -180,13 +182,45 @@ class UserStorage {
 
   /**
    * Добавляет сообщение в историю (максимум 20 сообщений)
-   * @param {Object} messageData - Данные сообщения {content, timestamp, isAI}
+   * @param {string} messageText - Текст сообщения
    */
-  addMessage(messageData) {
-    this.messages.push(messageData);
+  addMessage(messageText) {
+    this.messages.push(messageText);
     // Ограничиваем до 20 сообщений
     if (this.messages.length > 20) {
       this.messages = this.messages.slice(-20);
+    }
+  }
+
+  /**
+   * Триггер для AI ответа на сообщение пользователя
+   * @param {Object} bot - Экземпляр бота
+   */
+  async triggerAIResponse(bot) {
+    // Случайный шанс ответа (30%)
+    // if (Math.random() > 0.3) return;
+
+    try {
+      // Получаем первый доступный AI экземпляр
+      // const aiInstance = this.aiInstances.values().next().value;
+      const aiInstance = this.aiInstances.get('first');
+      if (!aiInstance) return;
+
+      const response = await aiInstance.generateResponse(this.messages);
+      if (response) {
+        // Отправляем ответ всем пользователям кроме AI
+        const allUsers = this.getAllUsers();
+        allUsers.forEach((user) => {
+          if (user.userId !== 'ai_user') {
+            bot.sendMessage(user.chatId, response);
+          }
+        });
+
+        // Добавляем ответ AI в историю
+        this.addMessage(response);
+      }
+    } catch (error) {
+      console.error('❌ Ошибка триггера AI:', error);
     }
   }
 }

@@ -26,6 +26,28 @@ class AI_User {
     };
     this.prompt = config.prompt;
   }
+
+  /**
+   * Генерирует ответ AI на основе истории сообщений
+   * @param {Array} messages - Массив сообщений из чата
+   * @returns {Promise<string>} Ответ AI
+   */
+  async generateResponse(messages) {
+    try {
+      const fullPrompt = `${this.prompt}\n${messages.join('\n')}`;
+
+      const result = await this.ai.models.generateContent({
+        model: this.model,
+        contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      });
+
+      const response = result.response.text();
+      return response.trim();
+    } catch (error) {
+      console.error('❌ Ошибка генерации ответа AI:', error);
+      return null;
+    }
+  }
 }
 
 module.exports = AI_User;

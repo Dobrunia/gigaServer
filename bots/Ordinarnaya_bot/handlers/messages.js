@@ -36,8 +36,6 @@ const messageHandler = (bot) => {
       try {
         if (msg.text) {
           bot.sendMessage(user.chatId, MESSAGES.anonTextPrefix(msg.text));
-          // Добавляем сообщение в историю
-          userStorage.addMessage(msg.text);
         } else if (msg.sticker) {
           bot.sendMessage(user.chatId, MESSAGES.anonSticker);
           bot.sendSticker(user.chatId, msg.sticker.file_id);
@@ -59,10 +57,21 @@ const messageHandler = (bot) => {
       }
     });
 
+    if (msg.text) {
+      // Добавляем сообщение в историю
+      userStorage.addMessage(msg.text);
+
+      if (chatId !== 'ai_user') {
+        // Если сообщение не от AI
+        // Триггер AI ответа (только для текстовых сообщений)
+        userStorage.triggerAIResponse(bot);
+      }
+    }
+
     // Подтверждаем отправителю
     if (msg.document) {
       bot.sendMessage(chatId, MESSAGES.filesForbidden);
-    } 
+    }
     // else {
     //   bot.sendMessage(chatId, MESSAGES.sentToNParticipants(otherUsers.length));
     // }
