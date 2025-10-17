@@ -19,7 +19,7 @@ const messageHandler = (bot) => {
 
     // Проверяем, что пользователь зарегистрирован
     if (!userStorage.isUserRegistered(chatId)) {
-      bot.sendMessage(chatId, MESSAGES.needStart);
+      bot.sendMessage(chatId, START.notConnected);
       return;
     }
 
