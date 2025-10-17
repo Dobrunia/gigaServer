@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const AI_User = require('../AI/AI_User');
 const { AI_CONFIG_FIRST } = require('../AI/config');
+const { MESSAGES } = require('../texts');
 class UserStorage {
   constructor() {
     // В памяти держим только online пользователей
@@ -255,7 +256,7 @@ class UserStorage {
         allUsers.forEach((user) => {
           if (user.userId !== 'ai_user') {
             try {
-              bot.sendMessage(user.chatId, response);
+              bot.sendMessage(user.chatId, MESSAGES.anonTextPrefix(response));
             } catch (error) {
               console.error(
                 `Ошибка отправки AI ответа пользователю ${user.chatId}:`,
