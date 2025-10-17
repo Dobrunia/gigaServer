@@ -25,6 +25,7 @@ class AI_User {
       username: config.username,
     };
     this.prompt = config.prompt;
+    this.isProcessing = false; // Флаг обработки
   }
 
   /**
@@ -33,6 +34,15 @@ class AI_User {
    * @returns {Promise<string>} Ответ AI
    */
   async generateResponse(messages) {
+    // Проверяем, не обрабатывается ли уже запрос
+    if (this.isProcessing) {
+      console.log('🤖 AI уже обрабатывает запрос, пропускаем...');
+      return null;
+    }
+
+    this.isProcessing = true;
+    console.log('🤖 AI начал обработку...');
+
     try {
       const fullPrompt = `${this.prompt}\n${messages.join('\n')}`;
 
@@ -42,10 +52,13 @@ class AI_User {
       });
 
       const response = result.response.text();
+      console.log('✅ AI завершил обработку');
       return response.trim();
     } catch (error) {
       console.error('❌ Ошибка генерации ответа AI:', error);
       return null;
+    } finally {
+      this.isProcessing = false;
     }
   }
 }

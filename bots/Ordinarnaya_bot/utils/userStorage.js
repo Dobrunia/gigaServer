@@ -13,6 +13,8 @@ class UserStorage {
     //AI
     this.messages = [];
     this.aiInstances = new Map(); // chatId -> AI_User instance
+    this.lastAITrigger = 0; // Время последнего триггера AI
+    this.AI_COOLDOWN = 5 * 60 * 1000; // 5 минут в миллисекундах
     this.initializeAI(AI_CONFIG_FIRST);
   }
 
@@ -197,14 +199,25 @@ class UserStorage {
    * @param {Object} bot - Экземпляр бота
    */
   async triggerAIResponse(bot) {
+    const now = Date.now();
+
+    // Проверяем кулдаун (5 минут)
+    if (now - this.lastAITrigger < this.AI_COOLDOWN) {
+      const remainingTime = Math.ceil((this.AI_COOLDOWN - (now - this.lastAITrigger)) / 1000 / 60);
+      console.log(`🤖 AI на кулдауне, осталось ${remainingTime} мин`);
+      return;
+    }
+
     // Случайный шанс ответа (30%)
     // if (Math.random() > 0.3) return;
 
     try {
       // Получаем первый доступный AI экземпляр
-      // const aiInstance = this.aiInstances.values().next().value;
       const aiInstance = this.aiInstances.get('first');
       if (!aiInstance) return;
+
+      // Обновляем время последнего триггера
+      this.lastAITrigger = now;
 
       const response = await aiInstance.generateResponse(this.messages);
       if (response) {
@@ -218,6 +231,7 @@ class UserStorage {
 
         // Добавляем ответ AI в историю
         this.addMessage(response);
+        console.log('🤖 AI ответил в чат');
       }
     } catch (error) {
       console.error('❌ Ошибка триггера AI:', error);
