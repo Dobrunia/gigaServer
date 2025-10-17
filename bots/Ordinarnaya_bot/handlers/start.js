@@ -1,4 +1,5 @@
 const userStorage = require('../utils/userStorage');
+const { BUTTONS, START } = require('../texts');
 
 const startHandler = (bot) => {
   // Обработчик команды /start
@@ -6,28 +7,12 @@ const startHandler = (bot) => {
     const chatId = msg.chat.id;
     const userCount = userStorage.getUserCount();
 
-    const helpText = `
-💬 *Анонимный чат*
-
-Добро пожаловать! Здесь ты можешь общаться анонимно с другими участниками.
-
-*Как пользоваться:*
-• Нажми "🔗 Подключиться" чтобы присоединиться к чату
-• Напиши любое сообщение - оно отправится всем участникам анонимно
-• Нажми "❌ Отключиться" чтобы выйти из чата
-• Используй "👥 Посмотреть онлайн" чтобы узнать количество участников
-
-*Что можно отправлять:*
-✅ Текст, стикеры, фото, голосовые, видео
-❌ Файлы запрещены
-
-*Сейчас онлайн: ${userCount} участников*
-    `;
+    const helpText = START.helpText(userCount);
 
     const keyboard = {
       keyboard: [
-        [{ text: '👥 Посмотреть онлайн' }],
-        [{ text: '🔗 Подключиться' }, { text: '❌ Отключиться' }],
+        [{ text: BUTTONS.online }],
+        [{ text: BUTTONS.connect }, { text: BUTTONS.disconnect }],
       ],
       resize_keyboard: true,
     };
@@ -39,32 +24,23 @@ const startHandler = (bot) => {
   });
 
   // Обработчик нажатия кнопки "Посмотреть онлайн"
-  bot.onText(/👥 Посмотреть онлайн/, (msg) => {
+  bot.onText(new RegExp(`${BUTTONS.online}`), (msg) => {
     const chatId = msg.chat.id;
     const allUsers = userStorage.getAllUsers();
     const userCount = allUsers.length;
 
-    let onlineText;
-
-    if (userCount === 0) {
-      onlineText = '👥 В анонимном чате пока никого нет.\n\nНажми /connect чтобы присоединиться!';
-    } else if (userCount === 1) {
-      onlineText = `👥 *Онлайн в анонимном чате: ${userCount}*\n\nТолько ты в чате. Пригласи друзей! 👤`;
-    } else {
-      onlineText = `👥 *Онлайн в анонимном чате: ${userCount}*\n\nАктивных участников: ${userCount}\n\n💬 Напиши сообщение, и оно отправится всем участникам анонимно!`;
-    }
-
+    const onlineText = START.onlineText(userCount);
     bot.sendMessage(chatId, onlineText, { parse_mode: 'Markdown' });
   });
 
   // Обработчик кнопки "Подключиться"
-  bot.onText(/🔗 Подключиться/, (msg) => {
+  bot.onText(new RegExp(`${BUTTONS.connect}`), (msg) => {
     const chatId = msg.chat.id;
     const user = msg.from;
 
     // Проверяем, не подключен ли уже пользователь
     if (userStorage.isUserRegistered(chatId)) {
-      bot.sendMessage(chatId, '✅ Ты уже подключен к анонимному чату!');
+      bot.sendMessage(chatId, START.alreadyConnected);
       return;
     }
 
@@ -77,28 +53,22 @@ const startHandler = (bot) => {
 
     otherUsers.forEach((otherUser) => {
       try {
-        bot.sendMessage(
-          otherUser.chatId,
-          `🆕 Новый участник присоединился к анонимному чату!\n\n👥 Всего участников: ${allUsers.length}`
-        );
+        bot.sendMessage(otherUser.chatId, START.userJoinedBroadcast(allUsers.length));
       } catch (error) {
         console.error(`Ошибка отправки уведомления пользователю ${otherUser.chatId}:`, error);
       }
     });
 
-    bot.sendMessage(
-      chatId,
-      `✅ Подключение успешно!\n\nТеперь ты в анонимном чате. Просто напиши сообщение, и оно будет отправлено всем участникам.`
-    );
+    bot.sendMessage(chatId, START.connectSuccess);
   });
 
   // Обработчик кнопки "Отключиться"
-  bot.onText(/❌ Отключиться/, (msg) => {
+  bot.onText(new RegExp(`${BUTTONS.disconnect}`), (msg) => {
     const chatId = msg.chat.id;
 
     // Проверяем, подключен ли пользователь
     if (!userStorage.isUserRegistered(chatId)) {
-      bot.sendMessage(chatId, '❌ Ты не подключен к анонимному чату!');
+      bot.sendMessage(chatId, START.notConnected);
       return;
     }
 
@@ -110,19 +80,13 @@ const startHandler = (bot) => {
 
     allUsers.forEach((otherUser) => {
       try {
-        bot.sendMessage(
-          otherUser.chatId,
-          `👋 Участник покинул анонимный чат!\n\n👥 Осталось участников: ${allUsers.length}`
-        );
+        bot.sendMessage(otherUser.chatId, START.userLeftBroadcast(allUsers.length));
       } catch (error) {
         console.error(`Ошибка отправки уведомления пользователю ${otherUser.chatId}:`, error);
       }
     });
 
-    bot.sendMessage(
-      chatId,
-      `👋 Отключение успешно!\n\nТы больше не получаешь сообщения из анонимного чата.`
-    );
+    bot.sendMessage(chatId, START.disconnectSuccess);
   });
 };
 

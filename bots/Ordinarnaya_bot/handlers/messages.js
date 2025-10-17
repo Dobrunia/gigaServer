@@ -1,28 +1,24 @@
 const userStorage = require('../utils/userStorage');
+const { BUTTONS, MESSAGES } = require('../texts');
 
 const messageHandler = (bot) => {
   bot.on('message', (msg) => {
     const chatId = msg.chat.id;
-    const senderId = msg.from.id;
 
-    // Игнорируем команды
-    if (msg.text && msg.text.startsWith('/')) {
-      return;
-    }
-
-    // Игнорируем кнопки
+    // Игнорируем команды и кнопки
     if (
       msg.text &&
-      (msg.text === '👥 Посмотреть онлайн' ||
-        msg.text === '🔗 Подключиться' ||
-        msg.text === '❌ Отключиться')
+      (msg.text.startsWith('/') ||
+        msg.text === BUTTONS.online ||
+        msg.text === BUTTONS.connect ||
+        msg.text === BUTTONS.disconnect)
     ) {
       return;
     }
 
     // Проверяем, что пользователь зарегистрирован
     if (!userStorage.isUserRegistered(chatId)) {
-      bot.sendMessage(chatId, 'Сначала нажми /start для подключения к чату!');
+      bot.sendMessage(chatId, MESSAGES.needStart);
       return;
     }
 
@@ -31,7 +27,7 @@ const messageHandler = (bot) => {
     const otherUsers = allUsers.filter((user) => user.chatId !== chatId);
 
     if (otherUsers.length === 0) {
-      bot.sendMessage(chatId, 'Пока что ты один в чате. Пригласи друзей! 👥');
+      bot.sendMessage(chatId, MESSAGES.onlyYouInChat);
       return;
     }
 
@@ -39,21 +35,21 @@ const messageHandler = (bot) => {
     otherUsers.forEach((user) => {
       try {
         if (msg.text) {
-          bot.sendMessage(user.chatId, `💬 Анонимное сообщение:\n\n${msg.text}`);
+          bot.sendMessage(user.chatId, MESSAGES.anonTextPrefix(msg.text));
         } else if (msg.sticker) {
-          bot.sendMessage(user.chatId, '💬 Анонимный стикер:');
+          bot.sendMessage(user.chatId, MESSAGES.anonSticker);
           bot.sendSticker(user.chatId, msg.sticker.file_id);
         } else if (msg.photo) {
-          bot.sendMessage(user.chatId, '💬 Анонимное фото:');
+          bot.sendMessage(user.chatId, MESSAGES.anonPhoto);
           bot.sendPhoto(user.chatId, msg.photo[msg.photo.length - 1].file_id);
         } else if (msg.document) {
           // Не отправляем файлы другим пользователям
           return;
         } else if (msg.voice) {
-          bot.sendMessage(user.chatId, '💬 Анонимное голосовое сообщение:');
+          bot.sendMessage(user.chatId, MESSAGES.anonVoice);
           bot.sendVoice(user.chatId, msg.voice.file_id);
         } else if (msg.video) {
-          bot.sendMessage(user.chatId, '💬 Анонимное видео:');
+          bot.sendMessage(user.chatId, MESSAGES.anonVideo);
           bot.sendVideo(user.chatId, msg.video.file_id);
         }
       } catch (error) {
@@ -63,9 +59,9 @@ const messageHandler = (bot) => {
 
     // Подтверждаем отправителю
     if (msg.document) {
-      bot.sendMessage(chatId, '❌ Файлы запрещены в анонимном чате!');
+      bot.sendMessage(chatId, MESSAGES.filesForbidden);
     } else {
-      bot.sendMessage(chatId, `✅ Сообщение отправлено ${otherUsers.length} участникам!`);
+      bot.sendMessage(chatId, MESSAGES.sentToNParticipants(otherUsers.length));
     }
   });
 };

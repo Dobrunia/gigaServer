@@ -3,7 +3,8 @@ const path = require('path');
 
 class UserStorage {
   constructor() {
-    this.users = new Map(); // chatId -> userData
+    // В памяти держим только online пользователей
+    this.users = new Map(); // chatId -> userData (status === 'online')
     this.jsonFile = path.join(__dirname, '../data/users.json');
     this.ensureDataDir();
     this.loadFromJson();
@@ -22,54 +23,81 @@ class UserStorage {
         const data = fs.readFileSync(this.jsonFile, 'utf8');
         const usersArray = JSON.parse(data);
 
-        // Загружаем пользователей в Map
+        // В память поднимаем только online
+        this.users.clear();
         usersArray.forEach((user) => {
-          this.users.set(user.chatId, user);
+          if (user.status === 'online') {
+            this.users.set(user.chatId, user);
+          }
         });
 
-        console.log(`Загружено ${usersArray.length} пользователей из JSON`);
+        console.log(`Загружено из JSON: всего=${usersArray.length}, онлайн=${this.users.size}`);
+      } else {
+        // Инициализируем пустой файл
+        fs.writeFileSync(this.jsonFile, JSON.stringify([], null, 2));
+        console.log('Создан пустой users.json');
       }
     } catch (error) {
       console.error('Ошибка загрузки пользователей из JSON:', error);
     }
   }
 
-  saveToJson() {
+  // Реестр храним целиком на диске
+  readRegistry() {
     try {
-      const usersArray = Array.from(this.users.values());
-      fs.writeFileSync(this.jsonFile, JSON.stringify(usersArray, null, 2));
+      const data = fs.readFileSync(this.jsonFile, 'utf8');
+      return JSON.parse(data);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  writeRegistry(array) {
+    try {
+      fs.writeFileSync(this.jsonFile, JSON.stringify(array, null, 2));
     } catch (error) {
       console.error('Ошибка сохранения пользователей в JSON:', error);
     }
   }
 
   addUser(chatId, userData) {
-    this.users.set(chatId, {
+    const registry = this.readRegistry();
+    const nowISO = new Date().toISOString();
+    const idx = registry.findIndex((u) => u.chatId === chatId);
+    const record = {
       chatId,
       userId: userData.id,
       firstName: userData.first_name,
       lastName: userData.last_name,
       username: userData.username,
-      joinedAt: new Date().toISOString(),
-    });
+      joinedAt: idx >= 0 ? registry[idx].joinedAt : nowISO,
+      status: 'online',
+    };
 
-    // Сохраняем в JSON
-    this.saveToJson();
+    if (idx >= 0) registry[idx] = record;
+    else registry.push(record);
+    this.writeRegistry(registry);
 
-    console.log(`Пользователь добавлен: ${userData.first_name} (${chatId})`);
-    console.log(`Всего пользователей: ${this.users.size}`);
+    // В память кладем только online
+    this.users.set(chatId, record);
+
+    console.log(`Пользователь онлайн: ${record.firstName} (${chatId})`);
+    console.log(`Онлайн пользователей: ${this.getUserCount()}`);
   }
 
   removeUser(chatId) {
+    const registry = this.readRegistry();
+    const idx = registry.findIndex((u) => u.chatId === chatId);
+    if (idx >= 0) {
+      registry[idx] = { ...registry[idx], status: 'offline' };
+      this.writeRegistry(registry);
+    }
+
     const user = this.users.get(chatId);
     if (user) {
       this.users.delete(chatId);
-
-      // НЕ сохраняем в JSON - пользователь остается в файле
-      // this.saveToJson();
-
-      console.log(`Пользователь удален: ${user.firstName} (${chatId})`);
-      console.log(`Всего пользователей: ${this.users.size}`);
+      console.log(`Пользователь офлайн: ${user.firstName} (${chatId})`);
+      console.log(`Онлайн пользователей: ${this.getUserCount()}`);
     }
   }
 
@@ -82,18 +110,12 @@ class UserStorage {
   }
 
   getAllUsers() {
+    // В памяти только online
     return Array.from(this.users.values());
   }
 
   getUserCount() {
     return this.users.size;
-  }
-
-  // Очистка неактивных пользователей (можно вызывать периодически)
-  cleanupInactiveUsers() {
-    // Здесь можно добавить логику очистки неактивных пользователей
-    // Например, по времени последней активности
-    console.log('Очистка неактивных пользователей...');
   }
 }
 

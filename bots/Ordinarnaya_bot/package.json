@@ -16,8 +16,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "node-telegram-bot-api": "^0.64.0",
-    "dotenv": "^16.3.1"
+    "@google/genai": "^1.25.0",
+    "dotenv": "^16.3.1",
+    "mime": "^4.1.0",
+    "node-telegram-bot-api": "^0.64.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
