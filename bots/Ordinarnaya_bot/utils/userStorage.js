@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-
+const AI_User = require('../AI/AI_User');
+const { AI_CONFIG_FIRST } = require('../AI/config');
 class UserStorage {
   constructor() {
     // В памяти держим только online пользователей
@@ -8,6 +9,10 @@ class UserStorage {
     this.jsonFile = path.join(__dirname, '../data/users.json');
     this.ensureDataDir();
     this.loadFromJson();
+
+    //AI
+    this.messages = [];
+    this.initializeAI(AI_CONFIG_FIRST);
   }
 
   ensureDataDir() {
@@ -116,6 +121,17 @@ class UserStorage {
 
   getUserCount() {
     return this.users.size;
+  }
+
+  // Инициализация AI пользователя
+  initializeAI(config) {
+    try {
+      const aiUser = new AI_User(config);
+      this.addUser(aiUser.user.chatId, aiUser.user);
+      console.log('✅ AI пользователь добавлен в чат ' + config.username);
+    } catch (error) {
+      console.error('❌ Ошибка инициализации AI пользователя:', error.message);
+    }
   }
 }
 
