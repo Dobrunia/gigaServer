@@ -47,7 +47,8 @@ const messageHandler = (bot) => {
           bot.sendMessage(user.chatId, '💬 Анонимное фото:');
           bot.sendPhoto(user.chatId, msg.photo[msg.photo.length - 1].file_id);
         } else if (msg.document) {
-          bot.sendMessage(user.chatId, '❌ Файлы запрещены в анонимном чате!');
+          // Не отправляем файлы другим пользователям
+          return;
         } else if (msg.voice) {
           bot.sendMessage(user.chatId, '💬 Анонимное голосовое сообщение:');
           bot.sendVoice(user.chatId, msg.voice.file_id);
