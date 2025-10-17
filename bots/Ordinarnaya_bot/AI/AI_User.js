@@ -3,7 +3,6 @@
 // npm install -D @types/node
 
 const { GoogleGenAI } = require('@google/genai');
-
 class AI_User {
   constructor() {
     if (!process.env.GEMINI_API_KEY) {
@@ -17,10 +16,10 @@ class AI_User {
     this.model = 'gemini-2.5-pro';
     this.user = {
       chatId: 'ai_user',
-      userId: 'ai_user',
-      firstName: 'AI',
+      id: 'ai_user',
+      first_name: 'ai_user',
+      last_name: 'ai_user',
       username: 'ai_user',
-      joinedAt: new Date().toISOString(),
     };
     this.messages = [];
     this.prompt = `
@@ -35,44 +34,6 @@ class AI_User {
       Сгенерируйте ваш ответ как сообщение в чате. Не включайте системные заметки или объяснения — только само сообщение. ОТВЕЧАЙТЕ ТОЛЬКО НА РУССКОМ!
       `;
   }
-
-  // // Добавление сообщения в историю
-  // addMessage(messageData) {
-  //   this.messages.push({
-  //     ...messageData,
-  //     timestamp: new Date().toISOString(),
-  //   });
-
-  //   // Ограничиваем до 20 сообщений
-  //   if (this.messages.length > 20) {
-  //     this.messages = this.messages.slice(-20);
-  //   }
-  // }
-
-  // // Получение последних сообщений
-  // getMessages() {
-  //   return this.messages;
-  // }
-
-  // // Получение пользователя
-  // getUser() {
-  //   return this.user;
-  // }
-
-  // // Проверка, является ли пользователь AI
-  // isAIUser(chatId) {
-  //   return chatId === 'ai_user';
-  // }
-
-  // // Установка промпта
-  // setPrompt(newPrompt) {
-  //   this.prompt = newPrompt;
-  // }
-
-  // // Получение промпта
-  // getPrompt() {
-  //   return this.prompt;
-  // }
 }
 
 module.exports = AI_User;
