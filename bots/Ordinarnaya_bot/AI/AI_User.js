@@ -16,6 +16,7 @@ class AI_User {
     this.ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
     });
+    this.config = config; // Сохраняем весь конфиг
     this.model = config.model;
     this.user = {
       chatId: config.chatId,
