@@ -72,6 +72,9 @@ const startHandler = (bot) => {
 
     try {
       bot.sendMessage(chatId, START.connectSuccess);
+
+      // Запускаем таймаут для приветственного сообщения
+      userStorage.scheduleWelcomeMessage(chatId, bot);
     } catch (error) {
       console.error(`Ошибка отправки connectSuccess пользователю ${chatId}:`, error.message);
     }

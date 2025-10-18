@@ -225,6 +225,23 @@ class UserStorage {
   }
 
   /**
+   * Планирует приветственное сообщение с таймаутом 5 секунд
+   * @param {string} chatId - ID чата пользователя
+   * @param {Object} bot - Экземпляр бота
+   */
+  scheduleWelcomeMessage(chatId, bot) {
+    setTimeout(() => {
+      try {
+        // Отправляем "Привет)" как обычное сообщение в чат
+        bot.sendMessage(chatId, 'Привет)');
+        // console.log(`Приветственное сообщение отправлено пользователю ${chatId}`);
+      } catch (error) {
+        console.error(`Ошибка отправки приветственного сообщения пользователю ${chatId}:`, error);
+      }
+    }, 5000); // 5 секунд
+  }
+
+  /**
    * Триггер для AI ответа на сообщение пользователя
    * @param {Object} bot - Экземпляр бота
    */
