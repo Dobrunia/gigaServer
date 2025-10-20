@@ -16,8 +16,21 @@ end
 
 -- Переместить моба (в grid-играх проверку проходимости делать в менеджере)
 function Mob:move(dx, dy)
-    self.x = self.x + (dx or 0)
-    self.y = self.y + (dy or 0)
+    local newX = self.x + (dx or 0)
+    local newY = self.y + (dy or 0)
+    
+    -- Проверяем границы карты (если есть глобальная ссылка на игру)
+    if _G.Game and _G.Game.isWalkable then
+        -- Передаем self (моба) чтобы учесть размер хитбокса
+        if _G.Game:isWalkable(newX, newY, self) then
+            self.x = newX
+            self.y = newY
+        end
+    else
+        -- Если нет проверки - двигаемся как раньше
+        self.x = newX
+        self.y = newY
+    end
 end
 
 -- Возвращает true если моб мёртв (hp <= 0)
@@ -92,18 +105,28 @@ end
 function Mob:drawHpBar(px, py, tileSize)
     if not love or not love.graphics then return end
     local barWidth = tileSize
-    local barHeight = 4
-    local y = py - (barHeight + 2)
+    local barHeight = 12
+    local y = py - (barHeight + 4)
 
     local ratio = self:getHpRatio()
 
-    -- фон
-    love.graphics.setColor(0, 0, 0, 0.6)
+    -- фон (черный с прозрачностью)
+    love.graphics.setColor(0, 0, 0, 0.8)
     love.graphics.rectangle("fill", px, y, barWidth, barHeight)
 
-    -- заполнение текущим здоровьем
-    love.graphics.setColor(0.15, 0.85, 0.2, 1)
+    -- заполнение текущим здоровьем (красный)
+    love.graphics.setColor(0.9, 0.1, 0.1, 1)
     love.graphics.rectangle("fill", px, y, math.floor(barWidth * ratio), barHeight)
+
+    -- текст HP (белый)
+    love.graphics.setColor(1, 1, 1, 1)
+    local hpText = tostring(self.hp) .. "/" .. tostring(self.maxHp)
+    local font = love.graphics.getFont()
+    local textWidth = font:getWidth(hpText)
+    local textHeight = font:getHeight()
+    local textX = px + (barWidth - textWidth) / 2
+    local textY = y + (barHeight - textHeight) / 2
+    love.graphics.print(hpText, math.floor(textX), math.floor(textY))
 
     -- восстановим белый цвет
     love.graphics.setColor(1, 1, 1, 1)

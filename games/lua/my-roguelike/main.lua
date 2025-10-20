@@ -32,4 +32,12 @@ function love.keypressed(key, scancode, isrepeat)
     Game:keypressed(key, scancode, isrepeat)
 end
 
+function love.mousepressed(x, y, button, istouch, presses)
+    Game:mousepressed(x, y, button)
+end
+
+function love.mousemoved(x, y, dx, dy, istouch)
+    Game:mousemoved(x, y, dx, dy)
+end
+
 -- Коротко: main.lua только проксирует вызовы LÖVE в модуль Game. Это облегчает масштабирование и тестирование.

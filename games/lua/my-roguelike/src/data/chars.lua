@@ -7,5 +7,7 @@ return {
         armor = 0,
         spriteRow = 4,
         spriteCol = 1, -- синий маг
+        width = 96,
+        height = 96,
     },
 }
