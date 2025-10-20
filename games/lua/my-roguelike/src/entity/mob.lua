@@ -1,13 +1,15 @@
 local Mob = {}
 Mob.__index = Mob
 
-function Mob:new(x, y, maxHp)
+function Mob:new(x, y, maxHp, width, height)
     local obj = {
         x = x or 0,
         y = y or 0,
         maxHp = maxHp,
         hp = maxHp,
         dead = false, -- маркер: смерть уже обработана (onDeath вызван)
+        width = width or 32,  -- ширина в пикселях
+        height = height or 32, -- высота в пикселях
     }
     return setmetatable(obj, self)
 end

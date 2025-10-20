@@ -132,11 +132,16 @@ function Game:handleMovement()
     end
 end
 
-function Game:drawSprite(row, col, x, y)
+function Game:drawSprite(row, col, x, y, width, height)
     if not self.spritesheet or not row or not col then return end
+    
+    width = width or 32
+    height = height or 32
     
     local sx = col * self.spriteSize
     local sy = row * self.spriteSize
+    local scaleX = width / self.spriteSize
+    local scaleY = height / self.spriteSize
     
     local quad = love.graphics.newQuad(
         sx, sy,
@@ -144,7 +149,7 @@ function Game:drawSprite(row, col, x, y)
         self.spritesheet:getDimensions()
     )
     
-    love.graphics.draw(self.spritesheet, quad, x, y)
+    love.graphics.draw(self.spritesheet, quad, x, y, 0, scaleX, scaleY)
 end
 
 function Game:draw()
@@ -156,11 +161,17 @@ function Game:draw()
         local py = self.player.screenY
         
         -- HP бар над персонажем
-        self.player:drawHpBar(px, py, TILE_SIZE)
+        self.player:drawHpBar(px, py, self.player.width)
         
         -- Рисуем спрайт персонажа
         love.graphics.setColor(1, 1, 1)
-        self:drawSprite(self.player.spriteRow, self.player.spriteCol, px, py)
+        self:drawSprite(
+            self.player.spriteRow, 
+            self.player.spriteCol, 
+            px, py, 
+            self.player.width, 
+            self.player.height
+        )
     end
 end
 

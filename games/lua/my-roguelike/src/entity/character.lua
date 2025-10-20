@@ -8,6 +8,8 @@ local DEFAULT = {
     speed = 50,
     armor = 0,
     maxHp = 100,
+    width = 96,
+    height = 96,
 }
 
 -- Конструктор персонажа
@@ -33,7 +35,13 @@ function Character:new(character_data)
     local x = character_data.x
     local y = character_data.y
 
-    local obj = Mob:new(x, y, charData.maxHp or DEFAULT.maxHp)
+    local obj = Mob:new(
+        x, 
+        y, 
+        charData.maxHp or DEFAULT.maxHp,
+        charData.width or DEFAULT.width,
+        charData.height or DEFAULT.height
+    )
     setmetatable(obj, self)
 
     -- Базовые параметры
