@@ -11,6 +11,12 @@ local DEFAULT = {
 }
 
 -- Конструктор персонажа
+-- пример character_data = {
+--     x = 0,
+--     y = 0,
+--     maxHp = 100,
+--     key = Mage,
+-- }
 function Character:new(character_data)
     local chars = require("src.data.chars")
     
@@ -24,8 +30,8 @@ function Character:new(character_data)
         error("Character '" .. key .. "' not found in chars.lua")
     end
     
-    local x = character_data.x or 0
-    local y = character_data.y or 0
+    local x = character_data.x
+    local y = character_data.y
     
     local obj = Mob:new(x, y, charData.maxHp or DEFAULT.maxHp)
     setmetatable(obj, self)
