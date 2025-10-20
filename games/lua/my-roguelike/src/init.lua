@@ -179,6 +179,10 @@ function Game:keypressed(key, scancode, isrepeat)
     -- Обработка других клавиш (не движения)
     if key == "escape" then
         love.event.quit()
+    elseif key == "f11" or (key == "return" and love.keyboard.isDown("lalt", "ralt")) then
+        -- F11 или Alt+Enter для полноэкранного режима
+        local fullscreen = love.window.getFullscreen()
+        love.window.setFullscreen(not fullscreen)
     end
 end
 

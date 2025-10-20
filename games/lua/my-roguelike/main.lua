@@ -5,6 +5,15 @@
 local Game = require("src.init")
 
 function love.load(args)
+    -- Настройка окна
+    love.window.setTitle("Doblike")
+    love.window.setMode(1280, 720, {
+        resizable = true,
+        vsync = 1,
+        minwidth = 800,
+        minheight = 600
+    })
+    
     -- инициализация RNG, шрифтов и т.п.
     math.randomseed(os.time())
     love.graphics.setDefaultFilter("nearest", "nearest")
