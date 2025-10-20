@@ -45,6 +45,7 @@ function Character:new(character_data)
     obj.speed = charData.speed or DEFAULT.speed
     obj.armor = charData.armor or DEFAULT.armor
     obj.name = charData.name
+    obj.symbol = character_data.symbol or charData.symbol or "@"
 
     return obj
 end
@@ -61,12 +62,12 @@ end
 
 -- Добавить опыт (exp) с простым повышением уровня
 function Character:addExp(amount)
-    self.exp += tonumber(amount)
+    self.exp = self.exp + tonumber(amount)
 
     -- Проверяем повышение уровня (может быть несколько уровней сразу)
     while self.exp >= self.expToNext do
-        self.exp -= self.expToNext
-        self.level += 1
+        self.exp = self.exp - self.expToNext
+        self.level = self.level + 1
         self.expToNext = math.floor(self.expToNext * 1.25)
     end
 end
