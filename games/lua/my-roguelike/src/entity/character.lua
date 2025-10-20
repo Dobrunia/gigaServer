@@ -5,7 +5,7 @@ Character.__index = Character
 setmetatable(Character, {__index = Mob})
 
 local DEFAULT = {
-    speed = 1,
+    speed = 50,
     armor = 0,
     maxHp = 100,
 }
