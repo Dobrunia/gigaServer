@@ -19,20 +19,20 @@ local DEFAULT = {
 -- }
 function Character:new(character_data)
     local chars = require("src.data.chars")
-    
+
     local key = character_data.key
     if not key then
         error("character_data.key is required")
     end
-    
+
     local charData = chars[key]
     if not charData then
         error("Character '" .. key .. "' not found in chars.lua")
     end
-    
+
     local x = character_data.x
     local y = character_data.y
-    
+
     local obj = Mob:new(x, y, charData.maxHp or DEFAULT.maxHp)
     setmetatable(obj, self)
 
