@@ -49,4 +49,26 @@ function Character:new(character_data)
     return obj
 end
 
+-- Установить скорость (speed)
+function Character:setSpeed(value)
+    self.speed = tonumber(value)
+end
+
+-- Установить броню (armor)
+function Character:setArmor(value)
+    self.armor = tonumber(value)
+end
+
+-- Добавить опыт (exp) с простым повышением уровня
+function Character:addExp(amount)
+    self.exp += tonumber(amount)
+
+    -- Проверяем повышение уровня (может быть несколько уровней сразу)
+    while self.exp >= self.expToNext do
+        self.exp -= self.expToNext
+        self.level += 1
+        self.expToNext = math.floor(self.expToNext * 1.25)
+    end
+end
+
 return Character
