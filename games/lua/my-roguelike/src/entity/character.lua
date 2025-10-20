@@ -45,7 +45,9 @@ function Character:new(character_data)
     obj.speed = charData.speed or DEFAULT.speed
     obj.armor = charData.armor or DEFAULT.armor
     obj.name = charData.name
-    obj.symbol = character_data.symbol or charData.symbol or "@"
+    obj.symbol = charData.symbol or "@"
+    obj.spriteRow = charData.spriteRow or 0
+    obj.spriteCol = charData.spriteCol or 0
 
     return obj
 end

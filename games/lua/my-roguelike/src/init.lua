@@ -8,6 +8,14 @@ local MOVE_SPEED = 320 -- пикселей в секунду (увеличена
 local MOVE_COOLDOWN = 0.15 -- секунды между движениями (уменьшен для отзывчивости)
 
 function Game:load()
+    -- Загружаем спрайтшит
+    self.spritesheet = love.graphics.newImage("assets/rogues.png")
+    self.spritesheet:setFilter("nearest", "nearest") -- пиксельная графика
+    
+    -- Параметры спрайтшита
+    self.spriteSize = 32
+    self.spriteCols = 8
+    
     -- Создаем персонажа
     self.player = Character:new({
         key = "Mage",
@@ -124,6 +132,21 @@ function Game:handleMovement()
     end
 end
 
+function Game:drawSprite(row, col, x, y)
+    if not self.spritesheet or not row or not col then return end
+    
+    local sx = col * self.spriteSize
+    local sy = row * self.spriteSize
+    
+    local quad = love.graphics.newQuad(
+        sx, sy,
+        self.spriteSize, self.spriteSize,
+        self.spritesheet:getDimensions()
+    )
+    
+    love.graphics.draw(self.spritesheet, quad, x, y)
+end
+
 function Game:draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     
@@ -132,16 +155,12 @@ function Game:draw()
         local px = self.player.screenX
         local py = self.player.screenY
         
-        -- Рисуем квадрат для персонажа
-        love.graphics.setColor(0.3, 0.5, 1)
-        love.graphics.rectangle("fill", px, py, TILE_SIZE, TILE_SIZE)
-        
         -- HP бар над персонажем
         self.player:drawHpBar(px, py, TILE_SIZE)
         
-        -- Рисуем символ персонажа
+        -- Рисуем спрайт персонажа
         love.graphics.setColor(1, 1, 1)
-        love.graphics.print(self.player.symbol or "@", px + 8, py + 8, 0, 2, 2)
+        self:drawSprite(self.player.spriteRow, self.player.spriteCol, px, py)
     end
 end
 
