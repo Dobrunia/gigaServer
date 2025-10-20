@@ -74,4 +74,37 @@ function Mob:getHealth()
     return {hp = self.hp, maxHp = self.maxHp, text = tostring(self.hp) .. "/" .. tostring(self.maxHp)}
 end
 
+-- Доля здоровья [0..1]
+function Mob:getHpRatio()
+    local maxHp = self.maxHp or 1
+    if maxHp <= 0 then return 0 end
+    local hp = self.hp or 0
+    if hp < 0 then hp = 0 end
+    if hp > maxHp then hp = maxHp end
+    return hp / maxHp
+end
+
+-- Рисует HP бар над мобом
+-- px, py: экранные координаты верхнего левого угла тайла
+-- tileSize: ширина/высота тайла
+function Mob:drawHpBar(px, py, tileSize)
+    if not love or not love.graphics then return end
+    local barWidth = tileSize
+    local barHeight = 4
+    local y = py - (barHeight + 2)
+
+    local ratio = self:getHpRatio()
+
+    -- фон
+    love.graphics.setColor(0, 0, 0, 0.6)
+    love.graphics.rectangle("fill", px, y, barWidth, barHeight)
+
+    -- заполнение текущим здоровьем
+    love.graphics.setColor(0.15, 0.85, 0.2, 1)
+    love.graphics.rectangle("fill", px, y, math.floor(barWidth * ratio), barHeight)
+
+    -- восстановим белый цвет
+    love.graphics.setColor(1, 1, 1, 1)
+end
+
 return Mob

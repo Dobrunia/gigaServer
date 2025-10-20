@@ -34,6 +34,9 @@ function Game:draw()
         love.graphics.setColor(0.3, 0.5, 1)
         love.graphics.rectangle("fill", px, py, TILE_SIZE, TILE_SIZE)
         
+        -- HP бар над персонажем
+        self.player:drawHpBar(px, py, TILE_SIZE)
+
         -- Рисуем символ персонажа
         love.graphics.setColor(1, 1, 1)
         love.graphics.print(self.player.symbol or "@", px + 8, py + 8, 0, 2, 2)
