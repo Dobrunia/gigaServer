@@ -26,5 +26,12 @@ servers/nodejs/package-lock.json
 scripts/rust/target/
 scripts/rust/Cargo.lock
 
-games/lua/32rogues-0.5.0.zip
-games/lua/my-roguelike/32rogues
+games/lua/*.zip
+games/lua/*.rar
+games/lua/32rogues
+games/lua/BloodBulletFree
+games/lua/DungeonCrawlerSprites
+games/lua/flames
+games/lua/Fireballs by Weentermakesgames
+games/lua/Free characters (32x32) shiru0shi
+games/lua/Shikashi's Fantasy Icons Pack v2
