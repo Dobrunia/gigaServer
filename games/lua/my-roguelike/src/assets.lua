@@ -465,23 +465,60 @@ function Assets.loadHeroSprites(folderPath)
 end
 
 -- Load mob sprites from a folder with standard naming:
--- i.png - main sprite (no animation, static image)
--- Returns table: { sprite = Image }
+-- i.png - idle animation (standing)
+-- 1.png, 2.png - idle animation frames (optional)
+-- a.png - attack animation (optional)
+-- Returns table: { idle = Image, idleFrames = {Image, Image, ...}, attack = Image }
 function Assets.loadMobSprites(folderPath)
     local sprites = {
-        sprite = nil
+        idle = nil,
+        idleFrames = {},
+        attack = nil
     }
 
-    -- Load main sprite (required)
-    local spritePath = folderPath .. "/i.png"
-    local spriteSuccess, spriteImg = pcall(love.graphics.newImage, spritePath)
-    if spriteSuccess then
-        sprites.sprite = spriteImg
-        Utils.log("Loaded mob sprite: " .. spritePath)
+    -- Load idle sprite (required)
+    local idlePath = folderPath .. "/i.png"
+    local idleSuccess, idleImg = pcall(love.graphics.newImage, idlePath)
+    if idleSuccess then
+        sprites.idle = idleImg
+        Utils.log("Loaded mob idle sprite: " .. idlePath)
     else
-        Utils.logError("Failed to load mob sprite: " .. spritePath)
-        -- Create placeholder if sprite missing
-        sprites.sprite = createPlaceholder(32, 32, 0.5, 0.2, 0.5)
+        Utils.logError("Failed to load mob idle sprite: " .. idlePath)
+        -- Create placeholder if idle missing
+        sprites.idle = createPlaceholder(32, 32, 0.5, 0.2, 0.5)
+    end
+
+    -- Load idle animation frames (1.png, 2.png, etc.)
+    local frameIndex = 1
+    while true do
+        local framePath = folderPath .. "/" .. frameIndex .. ".png"
+        local frameSuccess, frameImg = pcall(love.graphics.newImage, framePath)
+        if frameSuccess then
+            table.insert(sprites.idleFrames, frameImg)
+            frameIndex = frameIndex + 1
+        else
+            break  -- No more frames
+        end
+    end
+
+    if #sprites.idleFrames > 0 then
+        Utils.log("Loaded " .. #sprites.idleFrames .. " mob idle animation frames from " .. folderPath)
+    else
+        Utils.log("No mob idle animation frames found in " .. folderPath)
+        -- Use idle sprite as fallback for frames
+        if sprites.idle then
+            table.insert(sprites.idleFrames, sprites.idle)
+        end
+    end
+
+    -- Load attack sprite (optional)
+    local attackPath = folderPath .. "/a.png"
+    local attackSuccess, attackImg = pcall(love.graphics.newImage, attackPath)
+    if attackSuccess then
+        sprites.attack = attackImg
+        Utils.log("Loaded mob attack sprite: " .. attackPath)
+    else
+        Utils.log("No mob attack sprite found in " .. attackPath)
     end
 
     return sprites

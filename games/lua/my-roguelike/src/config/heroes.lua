@@ -21,7 +21,7 @@
 --   baseCastSpeed = number (multiplier, 1.0 = normal),
 --   castSpeedGrowth = number,
 --   spriteSize = number (optional, display size in pixels, default: 64)
---   -- hitboxRadius calculated automatically: spriteSize * 0.25
+--   -- hitboxRadius calculated automatically: spriteSize * 0.4
 --   innateSkill = table (passive modifier)
 -- }
 

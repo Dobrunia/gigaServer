@@ -5,8 +5,12 @@
 --   id = "unique_id",
 --   name = "Mob Name",
 --   type = "melee" | "ranged",
---   spritesheet = "filename" (spritesheet file from assets/, without .png),
---   spriteIndex = number (index in spritesheet, 1-based),
+--   assetFolder = "foldername" (folder in assets/mobs/ containing sprite files),
+--   -- Sprite files in folder:
+--   --   i.png - idle animation (standing)
+--   --   1.png, 2.png - idle animation frames (optional)
+--   --   a.png - attack animation (when attacking)
+--   --   NOTE: All sprites should be oriented FACING RIGHT
 --   baseHp = number,
 --   hpGrowth = number (per level),
 --   baseArmor = number,
