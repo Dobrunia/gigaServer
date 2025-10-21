@@ -1,43 +1,75 @@
 -- main.lua
--- Точка входа для LÖVE
+-- Entry point for LÖVE framework
+-- Proxies all LÖVE callbacks to Game module
 
--- Подключаем менеджер игры (в src/init.lua)
-local Game = require("src.init")
+local Game = require("src.game")
+
+-- Global game instance
+local game = nil
 
 function love.load(args)
-    -- Настройка окна
-    love.window.setTitle("Doblike")
-    love.window.setMode(1280, 720, {
-        resizable = true,
-        vsync = 1,
-        minwidth = 800,
-        minheight = 600
-    })
-    
-    -- инициализация RNG, шрифтов и т.п.
+    -- Seed RNG
     math.randomseed(os.time())
+    
+    -- Set pixel art filter (no smoothing)
     love.graphics.setDefaultFilter("nearest", "nearest")
-    Game:load()
+    
+    -- Create and load game
+    game = Game.new()
+    game:load()
 end
 
 function love.update(dt)
-    Game:update(dt)
+    if game then
+        game:update(dt)
+    end
 end
 
 function love.draw()
-    Game:draw()
+    if game then
+        game:draw()
+    end
 end
 
 function love.keypressed(key, scancode, isrepeat)
-    Game:keypressed(key, scancode, isrepeat)
+    if game then
+        game:keypressed(key, scancode, isrepeat)
+    end
+end
+
+function love.keyreleased(key)
+    if game then
+        game:keyreleased(key)
+    end
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
-    Game:mousepressed(x, y, button)
+    if game then
+        game:mousepressed(x, y, button)
+    end
 end
 
-function love.mousemoved(x, y, dx, dy, istouch)
-    Game:mousemoved(x, y, dx, dy)
+function love.mousereleased(x, y, button, istouch, presses)
+    if game then
+        game:mousereleased(x, y, button)
+    end
 end
 
--- Коротко: main.lua только проксирует вызовы LÖVE в модуль Game. Это облегчает масштабирование и тестирование.
+function love.resize(w, h)
+    if game then
+        game:resize(w, h)
+    end
+end
+
+function love.gamepadpressed(joystick, button)
+    if game and game.input then
+        game.input:gamepadpressed(joystick, button)
+    end
+end
+
+function love.gamepadreleased(joystick, button)
+    if game and game.input then
+        game.input:gamepadreleased(joystick, button)
+    end
+end
+
