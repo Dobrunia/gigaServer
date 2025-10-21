@@ -409,13 +409,14 @@ function Game:startGame()
     -- Add starting skill with proper initialization
     self.player:addSkill(startingSkill)
     
-    -- Set player sprite from spritesheet
-    local spritesheetName = heroData.spritesheet or "rogues"  -- Default to "rogues" if not specified
-    local spriteIndex = heroData.spriteIndex or Assets.images.player
-    self.player.spritesheet = Assets.getSpritesheet(spritesheetName)
-    self.player.quad = Assets.getQuad(spritesheetName, spriteIndex)
-    self.player.spriteIndex = spriteIndex
-    self.player.spritesheetName = spritesheetName
+    -- Load hero sprites from folder if needed
+    if heroData.assetFolder and not heroData.loadedSprites then
+        heroData.loadedSprites = Assets.loadHeroSprites("assets/heroes/" .. heroData.assetFolder)
+    end
+    
+    -- Set player sprite data
+    self.player.heroSprites = heroData.loadedSprites
+    self.player.assetFolder = heroData.assetFolder
     self.player.isPlayer = true
     
     -- DEBUG (can remove later)

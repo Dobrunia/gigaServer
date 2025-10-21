@@ -84,11 +84,22 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         local spriteY = cardY + 130
         
         Colors.setColor(Colors.TEXT_PRIMARY)
-        local spritesheetName = hero.spritesheet or "rogues"  -- Default to "rogues" if not specified
-        local spritesheet = assets.getSpritesheet(spritesheetName)
-        local quad = assets.getQuad(spritesheetName, hero.spriteIndex)
-        if spritesheet and quad then
-            love.graphics.draw(spritesheet, quad, spriteX, spriteY, 0, 4, 4, 16, 16)
+        
+        -- Load hero sprites from folder if needed
+        if hero.assetFolder and not hero.loadedSprites then
+            hero.loadedSprites = assets.loadHeroSprites("assets/heroes/" .. hero.assetFolder)
+        end
+        
+        if hero.loadedSprites and hero.loadedSprites.idle then
+            local sprite = hero.loadedSprites.idle
+            local spriteW, spriteH = sprite:getDimensions()
+            -- Scale sprite to fit nicely in card
+            local scale = 64 / math.max(spriteW, spriteH)
+            love.graphics.draw(sprite, spriteX, spriteY, 0, scale, scale, spriteW/2, spriteH/2)
+        else
+            -- Fallback: draw placeholder
+            Colors.setColor(Colors.TEXT_DIM)
+            love.graphics.rectangle("fill", spriteX - 32, spriteY - 32, 64, 64)
         end
         
         -- Key stats with growth (moved to right side)

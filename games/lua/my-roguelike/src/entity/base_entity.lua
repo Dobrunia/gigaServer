@@ -46,10 +46,51 @@ function BaseEntity.new(x, y)
     self.rotation = 0
     self.scale = 1
     
+    -- Hero animation
+    self.heroSprites = nil     -- Loaded hero sprites
+    self.isAttacking = false   -- Attack animation state
+    self.attackTimer = 0       -- Attack animation timer
+    self.attackDuration = 0.5  -- Attack animation duration (0.5 seconds)
+    self.isWalking = false     -- Walking animation state
+    self.walkFrameIndex = 1    -- Current walking frame (1 or 2)
+    self.walkTimer = 0         -- Walking animation timer
+    self.walkSpeed = 0.3       -- Seconds per walking frame
+    
     -- Status effects
     self.statusEffects = {}
     
     return self
+end
+
+-- === HERO ANIMATION ===
+
+function BaseEntity:updateHeroAnimation(dt)
+    -- Update attack animation (HIGHEST PRIORITY)
+    if self.isAttacking then
+        self.attackTimer = self.attackTimer + dt
+        if self.attackTimer >= self.attackDuration then
+            self.isAttacking = false
+            self.attackTimer = 0
+        end
+        return  -- Don't update walking animation during attack
+    end
+    
+    -- Update walking animation (only when not attacking)
+    if self.isWalking and self.heroSprites and self.heroSprites.idleFrames and #self.heroSprites.idleFrames >= 2 then
+        self.walkTimer = self.walkTimer + dt
+        if self.walkTimer >= self.walkSpeed then
+            self.walkTimer = 0
+            self.walkFrameIndex = self.walkFrameIndex + 1
+            if self.walkFrameIndex > 2 then
+                self.walkFrameIndex = 1
+            end
+        end
+    end
+end
+
+function BaseEntity:startAttackAnimation()
+    self.isAttacking = true
+    self.attackTimer = 0
 end
 
 -- === UPDATE ===
@@ -62,6 +103,17 @@ function BaseEntity:update(dt)
     -- Update position from velocity
     self.x = self.x + self.vx * dt
     self.y = self.y + self.vy * dt
+    
+    -- Update movement direction for sprite flipping
+    if self.vx ~= 0 or self.vy ~= 0 then
+        self.dx = self.vx
+        self.dy = self.vy
+    end
+    
+    -- Update hero animation
+    if self.heroSprites then
+        self:updateHeroAnimation(dt)
+    end
     
     -- Update status effects
     self:updateStatusEffects(dt)
@@ -243,6 +295,40 @@ function BaseEntity:draw()
             self.scale, self.scale,
             16, 16  -- Origin at center (16, 16) for 32x32 sprites
         )
+    elseif self.heroSprites then
+        -- Hero sprite rendering with animation and direction flipping
+        local sprite = nil
+        
+        -- Choose sprite based on state (PRIORITY: Attack > Walking > Idle)
+        if self.isAttacking and self.heroSprites.attack then
+            -- Attack animation (0.5 seconds) - HIGHEST PRIORITY
+            sprite = self.heroSprites.attack
+        elseif self.isWalking and self.heroSprites.idleFrames and #self.heroSprites.idleFrames >= 2 then
+            -- Walking animation (1.png, 2.png) - MEDIUM PRIORITY
+            sprite = self.heroSprites.idleFrames[self.walkFrameIndex] or self.heroSprites.idle
+        else
+            -- Idle animation (standing) - LOWEST PRIORITY
+            sprite = self.heroSprites.idle
+        end
+        
+        if sprite then
+            local spriteW, spriteH = sprite:getDimensions()
+            -- Fixed size for hero sprites (not based on hitbox)
+            local targetSize = 64  -- Standard hero size
+            local scale = targetSize / math.max(spriteW, spriteH)
+            
+            -- Flip horizontally if facing left (dx < 0)
+            local flipX = (self.dx and self.dx < 0) and -1 or 1
+            local flipY = 1
+            
+            love.graphics.draw(
+                sprite,
+                self.x, self.y,
+                0,  -- No rotation
+                scale * flipX, scale * flipY,
+                spriteW / 2, spriteH / 2
+            )
+        end
     elseif self.sprite then
         -- Direct sprite rendering (legacy/placeholders)
         love.graphics.draw(

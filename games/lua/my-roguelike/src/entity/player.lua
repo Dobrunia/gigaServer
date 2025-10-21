@@ -71,6 +71,14 @@ function Player:update(dt)
             skill.cooldownTimer = skill.cooldownTimer - dt
         end
     end
+    
+    -- Continuous attack animation check (for repeated attacks while aiming)
+    if self.heroSprites and self.manualAimMode and (self.aimDirection.x ~= 0 or self.aimDirection.y ~= 0) then
+        -- Allow restart attack animation if previous one finished or is almost finished
+        if not self.isAttacking or self.attackTimer >= self.attackDuration * 0.8 then
+            self:startAttackAnimation()
+        end
+    end
 end
 
 -- === MOVEMENT ===
@@ -79,8 +87,17 @@ function Player:setMovementInput(dx, dy, dt)
     if dx ~= 0 or dy ~= 0 then
         self:move(dx, dy, dt)
         -- Don't update directionArrow here - it should show attack direction, not movement
+        
+        -- Start walking animation when moving (only if not attacking)
+        if self.heroSprites and not self.isAttacking then
+            self.isWalking = true
+        end
     else
         self:stopMovement()
+        -- Stop walking animation when not moving
+        if self.heroSprites then
+            self.isWalking = false
+        end
     end
 end
 
@@ -92,6 +109,17 @@ function Player:setAimDirection(dx, dy)
         self.aimDirection.x = dx / len
         self.aimDirection.y = dy / len
         self.directionArrow = math.atan2(dy, dx)
+        
+        -- Start attack animation when aiming (initial trigger)
+        if self.heroSprites and not self.isAttacking then
+            self:startAttackAnimation()
+        end
+    else
+        -- When not aiming, ensure we're not stuck in attack state
+        if self.heroSprites and self.isAttacking and self.attackTimer >= self.attackDuration then
+            self.isAttacking = false
+            self.attackTimer = 0
+        end
     end
 end
 
@@ -109,11 +137,16 @@ end
 -- Cast a specific skill (called by skills system)
 function Player:castSkill(skill, targetX, targetY)
     if not self:canCastSkill(skill) then return false end
-    
+
+    -- Start attack animation when casting skill
+    if self.heroSprites then
+        self:startAttackAnimation()
+    end
+
     -- Calculate effective cooldown (affected by cast speed)
     local effectiveCooldown = skill.cooldown / self.castSpeed
     skill.cooldownTimer = effectiveCooldown
-    
+
     return true
 end
 

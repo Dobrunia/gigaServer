@@ -402,5 +402,67 @@ function Assets.loadFolderSprites(folderPath)
     return sprites
 end
 
+-- === HERO SPRITE LOADING ===
+
+-- Load hero sprites from a folder with standard naming:
+-- i.png - idle animation (standing)
+-- 1.png, 2.png - idle animation frames (optional)
+-- a.png - attack animation
+-- Returns table: { idle = Image, idleFrames = {Image, Image, ...}, attack = Image }
+function Assets.loadHeroSprites(folderPath)
+    local sprites = {
+        idle = nil,
+        idleFrames = {},
+        attack = nil
+    }
+    
+    -- Load idle sprite (required)
+    local idlePath = folderPath .. "/i.png"
+    local idleSuccess, idleImg = pcall(love.graphics.newImage, idlePath)
+    if idleSuccess then
+        sprites.idle = idleImg
+        Utils.log("Loaded hero idle sprite: " .. idlePath)
+    else
+        Utils.logError("Failed to load hero idle sprite: " .. idlePath)
+        -- Create placeholder if idle missing
+        sprites.idle = createPlaceholder(32, 32, 0.2, 0.8, 0.2)
+    end
+    
+    -- Load idle animation frames (1.png, 2.png, etc.)
+    local frameIndex = 1
+    while true do
+        local framePath = folderPath .. "/" .. frameIndex .. ".png"
+        local frameSuccess, frameImg = pcall(love.graphics.newImage, framePath)
+        if frameSuccess then
+            table.insert(sprites.idleFrames, frameImg)
+            frameIndex = frameIndex + 1
+        else
+            break  -- No more frames
+        end
+    end
+    
+    if #sprites.idleFrames > 0 then
+        Utils.log("Loaded " .. #sprites.idleFrames .. " hero idle animation frames from " .. folderPath)
+    else
+        Utils.log("No hero idle animation frames found in " .. folderPath)
+        -- Use idle sprite as fallback for frames
+        if sprites.idle then
+            table.insert(sprites.idleFrames, sprites.idle)
+        end
+    end
+    
+    -- Load attack sprite (optional)
+    local attackPath = folderPath .. "/a.png"
+    local attackSuccess, attackImg = pcall(love.graphics.newImage, attackPath)
+    if attackSuccess then
+        sprites.attack = attackImg
+        Utils.log("Loaded hero attack sprite: " .. attackPath)
+    else
+        Utils.log("No hero attack sprite found in " .. folderPath)
+    end
+    
+    return sprites
+end
+
 return Assets
 

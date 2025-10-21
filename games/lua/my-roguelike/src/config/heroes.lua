@@ -6,8 +6,12 @@
 -- {
 --   id = "unique_id",
 --   name = "Hero Name",
---   spritesheet = "filename" (spritesheet file from assets/, without .png),
---   spriteIndex = number (index in spritesheet, 1-based),
+--   assetFolder = "foldername" (folder in assets/heroes/ containing sprite files),
+--   -- Sprite files in folder:
+--   --   i.png - idle animation (standing)
+--   --   1.png, 2.png - idle animation frames (optional)
+--   --   a.png - attack animation (when attacking)
+--   --   NOTE: All sprites should be oriented FACING RIGHT
 --   baseHp = number,
 --   hpGrowth = number (per level),
 --   baseArmor = number,
@@ -47,8 +51,9 @@ local heroes = {
     {
         id = "сhronomancer",
         name = "Chronomancer",
-        spritesheet = "rogues",  -- rogues.png from assets/
-        spriteIndex = 30,  -- Male wizard from rogues.png (5.b in 7-col grid)
+        assetFolder = "сhronomancer",  -- assets/heroes/сhronomancer/ folder
+        -- Contains: i.png (idle), 1.png, 2.png (idle animation), a.png (attack)
+        -- All sprites face RIGHT and are auto-scaled
         
         baseHp = 80,
         hpGrowth = 10,
