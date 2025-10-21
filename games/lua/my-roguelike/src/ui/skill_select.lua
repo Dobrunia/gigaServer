@@ -34,7 +34,7 @@ function SkillSelect:draw(assets, skills, selectedIndex)
     local cardHeight = 280
     local cardSpacing = 40
     local cardsPerRow = 2
-    local startY = 120
+    local startY = 100
     
     -- Calculate grid positioning
     local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))
@@ -79,21 +79,9 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         Colors.setColor(Colors.TEXT_PRIMARY)
         love.graphics.print(skill.name, cardX + 20, cardY + 20)
         
-        -- Skill stats
-        love.graphics.setFont(assets.getFont("default"))
-        Colors.setColor(Colors.TEXT_SECONDARY)
-        local yOffset = 70
-        love.graphics.print("Type: " .. skill.type, cardX + 20, cardY + yOffset)
-        yOffset = yOffset + 30
-        love.graphics.print("Damage: " .. skill.damage, cardX + 20, cardY + yOffset)
-        yOffset = yOffset + 30
-        love.graphics.print("Cooldown: " .. skill.cooldown .. "s", cardX + 20, cardY + yOffset)
-        yOffset = yOffset + 30
-        love.graphics.print("Range: " .. skill.range, cardX + 20, cardY + yOffset)
-        
-        -- Skill sprite (aligned with stats horizontally) - use icon sprite from folder
-        local spriteX = cardX + cardWidth - 120
-        local spriteY = cardY + 70  -- Same Y as first stat line
+        -- Skill sprite (moved to left side)
+        local spriteX = cardX + 80
+        local spriteY = cardY + 110
         
         Colors.setColor(Colors.TEXT_PRIMARY)
         
@@ -109,6 +97,18 @@ function SkillSelect:draw(assets, skills, selectedIndex)
             local scale = 64 / math.max(iconW, iconH)
             love.graphics.draw(icon, spriteX, spriteY, 0, scale, scale, iconW / 2, iconH / 2)
         end
+        
+        -- Skill stats (moved to right side)
+        love.graphics.setFont(assets.getFont("default"))
+        Colors.setColor(Colors.TEXT_SECONDARY)
+        local yOffset = 70
+        love.graphics.print("Type: " .. skill.type, cardX + 200, cardY + yOffset)
+        yOffset = yOffset + 30
+        love.graphics.print("Damage: " .. skill.damage, cardX + 200, cardY + yOffset)
+        yOffset = yOffset + 30
+        love.graphics.print("Cooldown: " .. skill.cooldown .. "s", cardX + 200, cardY + yOffset)
+        yOffset = yOffset + 30
+        love.graphics.print("Range: " .. skill.range, cardX + 200, cardY + yOffset)
         
         -- Description background
         local descY = cardY + 190
@@ -144,7 +144,7 @@ function SkillSelect:handleClick(x, y, skills)
     local cardHeight = 280
     local cardSpacing = 40
     local cardsPerRow = 2
-    local startY = 120
+    local startY = 100
     
     -- Calculate grid positioning
     local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))
