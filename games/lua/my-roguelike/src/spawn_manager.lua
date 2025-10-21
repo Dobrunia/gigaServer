@@ -144,7 +144,7 @@ end
 
 -- === XP DROP ===
 
-function SpawnManager:spawnXPDrop(x, y, amount, xpDrops)
+function SpawnManager:spawnXPDrop(x, y, amount, xpDrops, mobData)
     local drop = {
         x = x,
         y = y,
@@ -152,7 +152,10 @@ function SpawnManager:spawnXPDrop(x, y, amount, xpDrops)
         lifetime = Constants.XP_DROP_LIFETIME,
         timer = 0,
         active = true,
-        radius = Constants.XP_DROP_SPRITE_SIZE / 2
+        radius = Constants.XP_DROP_SPRITE_SIZE / 2,
+        -- XP drop sprite from mob config
+        spritesheet = (mobData and mobData.xpDropSpritesheet) or "items",
+        spriteIndex = (mobData and mobData.xpDropSpriteIndex) or Assets.images.xpDrop
     }
     
     table.insert(xpDrops, drop)

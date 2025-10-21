@@ -24,7 +24,9 @@
 --   projectileSpritesheet = "filename" (ranged only, spritesheet for projectiles),
 --   projectileSpriteIndex = number (ranged only, sprite index for projectiles),
 --   xpDrop = number,
---   xpDropGrowth = number (per level)
+--   xpDropGrowth = number (per level),
+--   xpDropSpritesheet = "filename" (spritesheet for XP drop, default "items"),
+--   xpDropSpriteIndex = number (sprite index for XP drop, default 324)
 -- }
 
 local mobs = {
@@ -70,7 +72,9 @@ local mobs = {
         attackSpeed = 1.0,  -- 1 attack per second
         
         xpDrop = 10,
-        xpDropGrowth = 2
+        xpDropGrowth = 2,
+        xpDropSpritesheet = "items",  -- items.png from assets/
+        -- xpDropSpriteIndex optional; default comes from Assets.images.xpDrop
     }
 }
 

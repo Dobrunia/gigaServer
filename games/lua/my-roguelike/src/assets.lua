@@ -191,8 +191,11 @@ function Assets.load()
     local itemsSuccess, itemsImage = pcall(love.graphics.newImage, "assets/items.png")
     if itemsSuccess then
         Assets.spritesheets.items = itemsImage
+        local imgW, imgH = itemsImage:getDimensions()
+        local cols = math.floor(imgW / 32)
+        local rows = math.floor(imgH / 32)
         Assets.quads.items = generateQuads(itemsImage)
-        Utils.log("Loaded items spritesheet (" .. #Assets.quads.items .. " items)")
+        Utils.log("Loaded items spritesheet: " .. imgW .. "x" .. imgH .. " (" .. cols .. " cols, " .. rows .. " rows, " .. #Assets.quads.items .. " total quads)")
     else
         Utils.logError("Failed to load items.png - using placeholder: " .. tostring(itemsImage))
         Assets.spritesheets.items = createPlaceholder(512, 512, 0.5, 0.5, 0.6)
@@ -206,9 +209,10 @@ function Assets.load()
     --   1.png, 2.png, 3.png... - animation frames
     -- Use Assets.loadFolderSprites("assets/foldername") to load them
     
-    -- XP drop (use blue potion sprite from items.png - 21.d = row 21, col 4)
-    -- Index calculation: (row-1) * 16 + col = (21-1) * 16 + 4 = 324
-    Assets.images.xpDrop = 324  -- Blue potion index
+    -- XP drop (default sprite from items.png - row 26, col 5)
+    -- NOTE: items.png grid inferred as 11 columns (352px / 32px)
+    -- Index calculation: (row-1) * 11 + col = (26-1) * 11 + 5 = 280
+    Assets.images.xpDrop = 280  -- Sprite at row 26, col 5 (11 cols)
     
     -- Skill icons (placeholder for now)
     Assets.images.skillDefault = createPlaceholder(48, 48, 0.5, 0.5, 0.8)

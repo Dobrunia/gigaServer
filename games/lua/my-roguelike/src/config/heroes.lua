@@ -45,8 +45,8 @@ local heroes = {
 
     -- === MAGE ===
     {
-        id = "mage",
-        name = "Mage",
+        id = "сhronomancer",
+        name = "Chronomancer",
         spritesheet = "rogues",  -- rogues.png from assets/
         spriteIndex = 30,  -- Male wizard from rogues.png (5.b in 7-col grid)
         

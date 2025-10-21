@@ -282,7 +282,15 @@ function Game:fixedUpdate(dt)
         -- Remove dead mobs
         if not mob.alive then
             self.spatialHash:remove(mob)
-            self.spawnManager:spawnXPDrop(mob.x, mob.y, mob:getXPDrop(), self.xpDrops)
+            -- Get mob data for XP drop sprite
+            local mobData = nil
+            for _, config in ipairs(self.mobConfigs) do
+                if config.id == mob.mobId then
+                    mobData = config
+                    break
+                end
+            end
+            self.spawnManager:spawnXPDrop(mob.x, mob.y, mob:getXPDrop(), self.xpDrops, mobData)
             self.mobsKilled = self.mobsKilled + 1
             table.remove(self.mobs, i)
         end
@@ -563,13 +571,17 @@ function Game:drawPlaying()
     
     -- Draw XP drops
     for _, drop in ipairs(self.xpDrops) do
-        local xpIndex = Assets.images.xpDrop
-        local spritesheet = Assets.getSpritesheet("items")
-        local quad = Assets.getQuad("items", xpIndex)
+        local spritesheet = Assets.getSpritesheet(drop.spritesheet or "items")
+        local quad = Assets.getQuad(drop.spritesheet or "items", drop.spriteIndex or Assets.images.xpDrop)
         
         if spritesheet and quad then
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.draw(spritesheet, quad, drop.x, drop.y, 0, 1, 1, 16, 16)
+        else
+            -- Fallback: draw as blue circle if sprite not found
+            Colors.setColor(Colors.BAR_XP)  -- Blue color for XP
+            love.graphics.circle("fill", drop.x, drop.y, drop.radius)
+            love.graphics.setColor(1, 1, 1, 1)  -- Reset to white
         end
     end
     
