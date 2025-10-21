@@ -1,6 +1,7 @@
 -- config/heroes.lua
 -- Hero configurations (data-driven)
--- Each hero has: base stats, stat growth, innate skill, starting skill
+-- Each hero has: base stats, stat growth, innate skill
+-- Starting skill is chosen separately from config/starting_skills.lua
 -- Format:
 -- {
 --   id = "unique_id",
@@ -14,8 +15,7 @@
 --   speedGrowth = number,
 --   baseCastSpeed = number (multiplier, 1.0 = normal),
 --   castSpeedGrowth = number,
---   innateSkill = table (passive modifier),
---   startingSkill = table (first active skill)
+--   innateSkill = table (passive modifier)
 -- }
 
 local heroes = {
@@ -40,16 +40,6 @@ local heroes = {
     --         description = "No special modifiers",
     --         modifiers = {}
     --     },
-    --     
-    --     startingSkill = {
-    --         id = "baseline_skill",
-    --         name = "Basic Attack",
-    --         type = "projectile",
-    --         cooldown = 2.0,
-    --         damage = 25,
-    --         range = 300,
-    --         projectileSpeed = 250
-    --     }
     -- },
 
     -- === MAGE ===
@@ -73,22 +63,6 @@ local heroes = {
             description = "All skills have 30% shorter cooldowns",
             modifiers = {
                 cooldownReduction = 0.3
-            }
-        },
-        
-        startingSkill = {
-            id = "fireball",
-            name = "Fireball",
-            type = "projectile",
-            cooldown = 1.5,
-            damage = 40,
-            range = 400,
-            projectileSpeed = 300,
-            effect = {
-                type = "poison",  -- Fire DOT
-                duration = 3,
-                damage = 5,
-                tickRate = 0.5
             }
         }
     }

@@ -1,10 +1,11 @@
 -- ui/hud.lua
 -- In-game HUD (HP, XP, skills, timer)
 -- Public API: HUD.new(), hud:draw(player, gameTime)
--- Dependencies: constants.lua, assets.lua, utils.lua
+-- Dependencies: constants.lua, assets.lua, utils.lua, colors.lua
 
 local Constants = require("src.constants")
 local Utils = require("src.utils")
+local Colors = require("src.ui.colors")
 
 local HUD = {}
 HUD.__index = HUD
@@ -26,7 +27,7 @@ function HUD:draw(player, gameTime, assets)
     local screenH = love.graphics.getHeight()
     
     -- HUD background
-    love.graphics.setColor(0, 0, 0, 0.7)
+    Colors.setColor(Colors.HUD_BACKGROUND)
     love.graphics.rectangle("fill", 0, screenH - Constants.HUD_HEIGHT, screenW, Constants.HUD_HEIGHT)
     
     -- Draw stats
@@ -43,7 +44,7 @@ function HUD:drawStats(player, assets)
     local stats = player:getStats()
     
     love.graphics.setFont(assets.getFont("small"))
-    love.graphics.setColor(1, 1, 1, 1)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     
     local x = Constants.HUD_PADDING
     local y = love.graphics.getHeight() - Constants.HUD_HEIGHT + Constants.HUD_PADDING
@@ -61,16 +62,16 @@ function HUD:drawStats(player, assets)
     local barHeight = 14
     
     -- HP bar background
-    love.graphics.setColor(0.2, 0.2, 0.2, 1)
+    Colors.setColor(Colors.BAR_BACKGROUND)
     love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
     
     -- HP bar fill
     local hpPercent = stats.hp / stats.maxHp
-    love.graphics.setColor(0.2, 0.8, 0.2, 1)
+    Colors.setColor(Colors.BAR_HP)
     love.graphics.rectangle("fill", barX, barY, barWidth * hpPercent, barHeight)
     
     -- HP text
-    love.graphics.setColor(1, 1, 1, 1)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     love.graphics.print(math.floor(stats.hp) .. "/" .. math.floor(stats.maxHp), barX + barWidth + 10, barY)
     
     y = y + lineHeight
@@ -80,16 +81,16 @@ function HUD:drawStats(player, assets)
     barY = y
     
     -- XP bar background
-    love.graphics.setColor(0.2, 0.2, 0.2, 1)
+    Colors.setColor(Colors.BAR_BACKGROUND)
     love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
     
     -- XP bar fill
     local xpPercent = stats.xp / stats.xpToNext
-    love.graphics.setColor(0.3, 0.5, 1, 1)
+    Colors.setColor(Colors.BAR_XP)
     love.graphics.rectangle("fill", barX, barY, barWidth * xpPercent, barHeight)
     
     -- XP text
-    love.graphics.setColor(1, 1, 1, 1)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     love.graphics.print(math.floor(stats.xp) .. "/" .. math.floor(stats.xpToNext), barX + barWidth + 10, barY)
     
     y = y + lineHeight
@@ -125,29 +126,29 @@ function HUD:drawSkills(player, assets)
             -- Draw skill icon
             local icon = assets.getImage("skillDefault")
             if icon then
-                love.graphics.setColor(1, 1, 1, 1)
+                Colors.setColor(Colors.TEXT_PRIMARY)
                 love.graphics.draw(icon, x, y, 0, skillIconSize / icon:getWidth(), skillIconSize / icon:getHeight())
             end
             
             -- Cooldown overlay
             if skill.cooldownTimer and skill.cooldownTimer > 0 then
-                love.graphics.setColor(0, 0, 0, 0.6)
+                Colors.setColor(Colors.OVERLAY_COOLDOWN)
                 love.graphics.rectangle("fill", x, y, skillIconSize, skillIconSize)
                 
                 -- Cooldown text
-                love.graphics.setColor(1, 1, 1, 1)
+                Colors.setColor(Colors.TEXT_PRIMARY)
                 love.graphics.printf(string.format("%.1f", skill.cooldownTimer), x, y + skillIconSize / 2 - 8, skillIconSize, "center")
             end
             
             -- Skill name
-            love.graphics.setColor(1, 1, 1, 1)
+            Colors.setColor(Colors.TEXT_PRIMARY)
             love.graphics.setFont(assets.getFont("debug"))
             love.graphics.printf(skill.name:sub(1, 8), x, y + skillIconSize + 2, skillIconSize, "center")
         else
             -- Empty slot
             local emptyIcon = assets.getImage("skillEmpty")
             if emptyIcon then
-                love.graphics.setColor(0.5, 0.5, 0.5, 0.5)
+                Colors.setColor(Colors.OVERLAY_EMPTY)
                 love.graphics.draw(emptyIcon, x, y, 0, skillIconSize / emptyIcon:getWidth(), skillIconSize / emptyIcon:getHeight())
             end
         end
@@ -156,7 +157,7 @@ end
 
 function HUD:drawTimer(gameTime, assets)
     love.graphics.setFont(assets.getFont("large"))
-    love.graphics.setColor(1, 1, 1, 1)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     
     local timeStr = Utils.formatTime(gameTime)
     love.graphics.printf(timeStr, 0, 20, love.graphics.getWidth(), "center")

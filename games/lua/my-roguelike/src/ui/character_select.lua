@@ -1,87 +1,33 @@
--- ui/menu.lua
--- Main menu and character selection UI
--- Public API: Menu.new(), menu:update(dt), menu:draw(), menu:handleClick(x, y)
--- Dependencies: constants.lua, assets.lua
+-- ui/character_select.lua
+-- Character selection UI
+-- Public API: CharacterSelect.new(), characterSelect:draw(assets, heroes, selectedIndex), characterSelect:handleClick(x, y, heroes)
+-- Dependencies: constants.lua, colors.lua
 
 local Constants = require("src.constants")
 local Colors = require("src.ui.colors")
 
-local Menu = {}
-Menu.__index = Menu
+local CharacterSelect = {}
+CharacterSelect.__index = CharacterSelect
 
 -- === CONSTRUCTOR ===
 
-function Menu.new()
-    local self = setmetatable({}, Menu)
-    
-    self.buttons = {}
-    self.hoveredButton = nil
-    
+function CharacterSelect.new()
+    local self = setmetatable({}, CharacterSelect)
     return self
 end
 
--- === MAIN MENU ===
+-- === DRAW ===
 
-function Menu:createMainMenuButtons()
-    self.buttons = {}
-    
-    local screenW = love.graphics.getWidth()
-    local screenH = love.graphics.getHeight()
-    
-    -- Play button
-    table.insert(self.buttons, {
-        text = "PLAY",
-        x = screenW / 2 - Constants.MENU_BUTTON_WIDTH / 2,
-        y = screenH / 2,
-        width = Constants.MENU_BUTTON_WIDTH,
-        height = Constants.MENU_BUTTON_HEIGHT,
-        action = "play"
-    })
-    
-    -- Quit button
-    table.insert(self.buttons, {
-        text = "QUIT",
-        x = screenW / 2 - Constants.MENU_BUTTON_WIDTH / 2,
-        y = screenH / 2 + Constants.MENU_BUTTON_HEIGHT + 20,
-        width = Constants.MENU_BUTTON_WIDTH,
-        height = Constants.MENU_BUTTON_HEIGHT,
-        action = "quit"
-    })
-end
-
-function Menu:drawMainMenu(assets)
-    love.graphics.clear(0.1, 0.1, 0.15, 1)
-    
-    -- Background
-    local bg = assets.getImage("menuBg")
-    if bg then
-        love.graphics.setColor(0.8, 0.8, 0.8, 1)
-        love.graphics.draw(bg, 0, 0)
-    end
-    
-    -- Title
-    love.graphics.setFont(assets.getFont("large"))
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.printf("DOBLIKE ROGUELIKE", 0, 150, love.graphics.getWidth(), "center")
-    
-    -- Buttons
-    love.graphics.setFont(assets.getFont("default"))
-    for _, button in ipairs(self.buttons) do
-        self:drawButton(button)
-    end
-end
-
--- === CHARACTER SELECT ===
-
-function Menu:drawCharacterSelect(assets, heroes, selectedIndex)
-    love.graphics.clear(0.1, 0.1, 0.15, 1)
+function CharacterSelect:draw(assets, heroes, selectedIndex)
+    Colors.setColor(Colors.BACKGROUND_PRIMARY)
+    love.graphics.clear()
     
     -- Title
     love.graphics.setFont(assets.getFont("large"))
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.printf("Choose Your Hero", 0, 30, love.graphics.getWidth(), "center")
     
-    -- Hero cards grid (doubled sizes)
+    -- Hero cards grid
     local screenW = love.graphics.getWidth()
     local screenH = love.graphics.getHeight()
     local cardWidth = 500
@@ -128,12 +74,12 @@ function Menu:drawCharacterSelect(assets, heroes, selectedIndex)
         love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, 8, 8)
         love.graphics.setLineWidth(1)
         
-        -- Hero name (doubled font size)
+        -- Hero name
         love.graphics.setFont(assets.getFont("large"))
         Colors.setColor(Colors.TEXT_PRIMARY)
         love.graphics.print(hero.name, cardX + 20, cardY + 30)
         
-        -- Key stats with growth (doubled font size)
+        -- Key stats with growth
         love.graphics.setFont(assets.getFont("default"))
         Colors.setColor(Colors.TEXT_SECONDARY)
         love.graphics.print("HP: " .. hero.baseHp .. " (+" .. hero.hpGrowth .. ")", cardX + 20, cardY + 70)
@@ -141,33 +87,31 @@ function Menu:drawCharacterSelect(assets, heroes, selectedIndex)
         love.graphics.print("Speed: " .. hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. ")", cardX + 20, cardY + 130)
         love.graphics.print("Cast: " .. hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. ")", cardX + 20, cardY + 160)
         
-        -- Hero sprite (aligned with text horizontally)
+        -- Hero sprite
         local spriteX = cardX + cardWidth - 120
-        local spriteY = cardY + 100  -- Same Y as first stat line
+        local spriteY = cardY + 100
         
         love.graphics.setColor(1, 1, 1, 1)
         local spritesheet = assets.getSpritesheet("rogues")
         local quad = assets.getQuad("rogues", hero.spriteIndex)
         if spritesheet and quad then
-            love.graphics.draw(spritesheet, quad, spriteX, spriteY, 0, 4, 4, 16, 16)  -- Doubled sprite size
+            love.graphics.draw(spritesheet, quad, spriteX, spriteY, 0, 4, 4, 16, 16)
         end
         
-        -- Dark background for passive ability description (with more padding)
+        -- Passive ability description
         if hero.innateSkill and hero.innateSkill.description then
             local passiveY = cardY + 200
             local passiveHeight = 70
             
-            -- Dark background for passive text (with more padding)
             Colors.setColor(Colors.ZONE_PASSIVE)
             love.graphics.rectangle("fill", cardX + 20, passiveY, cardWidth - 40, passiveHeight, 8, 8)
             
-            -- Passive ability description (with more padding)
             love.graphics.setFont(assets.getFont("default"))
             Colors.setColor(Colors.TEXT_ACCENT)
             love.graphics.printf("Passive: " .. hero.innateSkill.description, cardX + 30, passiveY + 15, cardWidth - 60, "left")
         end
         
-        -- Selection indicator (moved to bottom)
+        -- Selection indicator
         if isSelected then
             Colors.setColor(Colors.ACCENT)
             love.graphics.setFont(assets.getFont("small"))
@@ -177,59 +121,13 @@ function Menu:drawCharacterSelect(assets, heroes, selectedIndex)
     
     -- Instructions
     love.graphics.setFont(assets.getFont("default"))
-    love.graphics.setColor(0.7, 0.7, 0.7, 1)
-    love.graphics.printf("Click on a hero to select, then press SPACE/ENTER to start", 0, screenH - 40, screenW, "center")
-end
-
--- === BUTTON DRAWING ===
-
-function Menu:drawButton(button)
-    local isHovered = (self.hoveredButton == button)
-    
-    -- Button background
-    if isHovered then
-        love.graphics.setColor(0.4, 0.4, 0.5, 1)
-    else
-        love.graphics.setColor(0.2, 0.2, 0.3, 1)
-    end
-    love.graphics.rectangle("fill", button.x, button.y, button.width, button.height)
-    
-    -- Button border
-    love.graphics.setColor(0.6, 0.6, 0.7, 1)
-    love.graphics.setLineWidth(2)
-    love.graphics.rectangle("line", button.x, button.y, button.width, button.height)
-    love.graphics.setLineWidth(1)
-    
-    -- Button text
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.printf(button.text, button.x, button.y + button.height / 2 - 12, button.width, "center")
+    Colors.setColor(Colors.TEXT_DIM)
+    love.graphics.printf("Click on a hero to select, then press SPACE/ENTER to continue", 0, screenH - 40, screenW, "center")
 end
 
 -- === INPUT ===
 
-function Menu:updateHover(mouseX, mouseY)
-    self.hoveredButton = nil
-    
-    for _, button in ipairs(self.buttons) do
-        if mouseX >= button.x and mouseX <= button.x + button.width and
-           mouseY >= button.y and mouseY <= button.y + button.height then
-            self.hoveredButton = button
-            break
-        end
-    end
-end
-
-function Menu:handleClick(x, y)
-    for _, button in ipairs(self.buttons) do
-        if x >= button.x and x <= button.x + button.width and
-           y >= button.y and y <= button.y + button.height then
-            return button.action
-        end
-    end
-    return nil
-end
-
-function Menu:handleHeroCardClick(x, y, heroes)
+function CharacterSelect:handleClick(x, y, heroes)
     local screenW = love.graphics.getWidth()
     local cardWidth = 500
     local cardHeight = 320
@@ -258,5 +156,5 @@ function Menu:handleHeroCardClick(x, y, heroes)
     return nil
 end
 
-return Menu
+return CharacterSelect
 
