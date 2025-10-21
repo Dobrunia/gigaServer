@@ -169,6 +169,14 @@ function Player:addSkill(skillData)
     local newSkill = Utils.shallowCopy(skillData)
     newSkill.cooldownTimer = 0
     newSkill.level = 1
+    
+    -- Load skill sprites if assetFolder is specified
+    if newSkill.assetFolder then
+        local Assets = require("src.assets")
+        newSkill.loadedSprites = Assets.loadFolderSprites("assets/" .. newSkill.assetFolder)
+        Utils.log("Loaded sprites for skill: " .. newSkill.name)
+    end
+    
     table.insert(self.skills, newSkill)
     Utils.log("Added new skill: " .. skillData.name)
     

@@ -20,6 +20,7 @@ local Projectile = require("src.entity.projectile")
 local MainMenu = require("src.ui.main_menu")
 local CharacterSelect = require("src.ui.character_select")
 local SkillSelect = require("src.ui.skill_select")
+local HUD = require("src.ui.hud")
 
 local Game = {}
 Game.__index = Game
@@ -55,6 +56,7 @@ function Game.new()
     self.mainMenu = nil
     self.characterSelect = nil
     self.skillSelect = nil
+    self.hud = nil
     
     -- Entities
     self.player = nil
@@ -108,6 +110,7 @@ function Game:load()
     self.mainMenu = MainMenu.new()
     self.characterSelect = CharacterSelect.new()
     self.skillSelect = SkillSelect.new()
+    self.hud = HUD.new()
     
     -- Initialize projectile pool
     self.projectilePool = Pool.new(
@@ -690,8 +693,10 @@ function Game:drawPlaying()
     -- Clear camera
     self.camera:clear()
     
-    -- Draw HUD (UI overlay, no camera)
-    self:drawHUD()
+    -- Draw HUD (UI overlay, no camera) using HUD module
+    if self.hud then
+        self.hud:draw(self.player, self.gameTime, Assets)
+    end
     
     -- Draw pause screen overlay
     if self.paused then
@@ -699,153 +704,7 @@ function Game:drawPlaying()
     end
 end
 
-function Game:drawHUD()
-    if not self.player then return end
-    
-    local stats = self.player:getStats()
-    local screenW = love.graphics.getWidth()
-    local screenH = love.graphics.getHeight()
-    
-    -- Timer at top center
-    love.graphics.setFont(Assets.getFont("large"))
-    Colors.setColor(Colors.TEXT_PRIMARY)
-    love.graphics.printf(Utils.formatTime(self.gameTime), 0, 10, screenW, "center")
-    
-    -- Stats Card (bottom left)
-    local statsCardW = 220
-    local statsCardH = 140
-    local statsCardX = 20
-    local statsCardY = screenH - statsCardH - 20
-    
-    -- Card background
-    Colors.setColor(Colors.HUD_CARD_BG)
-    love.graphics.rectangle("fill", statsCardX, statsCardY, statsCardW, statsCardH, 8, 8)
-    Colors.setColor(Colors.HUD_CARD_BORDER)
-    love.graphics.setLineWidth(2)
-    love.graphics.rectangle("line", statsCardX, statsCardY, statsCardW, statsCardH, 8, 8)
-    love.graphics.setLineWidth(1)
-    
-    -- Stats content
-    love.graphics.setFont(Assets.getFont("default"))
-    Colors.setColor(Colors.TEXT_PRIMARY)
-    local textX = statsCardX + 10
-    local textY = statsCardY + 10
-    
-    -- Level
-    love.graphics.print("Level: " .. stats.level, textX, textY)
-    
-    -- HP Bar
-    textY = textY + 25
-    love.graphics.setFont(Assets.getFont("small"))
-    love.graphics.print("HP:", textX, textY)
-    local hpBarX = textX + 30
-    local hpBarW = statsCardW - 50
-    local hpBarH = 16
-    local hpPercent = math.max(0, math.min(1, stats.hp / stats.maxHp))
-    
-    -- HP bar background
-    Colors.setColor(Colors.BAR_BACKGROUND)
-    love.graphics.rectangle("fill", hpBarX, textY, hpBarW, hpBarH, 3, 3)
-    -- HP bar fill
-    Colors.setColor(Colors.BAR_HP)
-    love.graphics.rectangle("fill", hpBarX, textY, hpBarW * hpPercent, hpBarH, 3, 3)
-    -- HP text
-    Colors.setColor(Colors.TEXT_PRIMARY)
-    love.graphics.printf(math.floor(stats.hp) .. "/" .. math.floor(stats.maxHp), hpBarX, textY + 2, hpBarW, "center")
-    
-    -- XP Bar
-    textY = textY + 25
-    love.graphics.print("XP:", textX, textY)
-    local xpPercent = math.max(0, math.min(1, stats.xp / stats.xpToNext))
-    
-    -- XP bar background
-    Colors.setColor(Colors.BAR_BACKGROUND)
-    love.graphics.rectangle("fill", hpBarX, textY, hpBarW, hpBarH, 3, 3)
-    -- XP bar fill
-    Colors.setColor(Colors.BAR_XP)
-    love.graphics.rectangle("fill", hpBarX, textY, hpBarW * xpPercent, hpBarH, 3, 3)
-    -- XP text
-    Colors.setColor(Colors.TEXT_PRIMARY)
-    love.graphics.printf(math.floor(stats.xp) .. "/" .. math.floor(stats.xpToNext), hpBarX, textY + 2, hpBarW, "center")
-    
-    -- Armor
-    textY = textY + 25
-    love.graphics.setFont(Assets.getFont("default"))
-    love.graphics.print("Armor: " .. math.floor(stats.armor), textX, textY)
-    
-    -- Speed
-    textY = textY + 20
-    love.graphics.setFont(Assets.getFont("small"))
-    love.graphics.print("Speed: " .. math.floor(stats.speed), textX, textY)
-    
-    -- Skills Card (bottom right)
-    local skillsCardW = 250
-    local skillsCardH = 140
-    local skillsCardX = screenW - skillsCardW - 20
-    local skillsCardY = screenH - skillsCardH - 20
-    
-    -- Card background
-    Colors.setColor(Colors.HUD_CARD_BG)
-    love.graphics.rectangle("fill", skillsCardX, skillsCardY, skillsCardW, skillsCardH, 8, 8)
-    Colors.setColor(Colors.HUD_CARD_BORDER)
-    love.graphics.setLineWidth(2)
-    love.graphics.rectangle("line", skillsCardX, skillsCardY, skillsCardW, skillsCardH, 8, 8)
-    love.graphics.setLineWidth(1)
-    
-    -- Skills content
-    Colors.setColor(Colors.TEXT_PRIMARY)
-    love.graphics.setFont(Assets.getFont("default"))
-    local skillTextX = skillsCardX + 10
-    local skillTextY = skillsCardY + 10
-    love.graphics.print("Skills:", skillTextX, skillTextY)
-    
-    skillTextY = skillTextY + 25
-    love.graphics.setFont(Assets.getFont("small"))
-    
-    if #self.player.skills == 0 then
-        Colors.setColor(Colors.TEXT_SECONDARY)
-        love.graphics.print("No skills yet", skillTextX, skillTextY)
-    else
-        for i, skill in ipairs(self.player.skills) do
-            local cooldown = skill.cooldownTimer or 0
-            local cdPercent = 0
-            if skill.cooldown and skill.cooldown > 0 then
-                cdPercent = math.max(0, math.min(1, cooldown / skill.cooldown))
-            end
-            
-            -- Skill name
-            Colors.setColor(Colors.TEXT_PRIMARY)
-            love.graphics.print(skill.name or "Unknown", skillTextX, skillTextY)
-            
-            -- Cooldown bar (small)
-            local cdBarX = skillTextX + 100
-            local cdBarW = skillsCardW - 120
-            local cdBarH = 12
-            
-            if cooldown > 0 then
-                -- CD bar background
-                Colors.setColor(Colors.BAR_BACKGROUND)
-                love.graphics.rectangle("fill", cdBarX, skillTextY, cdBarW, cdBarH, 2, 2)
-                -- CD bar fill
-                Colors.setColor(Colors.BAR_COOLDOWN)
-                love.graphics.rectangle("fill", cdBarX, skillTextY, cdBarW * cdPercent, cdBarH, 2, 2)
-                -- CD text
-                Colors.setColor(Colors.TEXT_PRIMARY)
-                love.graphics.printf(string.format("%.1f", cooldown), cdBarX, skillTextY, cdBarW, "center")
-            else
-                -- Ready indicator
-                Colors.setColor(Colors.BAR_READY)
-                love.graphics.rectangle("fill", cdBarX, skillTextY, cdBarW, cdBarH, 2, 2)
-                Colors.setColor(Colors.TEXT_PRIMARY)
-                love.graphics.printf("READY", cdBarX, skillTextY, cdBarW, "center")
-            end
-            
-            skillTextY = skillTextY + 20
-        end
-    end
-    
-    Colors.setColor(Colors.TEXT_PRIMARY)
-end
+-- Old drawHUD function removed - now using HUD module (src/ui/hud.lua)
 
 function Game:drawDebug()
     Colors.setColor(Colors.ACCENT)

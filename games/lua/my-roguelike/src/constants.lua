@@ -53,7 +53,7 @@ Constants.BOSS_SPAWN_INTERVAL = 600.0       -- Boss every 10 minutes
 -- === UI ===
 Constants.HUD_HEIGHT = 120
 Constants.HUD_PADDING = 10
-Constants.SKILL_ICON_SIZE = 48
+Constants.SKILL_ICON_SIZE = 64  -- Square skill slots (Dota-style)
 Constants.MENU_BUTTON_WIDTH = 200
 Constants.MENU_BUTTON_HEIGHT = 60
 Constants.CHAR_CARD_WIDTH = 600
