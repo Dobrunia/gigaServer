@@ -1,5 +1,5 @@
 -- camera.lua
--- Simple 2D camera with smooth follow and culling support
+-- Simple 2D camera with smooth follow, zoom and culling support
 -- Public API: Camera.new(x, y), camera:update(dt, targetX, targetY), camera:apply(), camera:clear()
 -- Dependencies: constants.lua, utils.lua
 
@@ -23,6 +23,9 @@ function Camera.new(x, y)
     self.viewportWidth = love.graphics.getWidth()
     self.viewportHeight = love.graphics.getHeight()
     
+    -- Scale (zoom level). 1 = normal, >1 = zoom in, <1 = zoom out
+    self.scale = 1.5  -- example: +0.5 zoom
+    
     return self
 end
 
@@ -38,21 +41,29 @@ function Camera:update(dt, targetX, targetY)
     self.y = Utils.lerp(self.y, targetY, Constants.CAMERA_LERP_SPEED * dt)
     
     -- Clamp camera to map bounds (keep viewport within map)
-    local halfW = self.viewportWidth / 2
-    local halfH = self.viewportHeight / 2
+    -- IMPORTANT: use viewport size in WORLD coordinates (i.e. divided by scale)
+    local halfW_world = (self.viewportWidth / self.scale) / 2
+    local halfH_world = (self.viewportHeight / self.scale) / 2
     
-    self.x = Utils.clamp(self.x, halfW, Constants.MAP_WIDTH - halfW)
-    self.y = Utils.clamp(self.y, halfH, Constants.MAP_HEIGHT - halfH)
+    self.x = Utils.clamp(self.x, halfW_world, Constants.MAP_WIDTH - halfW_world)
+    self.y = Utils.clamp(self.y, halfH_world, Constants.MAP_HEIGHT - halfH_world)
 end
 
 -- === TRANSFORM ===
 
 function Camera:apply()
+    -- We want the camera world point (self.x, self.y) to appear at the center of the viewport
+    -- and to apply scaling around the center. Sequence:
+    -- 1) translate to screen center
+    -- 2) scale
+    -- 3) translate by -camera position (world -> camera-space)
     love.graphics.push()
-    love.graphics.translate(
-        -self.x + self.viewportWidth / 2,
-        -self.y + self.viewportHeight / 2
-    )
+    -- move origin to center of screen
+    love.graphics.translate(self.viewportWidth * 0.5, self.viewportHeight * 0.5)
+    -- apply scale (zoom)
+    love.graphics.scale(self.scale, self.scale)
+    -- move world so that camera position is at origin
+    love.graphics.translate(-self.x, -self.y)
 end
 
 function Camera:clear()
@@ -61,17 +72,21 @@ end
 
 -- === COORDINATE CONVERSION ===
 
--- Convert screen coordinates to world coordinates
+-- Convert screen coordinates to world coordinates (considering scale & center origin)
 function Camera:screenToWorld(screenX, screenY)
-    local worldX = screenX + self.x - self.viewportWidth / 2
-    local worldY = screenY + self.y - self.viewportHeight / 2
+    -- inverse of apply():
+    -- step1: move origin to center -> (screenX - vw/2, screenY - vh/2)
+    -- step2: un-scale -> / scale
+    -- step3: add camera position -> + self.x, + self.y
+    local worldX = (screenX - self.viewportWidth * 0.5) / self.scale + self.x
+    local worldY = (screenY - self.viewportHeight * 0.5) / self.scale + self.y
     return worldX, worldY
 end
 
--- Convert world coordinates to screen coordinates
+-- Convert world coordinates to screen coordinates (considering scale & center origin)
 function Camera:worldToScreen(worldX, worldY)
-    local screenX = worldX - self.x + self.viewportWidth / 2
-    local screenY = worldY - self.y + self.viewportHeight / 2
+    local screenX = (worldX - self.x) * self.scale + self.viewportWidth * 0.5
+    local screenY = (worldY - self.y) * self.scale + self.viewportHeight * 0.5
     return screenX, screenY
 end
 
@@ -80,8 +95,9 @@ end
 -- Check if point is visible (with margin for culling optimization)
 function Camera:isPointVisible(x, y, margin)
     margin = margin or Constants.CULLING_MARGIN
-    local halfW = self.viewportWidth / 2 + margin
-    local halfH = self.viewportHeight / 2 + margin
+    -- viewport half-sizes in world coords
+    local halfW = (self.viewportWidth / self.scale) / 2 + margin
+    local halfH = (self.viewportHeight / self.scale) / 2 + margin
     
     return x > self.x - halfW and x < self.x + halfW and
            y > self.y - halfH and y < self.y + halfH
@@ -90,8 +106,8 @@ end
 -- Check if AABB is visible
 function Camera:isAABBVisible(x, y, w, h, margin)
     margin = margin or Constants.CULLING_MARGIN
-    local halfW = self.viewportWidth / 2 + margin
-    local halfH = self.viewportHeight / 2 + margin
+    local halfW = (self.viewportWidth / self.scale) / 2 + margin
+    local halfH = (self.viewportHeight / self.scale) / 2 + margin
     
     local camLeft = self.x - halfW
     local camRight = self.x + halfW
@@ -109,11 +125,13 @@ function Camera:resize(width, height)
     self.viewportHeight = height
 end
 
+-- Returns viewport in WORLD coordinates: x, y, w, h
 function Camera:getViewport()
-    local halfW = self.viewportWidth / 2
-    local halfH = self.viewportHeight / 2
-    return self.x - halfW, self.y - halfH, self.viewportWidth, self.viewportHeight
+    local worldW = self.viewportWidth / self.scale
+    local worldH = self.viewportHeight / self.scale
+    local halfW = worldW / 2
+    local halfH = worldH / 2
+    return self.x - halfW, self.y - halfH, worldW, worldH
 end
 
 return Camera
-
