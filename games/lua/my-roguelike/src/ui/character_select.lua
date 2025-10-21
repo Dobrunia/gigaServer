@@ -94,7 +94,7 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
             local sprite = hero.loadedSprites.idle
             local spriteW, spriteH = sprite:getDimensions()
             -- Scale sprite to fit nicely in card
-            local scale = 64 / math.max(spriteW, spriteH)
+            local scale = 100 / math.max(spriteW, spriteH)
             love.graphics.draw(sprite, spriteX, spriteY, 0, scale, scale, spriteW/2, spriteH/2)
         else
             -- Fallback: draw placeholder
