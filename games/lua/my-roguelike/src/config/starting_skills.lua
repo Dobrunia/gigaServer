@@ -44,53 +44,6 @@ local startingSkills = {
             damage = 5,
             tickRate = 0.5
         }
-    },
-
-    -- === ICE SHARD ===
-    {
-        id = "ice_shard",
-        name = "Ice Shard",
-        description = "Launches a freezing projectile that slows enemies",
-        type = "projectile",
-        cooldown = 2.0,
-        damage = 30,
-        range = 350,
-        projectileSpeed = 280,
-        effect = {
-            type = "slow",
-            duration = 2,
-            slowPercent = 0.5  -- 50% slow
-        }
-    },
-
-    -- === POISON DART ===
-    {
-        id = "poison_dart",
-        name = "Poison Dart",
-        description = "Fast projectile with strong poison effect",
-        type = "projectile",
-        cooldown = 1.8,
-        damage = 20,
-        range = 380,
-        projectileSpeed = 350,
-        effect = {
-            type = "poison",
-            duration = 5,
-            damage = 8,
-            tickRate = 0.5
-        }
-    },
-
-    -- === ARCANE BOLT ===
-    {
-        id = "arcane_bolt",
-        name = "Arcane Bolt",
-        description = "Pure magic damage with fast cooldown",
-        type = "projectile",
-        cooldown = 1.2,
-        damage = 35,
-        range = 320,
-        projectileSpeed = 320
     }
 }
 

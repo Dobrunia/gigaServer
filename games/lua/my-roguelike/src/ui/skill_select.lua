@@ -24,7 +24,7 @@ function SkillSelect:draw(assets, skills, selectedIndex)
     
     -- Title
     love.graphics.setFont(assets.getFont("large"))
-    love.graphics.setColor(1, 1, 1, 1)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     love.graphics.printf("Choose Your Starting Skill", 0, 30, love.graphics.getWidth(), "center")
     
     -- Skill cards grid

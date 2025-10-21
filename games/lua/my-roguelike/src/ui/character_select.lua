@@ -24,7 +24,7 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
     
     -- Title
     love.graphics.setFont(assets.getFont("large"))
-    love.graphics.setColor(1, 1, 1, 1)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     love.graphics.printf("Choose Your Hero", 0, 30, love.graphics.getWidth(), "center")
     
     -- Hero cards grid
@@ -91,7 +91,7 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         local spriteX = cardX + cardWidth - 120
         local spriteY = cardY + 100
         
-        love.graphics.setColor(1, 1, 1, 1)
+        Colors.setColor(Colors.TEXT_PRIMARY)
         local spritesheet = assets.getSpritesheet("rogues")
         local quad = assets.getQuad("rogues", hero.spriteIndex)
         if spritesheet and quad then
