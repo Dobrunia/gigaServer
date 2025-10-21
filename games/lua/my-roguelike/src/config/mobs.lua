@@ -49,7 +49,7 @@ local mobs = {
         id = "zombie",
         name = "Zombie",
         type = "melee",
-        spriteIndex = 26,  -- Zombie from monsters.png (5.f zombie)
+        spriteIndex = 27,  -- Zombie from monsters.png (5.f zombie)
         
         baseHp = 50,
         hpGrowth = 10,
