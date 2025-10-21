@@ -118,9 +118,33 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         love.graphics.rectangle("fill", cardX + 20, descY, cardWidth - 40, descHeight, 8, 8)
         
         -- Description text
-        love.graphics.setFont(assets.getFont("default"))
-        Colors.setColor(Colors.TEXT_ACCENT)
-        love.graphics.printf(skill.description, cardX + 30, descY + 15, cardWidth - 60, "left")
+        -- love.graphics.setFont(assets.getFont("default"))
+        -- Colors.setColor(Colors.TEXT_ACCENT)
+        -- love.graphics.printf(skill.description, cardX + 30, descY + 15, cardWidth - 60, "left")
+        
+        -- Effect display (if skill has effect)
+        if skill.effect then
+            local effectY = descY + 15
+            love.graphics.setFont(assets.getFont("small"))
+            Colors.setColor(Colors.TEXT_ACCENT)
+            
+            local effectText = ""
+            if skill.effect.type == "burning" then
+                effectText = "Effect: " .. skill.effect.damage .. " damage/sec for " .. skill.effect.duration .. "s"
+            elseif skill.effect.type == "poison" then
+                effectText = "Effect: " .. skill.effect.damage .. " poison/sec for " .. skill.effect.duration .. "s"
+            elseif skill.effect.type == "slow" then
+                effectText = "Effect: " .. (skill.effect.slowPercent or 50) .. "% slow for " .. skill.effect.duration .. "s"
+            elseif skill.effect.type == "root" then
+                effectText = "Effect: Root for " .. skill.effect.duration .. "s"
+            elseif skill.effect.type == "stun" then
+                effectText = "Effect: Stun for " .. skill.effect.duration .. "s"
+            else
+                effectText = "Effect: " .. skill.effect.type .. " for " .. skill.effect.duration .. "s"
+            end
+            
+            love.graphics.printf(effectText, cardX + 30, effectY, cardWidth - 60, "left")
+        end
         
         -- Selection indicator
         if isSelected then
