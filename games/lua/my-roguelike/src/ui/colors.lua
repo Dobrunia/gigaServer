@@ -71,6 +71,7 @@ Colors.MINIMAP_BORDER = {0.5, 0.5, 0.5, 1}     -- Gray border
 Colors.MINIMAP_MAP_BORDER = {0.3, 0.3, 0.3, 1} -- Darker gray for map boundary
 Colors.MINIMAP_PLAYER = {0, 1, 0, 1}           -- Green for player
 Colors.MINIMAP_MOB = {1, 0, 0, 1}              -- Red for enemies
+Colors.MINIMAP_PROJECTILE = {1, 1, 0, 1}        -- Yellow for enemy projectiles
 
 -- === УТИЛИТЫ ===
 

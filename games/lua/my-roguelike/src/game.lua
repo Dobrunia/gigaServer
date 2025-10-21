@@ -701,7 +701,7 @@ function Game:drawPlaying()
     
     -- Draw minimap (UI overlay, no camera)
     if self.minimap then
-        self.minimap:draw(self.player, self.mobs, self.camera, Assets)
+        self.minimap:draw(self.player, self.mobs, self.projectiles, self.camera, Assets)
     end
     
     -- Draw pause screen overlay

@@ -1,6 +1,6 @@
 -- minimap.lua
 -- Minimap system showing player, enemies, and map boundaries
--- Public API: Minimap.new(), minimap:draw(player, mobs, camera, assets)
+-- Public API: Minimap.new(), minimap:draw(player, mobs, projectiles, camera, assets)
 -- Dependencies: constants.lua, utils.lua, colors.lua
 
 local Constants = require("src.constants")
@@ -27,7 +27,7 @@ end
 
 -- === DRAW ===
 
-function Minimap:draw(player, mobs, camera, assets)
+function Minimap:draw(player, mobs, projectiles, camera, assets)
     if not player then return end
     
     local screenW = love.graphics.getWidth()
@@ -44,6 +44,9 @@ function Minimap:draw(player, mobs, camera, assets)
     
     -- Draw map boundaries
     self:drawMapBoundaries()
+    
+    -- Draw projectiles (enemy projectiles only)
+    self:drawProjectiles(projectiles)
     
     -- Draw mobs
     self:drawMobs(mobs, player, camera)
@@ -76,6 +79,23 @@ function Minimap:drawMapBoundaries()
     Colors.setColor(Colors.MINIMAP_MAP_BORDER)
     love.graphics.setLineWidth(1)
     love.graphics.rectangle("line", mapX, mapY, mapW - mapX, mapH - mapY)
+end
+
+function Minimap:drawProjectiles(projectiles)
+    if not projectiles then return end
+    
+    Colors.setColor(Colors.MINIMAP_PROJECTILE)
+    
+    for _, proj in ipairs(projectiles) do
+        if proj.active and proj.owner == "mob" then  -- Only enemy projectiles
+            local px, py = self:worldToMinimap(proj.x, proj.y)
+            
+            -- Only draw if within minimap bounds
+            if self:isPointInMinimap(px, py) then
+                love.graphics.circle("fill", px, py, Constants.MINIMAP_PROJECTILE_SIZE)
+            end
+        end
+    end
 end
 
 function Minimap:drawMobs(mobs, player, camera)

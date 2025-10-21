@@ -63,6 +63,7 @@ Constants.MINIMAP_PADDING = 10                 -- Distance from screen edge
 Constants.MINIMAP_BORDER_WIDTH = 2             -- Border thickness
 Constants.MINIMAP_PLAYER_SIZE = 4              -- Player dot size
 Constants.MINIMAP_MOB_SIZE = 2                 -- Mob dot size
+Constants.MINIMAP_PROJECTILE_SIZE = 1          -- Projectile dot size
 Constants.MINIMAP_BACKGROUND_ALPHA = 0.7       -- Background transparency
 
 -- === RENDERING ===
