@@ -16,6 +16,7 @@ local Skills = require("src.skills")
 local SpawnManager = require("src.spawn_manager")
 local Player = require("src.entity.player")
 local Projectile = require("src.entity.projectile")
+local Menu = require("src.ui.menu")
 
 local Game = {}
 Game.__index = Game
@@ -46,6 +47,7 @@ function Game.new()
     self.projectilePool = nil
     self.skills = nil
     self.spawnManager = nil
+    self.menu = nil
     
     -- Entities
     self.player = nil
@@ -92,6 +94,7 @@ function Game:load()
     self.spatialHash = SpatialHash.new(Constants.SPATIAL_CELL_SIZE)
     self.skills = Skills.new()
     self.spawnManager = SpawnManager.new(self.map, self.spatialHash)
+    self.menu = Menu.new()
     
     -- Initialize projectile pool
     self.projectilePool = Pool.new(
@@ -169,6 +172,15 @@ function Game:updateMenu(dt)
 end
 
 function Game:updateCharSelect(dt)
+    -- Handle mouse clicks on hero cards
+    if Input.mouse.leftPressed then
+        local mx, my = Input.mouse.x, Input.mouse.y
+        local clickedHeroIndex = self.menu:handleHeroCardClick(mx, my, self.heroConfigs)
+        if clickedHeroIndex then
+            self.selectedHeroIndex = clickedHeroIndex
+        end
+    end
+    
     -- Navigate with arrow keys, select with space
     if Input.isKeyPressed("left") then
         self.selectedHeroIndex = math.max(1, self.selectedHeroIndex - 1)
@@ -472,62 +484,7 @@ function Game:drawMenu()
 end
 
 function Game:drawCharSelect()
-    love.graphics.clear(0.1, 0.1, 0.15, 1)
-    
-    love.graphics.setFont(Assets.getFont("large"))
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.printf("Choose Your Hero", 0, 50, love.graphics.getWidth(), "center")
-    
-    -- Draw hero cards
-    local hero = self.heroConfigs[self.selectedHeroIndex]
-    
-    if hero then
-        local centerX = love.graphics.getWidth() / 2
-        local spriteY = 140
-        
-        -- Draw hero sprite (large)
-        local spriteIndex = hero.spriteIndex or Assets.images.player
-        local spritesheet = Assets.getSpritesheet("rogues")
-        local quad = Assets.getQuad("rogues", spriteIndex)
-        
-        if spritesheet and quad then
-            love.graphics.setColor(1, 1, 1, 1)
-            -- Draw sprite at 4x scale (32x32 -> 128x128)
-            love.graphics.draw(spritesheet, quad, centerX, spriteY, 0, 4, 4, 16, 16)
-        end
-        
-        -- Draw hero name
-        local cardY = 280
-        love.graphics.setFont(Assets.getFont("large"))
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.printf(hero.name, 0, cardY, love.graphics.getWidth(), "center")
-        
-        -- Draw stats
-        love.graphics.setFont(Assets.getFont("default"))
-        love.graphics.printf("HP: " .. hero.baseHp .. " (+" .. hero.hpGrowth .. "/lvl)", 0, cardY + 50, love.graphics.getWidth(), "center")
-        love.graphics.printf("Armor: " .. hero.baseArmor .. " (+" .. hero.armorGrowth .. "/lvl)", 0, cardY + 70, love.graphics.getWidth(), "center")
-        love.graphics.printf("Speed: " .. hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. "/lvl)", 0, cardY + 90, love.graphics.getWidth(), "center")
-        love.graphics.printf("Cast Speed: " .. hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. "/lvl)", 0, cardY + 110, love.graphics.getWidth(), "center")
-        
-        -- Draw innate ability
-        if hero.innateSkill then
-            love.graphics.setFont(Assets.getFont("small"))
-            love.graphics.setColor(0.8, 0.8, 1, 1)
-            love.graphics.printf("Innate: " .. hero.innateSkill.name, 0, cardY + 140, love.graphics.getWidth(), "center")
-            love.graphics.setColor(0.7, 0.7, 0.7, 1)
-            love.graphics.printf(hero.innateSkill.description or "", 0, cardY + 160, love.graphics.getWidth(), "center")
-        end
-        
-        -- Navigation instructions
-        love.graphics.setFont(Assets.getFont("default"))
-        love.graphics.setColor(0.5, 1, 0.5, 1)
-        love.graphics.printf("< LEFT/RIGHT arrows to navigate >", 0, cardY + 200, love.graphics.getWidth(), "center")
-        love.graphics.printf("Press SPACE or ENTER to select", 0, cardY + 220, love.graphics.getWidth(), "center")
-        
-        -- Show hero counter
-        love.graphics.setColor(0.7, 0.7, 0.7, 1)
-        love.graphics.printf(self.selectedHeroIndex .. " / " .. #self.heroConfigs, 0, cardY + 250, love.graphics.getWidth(), "center")
-    end
+    self.menu:drawCharacterSelect(Assets, self.heroConfigs, self.selectedHeroIndex)
 end
 
 function Game:drawGameOver()
