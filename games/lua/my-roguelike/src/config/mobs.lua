@@ -22,12 +22,34 @@
 -- }
 
 local mobs = {
+    -- === BASELINE MOB (REFERENCE FOR BALANCE) ===
+    -- {
+    --     id = "baseline_mob",
+    --     name = "Baseline Mob",
+    --     type = "melee",
+    --     spriteIndex = 1,
+    --     
+    --     baseHp = 50,         -- Standard mob HP
+    --     hpGrowth = 8,        -- Moderate HP growth
+    --     baseArmor = 0,        -- No armor
+    --     armorGrowth = 0.3,    -- Low armor scaling
+    --     baseMoveSpeed = 70,   -- Slightly slower than player
+    --     speedGrowth = 1,      -- Standard speed growth
+    --     baseDamage = 10,      -- Standard damage
+    --     damageGrowth = 2,     -- Moderate damage scaling
+    --     
+    --     attackSpeed = 1.0,    -- 1 attack per second
+    --     
+    --     xpDrop = 10,         -- Standard XP
+    --     xpDropGrowth = 2      -- Moderate XP scaling
+    -- },
+
     -- === MELEE MOB ===
     {
         id = "zombie",
         name = "Zombie",
         type = "melee",
-        spriteIndex = 69,  -- Zombie from monsters.png (row 5, col 5)
+        spriteIndex = 26,  -- Zombie from monsters.png (5.f zombie)
         
         baseHp = 50,
         hpGrowth = 10,
@@ -42,98 +64,6 @@ local mobs = {
         
         xpDrop = 10,
         xpDropGrowth = 2
-    },
-    
-    -- === FAST MELEE MOB ===
-    {
-        id = "ghoul",
-        name = "Ghoul",
-        type = "melee",
-        spriteIndex = 70,  -- Ghoul from monsters.png (row 5, col 6)
-        
-        baseHp = 30,
-        hpGrowth = 7,
-        baseArmor = 0,
-        armorGrowth = 0.2,
-        baseMoveSpeed = 120,  -- Fast
-        speedGrowth = 2,
-        baseDamage = 8,
-        damageGrowth = 2,
-        
-        attackSpeed = 1.5,  -- Fast attacks
-        
-        xpDrop = 8,
-        xpDropGrowth = 1.5
-    },
-    
-    -- === RANGED MOB ===
-    {
-        id = "archer",
-        name = "Skeleton Archer",
-        type = "ranged",
-        spriteIndex = 66,  -- Skeleton archer from monsters.png (row 5, col 2)
-        
-        baseHp = 40,
-        hpGrowth = 8,
-        baseArmor = 0,
-        armorGrowth = 0.3,
-        baseMoveSpeed = 70,
-        speedGrowth = 1,
-        baseDamage = 12,
-        damageGrowth = 3,
-        
-        attackSpeed = 0.8,  -- Slower than melee
-        attackRange = 300,
-        projectileSpeed = 200,
-        
-        xpDrop = 12,
-        xpDropGrowth = 2
-    },
-    
-    -- === STRONG RANGED MOB ===
-    {
-        id = "mage_mob",
-        name = "Dark Mage",
-        type = "ranged",
-        spriteIndex = 2,  -- Orc wizard from monsters.png (row 1, col 2)
-        
-        baseHp = 35,
-        hpGrowth = 6,
-        baseArmor = 0,
-        armorGrowth = 0.2,
-        baseMoveSpeed = 50,
-        speedGrowth = 0.5,
-        baseDamage = 20,
-        damageGrowth = 5,
-        
-        attackSpeed = 0.5,  -- Slow but powerful
-        attackRange = 400,
-        projectileSpeed = 150,
-        
-        xpDrop = 15,
-        xpDropGrowth = 3
-    },
-    
-    -- === TANK MELEE MOB ===
-    {
-        id = "ogre",
-        name = "Ogre",
-        type = "melee",
-        spriteIndex = 1,  -- Orc from monsters.png (row 1, col 1)
-        
-        baseHp = 120,
-        hpGrowth = 20,
-        baseArmor = 3,
-        armorGrowth = 1,
-        baseMoveSpeed = 40,  -- Very slow
-        speedGrowth = 0.5,
-        baseDamage = 25,
-        damageGrowth = 5,
-        
-        attackSpeed = 0.6,  -- Slow but hard-hitting
-        
-        xpDrop = 25,
-        xpDropGrowth = 4
     }
 }
 

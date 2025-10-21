@@ -239,7 +239,7 @@ function BaseEntity:draw()
             self.x, self.y,
             self.rotation,
             self.scale, self.scale,
-            16, 16  -- Assuming 32x32 sprites, origin at center (16, 16)
+            16, 16  -- Origin at center (16, 16) for 32x32 sprites
         )
     elseif self.sprite then
         -- Direct sprite rendering (legacy/placeholders)

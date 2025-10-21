@@ -111,7 +111,7 @@ function Game:loadConfigs()
     local allBosses = require("src.config.bosses")
     
     -- TEMPORARY: Limit to 1 hero and 1 mob for testing
-    self.heroConfigs = {allHeroes[2]}  -- Only Mage (ranged)
+    self.heroConfigs = {allHeroes[1]}  -- Only Mage (ranged)
     self.mobConfigs = {allMobs[1]}     -- Only Zombie (melee)
     self.bossConfigs = {}              -- No bosses for now
     
@@ -668,6 +668,16 @@ function Game:drawPlaying()
             love.graphics.circle("line", drop.x, drop.y, drop.radius)
         end
         
+        -- Player skill ranges (blue)
+        if self.player and self.player.skills then
+            love.graphics.setColor(0, 0, 1, 0.3)
+            for _, skill in ipairs(self.player.skills) do
+                if skill.range then
+                    love.graphics.circle("line", self.player.x, self.player.y, skill.range)
+                end
+            end
+        end
+        
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.setLineWidth(1)
     end
@@ -677,6 +687,11 @@ function Game:drawPlaying()
     
     -- Draw HUD (UI overlay, no camera)
     self:drawHUD()
+    
+    -- Draw pause screen overlay
+    if self.paused then
+        self:drawPauseScreen()
+    end
 end
 
 function Game:drawHUD()
@@ -876,6 +891,25 @@ function Game:resize(w, h)
     if self.camera then
         self.camera:resize(w, h)
     end
+end
+
+function Game:drawPauseScreen()
+    local screenW = love.graphics.getWidth()
+    local screenH = love.graphics.getHeight()
+    
+    -- Dark overlay
+    love.graphics.setColor(0, 0, 0, 0.7)
+    love.graphics.rectangle("fill", 0, 0, screenW, screenH)
+    
+    -- Pause text
+    love.graphics.setFont(Assets.getFont("large"))
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.printf("PAUSED", 0, screenH/2 - 60, screenW, "center")
+    
+    -- Continue button
+    love.graphics.setFont(Assets.getFont("medium"))
+    love.graphics.setColor(0.8, 0.8, 0.8, 1)
+    love.graphics.printf("Press ESC to Continue", 0, screenH/2 + 20, screenW, "center")
 end
 
 return Game

@@ -19,47 +19,40 @@
 -- }
 
 local heroes = {
-    -- === HERO 1: WARRIOR ===
-    {
-        id = "warrior",
-        name = "Warrior",
-        spriteIndex = 8,  -- Knight from rogues.png (2.a in 7-col grid)
-        
-        -- Base stats
-        baseHp = 150,
-        hpGrowth = 20,
-        baseArmor = 5,
-        armorGrowth = 1.5,
-        baseMoveSpeed = 120,
-        speedGrowth = 2,
-        baseCastSpeed = 1.0,
-        castSpeedGrowth = 0.02,
-        
-        -- Innate: +1 skill slot, more armor from items
-        innateSkill = {
-            id = "warrior_innate",
-            name = "Tank",
-            description = "Start with +50 HP, armor is 20% more effective",
-            modifiers = {
-                maxSkillSlots = 5,  -- Override default 4
-                armorMultiplier = 1.2
-            }
-        },
-        
-        -- Starting skill
-        startingSkill = {
-            id = "slash",
-            name = "Slash",
-            type = "projectile",
-            cooldown = 1.0,
-            damage = 25,
-            range = 200,
-            projectileSpeed = 400,
-            effect = nil
-        }
-    },
-    
-    -- === HERO 2: MAGE ===
+    -- === BASELINE HERO (REFERENCE FOR BALANCE) ===
+    -- {
+    --     id = "baseline_hero",
+    --     name = "Baseline Hero",
+    --     spriteIndex = 1,
+    --     
+    --     baseHp = 100,        -- Standard HP
+    --     hpGrowth = 15,       -- Moderate HP growth
+    --     baseArmor = 2,        -- Some armor
+    --     armorGrowth = 0.8,    -- Decent armor scaling
+    --     baseMoveSpeed = 100,  -- Standard speed
+    --     speedGrowth = 1.5,    -- Moderate speed growth
+    --     baseCastSpeed = 1.0,  -- Normal cast speed
+    --     castSpeedGrowth = 0.03,
+    --     
+    --     innateSkill = {
+    --         id = "baseline_innate",
+    --         name = "Balanced",
+    --         description = "No special modifiers",
+    --         modifiers = {}
+    --     },
+    --     
+    --     startingSkill = {
+    --         id = "baseline_skill",
+    --         name = "Basic Attack",
+    --         type = "projectile",
+    --         cooldown = 2.0,
+    --         damage = 25,
+    --         range = 300,
+    --         projectileSpeed = 250
+    --     }
+    -- },
+
+    -- === MAGE ===
     {
         id = "mage",
         name = "Mage",
@@ -96,88 +89,6 @@ local heroes = {
                 duration = 3,
                 damage = 5,
                 tickRate = 0.5
-            }
-        }
-    },
-    
-    -- === HERO 3: ROGUE ===
-    {
-        id = "rogue",
-        name = "Rogue",
-        spriteIndex = 4,  -- Rogue from rogues.png (row 1, col 4)
-        
-        baseHp = 100,
-        hpGrowth = 12,
-        baseArmor = 2,
-        armorGrowth = 0.8,
-        baseMoveSpeed = 150,  -- Fast
-        speedGrowth = 3,
-        baseCastSpeed = 1.1,
-        castSpeedGrowth = 0.03,
-        
-        innateSkill = {
-            id = "rogue_innate",
-            name = "Poison Master",
-            description = "All poison effects tick 2x faster (every 0.25s instead of 0.5s)",
-            modifiers = {
-                poisonTickRate = 0.25
-            }
-        },
-        
-        startingSkill = {
-            id = "poison_dart",
-            name = "Poison Dart",
-            type = "projectile",
-            cooldown = 0.8,
-            damage = 15,
-            range = 350,
-            projectileSpeed = 500,
-            effect = {
-                type = "poison",
-                duration = 5,
-                damage = 8,
-                tickRate = 0.5  -- Will be modified by innate
-            }
-        }
-    },
-    
-    -- === HERO 4: TANK ===
-    {
-        id = "tank",
-        name = "Tank",
-        spriteIndex = 22,  -- Male barbarian from rogues.png (4.a in 7-col grid)
-        
-        baseHp = 200,
-        hpGrowth = 25,
-        baseArmor = 8,
-        armorGrowth = 2,
-        baseMoveSpeed = 90,  -- Slow
-        speedGrowth = 1,
-        baseCastSpeed = 0.8,  -- Casts slower
-        castSpeedGrowth = 0.01,
-        
-        innateSkill = {
-            id = "tank_innate",
-            name = "Immovable",
-            description = "Cannot be slowed or rooted. +5 armor.",
-            modifiers = {
-                immuneToSlow = true,
-                immuneToRoot = true,
-                bonusArmor = 5
-            }
-        },
-        
-        startingSkill = {
-            id = "ground_slam",
-            name = "Ground Slam",
-            type = "aoe",
-            cooldown = 2.0,
-            damage = 35,
-            range = 150,
-            radius = 150,
-            effect = {
-                type = "stun",
-                duration = 1.5
             }
         }
     }
