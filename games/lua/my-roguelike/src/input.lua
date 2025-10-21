@@ -40,12 +40,6 @@ end
 -- === UPDATE ===
 
 function Input.update(dt)
-    -- Clear pressed states
-    Input.keysPressed = {}
-    Input.mouse.leftPressed = false
-    Input.mouse.rightPressed = false
-    Input.gamepadButtonsPressed = {}
-    
     -- Update mouse position
     Input.mouse.x, Input.mouse.y = love.mouse.getPosition()
     
@@ -63,11 +57,21 @@ function Input.update(dt)
     end
 end
 
+-- Call this at the END of the frame to clear pressed states
+function Input.clearPressed()
+    Input.keysPressed = {}
+    Input.mouse.leftPressed = false
+    Input.mouse.rightPressed = false
+    Input.gamepadButtonsPressed = {}
+end
+
 -- === KEYBOARD ===
 
 function Input.keypressed(key)
     Input.keys[key] = true
     Input.keysPressed[key] = true
+    -- Debug: log key presses
+    print("[INPUT] Key pressed: " .. tostring(key))
 end
 
 function Input.keyreleased(key)
@@ -85,6 +89,9 @@ end
 -- === MOUSE ===
 
 function Input.mousepressed(x, y, button)
+    -- Debug: log mouse clicks
+    print(string.format("[INPUT] Mouse pressed: button=%d at (%.0f, %.0f)", button, x, y))
+    
     if button == 1 then
         Input.mouse.left = true
         Input.mouse.leftPressed = true

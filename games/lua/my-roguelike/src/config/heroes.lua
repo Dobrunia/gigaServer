@@ -5,6 +5,7 @@
 -- {
 --   id = "unique_id",
 --   name = "Hero Name",
+--   spriteIndex = number (index in rogues.png spritesheet, 1-based),
 --   baseHp = number,
 --   hpGrowth = number (per level),
 --   baseArmor = number,
@@ -22,6 +23,7 @@ local heroes = {
     {
         id = "warrior",
         name = "Warrior",
+        spriteIndex = 8,  -- Knight from rogues.png (2.a in 7-col grid)
         
         -- Base stats
         baseHp = 150,
@@ -61,6 +63,7 @@ local heroes = {
     {
         id = "mage",
         name = "Mage",
+        spriteIndex = 30,  -- Male wizard from rogues.png (5.b in 7-col grid)
         
         baseHp = 80,
         hpGrowth = 10,
@@ -101,6 +104,7 @@ local heroes = {
     {
         id = "rogue",
         name = "Rogue",
+        spriteIndex = 4,  -- Rogue from rogues.png (row 1, col 4)
         
         baseHp = 100,
         hpGrowth = 12,
@@ -141,6 +145,7 @@ local heroes = {
     {
         id = "tank",
         name = "Tank",
+        spriteIndex = 22,  -- Male barbarian from rogues.png (4.a in 7-col grid)
         
         baseHp = 200,
         hpGrowth = 25,

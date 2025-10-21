@@ -26,8 +26,14 @@ function Game.new()
     local self = setmetatable({}, Game)
     
     -- Game state
-    self.mode = "menu"  -- menu, char_select, playing
+    self.mode = "menu"  -- menu, char_select, playing, game_over
     self.paused = false
+    
+    -- Game over stats
+    self.finalStats = {
+        time = 0,
+        kills = 0
+    }
     
     -- Fixed timestep
     self.accumulator = 0
@@ -59,6 +65,7 @@ function Game.new()
     
     -- Timer
     self.gameTime = 0
+    self.mobsKilled = 0
     
     return self
 end
@@ -98,10 +105,17 @@ end
 
 function Game:loadConfigs()
     -- Load data-driven configs
-    self.heroConfigs = require("src.config.heroes")
-    self.mobConfigs = require("src.config.mobs")
+    -- Load all configs
+    local allHeroes = require("src.config.heroes")
+    local allMobs = require("src.config.mobs")
+    local allBosses = require("src.config.bosses")
+    
+    -- TEMPORARY: Limit to 1 hero and 1 mob for testing
+    self.heroConfigs = {allHeroes[2]}  -- Only Mage (ranged)
+    self.mobConfigs = {allMobs[1]}     -- Only Zombie (melee)
+    self.bossConfigs = {}              -- No bosses for now
+    
     self.skillConfigs = require("src.config.skills")
-    self.bossConfigs = require("src.config.bosses")
 end
 
 -- === UPDATE ===
@@ -115,12 +129,41 @@ function Game:update(dt)
         self:updateCharSelect(dt)
     elseif self.mode == "playing" then
         self:updatePlaying(dt)
+    elseif self.mode == "game_over" then
+        self:updateGameOver(dt)
     end
+    
+    -- Clear pressed states at the END of frame (after all updates)
+    Input.clearPressed()
 end
 
 function Game:updateMenu(dt)
-    -- Simple menu: press space or click to go to character select
-    if Input.isKeyPressed("space") or Input.mouse.leftPressed then
+    -- Button bounds for "Start Game" button
+    local buttonWidth = 300
+    local buttonHeight = 60
+    local buttonX = (love.graphics.getWidth() - buttonWidth) / 2
+    local buttonY = 400
+    
+    -- Get mouse position
+    local mx, my = love.mouse.getPosition()
+    local isHovering = mx >= buttonX and mx <= buttonX + buttonWidth and
+                       my >= buttonY and my <= buttonY + buttonHeight
+    
+    -- Debug log - check Input state
+    if Input.mouse.leftPressed then
+        print(string.format("[MENU] Mouse leftPressed=true at (%.0f, %.0f), hovering=%s", mx, my, tostring(isHovering)))
+    end
+    
+    if Input.isKeyPressed("space") then
+        print("[MENU] SPACE isKeyPressed=true")
+    end
+    
+    -- Check for click on button or SPACE key
+    if Input.isKeyPressed("space") then
+        print("[MENU] Starting game via SPACE!")
+        self.mode = "char_select"
+    elseif Input.mouse.leftPressed and isHovering then
+        print("[MENU] Starting game via button click!")
         self.mode = "char_select"
     end
 end
@@ -133,6 +176,13 @@ function Game:updateCharSelect(dt)
         self.selectedHeroIndex = math.min(#self.heroConfigs, self.selectedHeroIndex + 1)
     elseif Input.isKeyPressed("space") or Input.isKeyPressed("return") then
         self:startGame()
+    end
+end
+
+function Game:updateGameOver(dt)
+    -- Restart on SPACE or click
+    if Input.isKeyPressed("space") or Input.isKeyPressed("return") or Input.mouse.leftPressed then
+        self:startGame()  -- Restart game
     end
 end
 
@@ -161,7 +211,12 @@ function Game:fixedUpdate(dt)
     self.gameTime = self.gameTime + dt
     
     if not self.player or not self.player.alive then
-        -- Game over
+        -- Trigger game over
+        if self.mode == "playing" then
+            self.mode = "game_over"
+            self.finalStats.time = self.gameTime
+            self.finalStats.kills = self.mobsKilled
+        end
         return
     end
     
@@ -200,6 +255,7 @@ function Game:fixedUpdate(dt)
         if not mob.alive then
             self.spatialHash:remove(mob)
             self.spawnManager:spawnXPDrop(mob.x, mob.y, mob:getXPDrop(), self.xpDrops)
+            self.mobsKilled = self.mobsKilled + 1
             table.remove(self.mobs, i)
         end
     end
@@ -250,7 +306,7 @@ function Game:fixedUpdate(dt)
     end
     
     -- Update skills (auto-cast)
-    self.skills:update(dt, self.player, self.mobs, self.projectilePool, self.spatialHash)
+    self.skills:update(dt, self.player, self.mobs, self.projectilePool, self.spatialHash, self.projectiles)
     
     -- Update spawns
     self.spawnManager:update(dt, self.player, self.mobs, self.xpDrops, self.mobConfigs, self.bossConfigs)
@@ -268,9 +324,16 @@ end
 function Game:handleInput(dt)
     if not self.player then return end
     
-    -- Movement (WASD or gamepad left stick)
-    local moveX, moveY = Input.getMoveVector()
-    self.player:setMovementInput(moveX, moveY, dt)
+    -- Movement via RMB (right mouse button)
+    if Input.mouse.right then
+        local worldX, worldY = self.camera:screenToWorld(Input.mouse.x, Input.mouse.y)
+        local moveX, moveY = Utils.directionTo(self.player.x, self.player.y, worldX, worldY)
+        self.player:setMovementInput(moveX, moveY, dt)
+    else
+        -- Movement (WASD or gamepad left stick)
+        local moveX, moveY = Input.getMoveVector()
+        self.player:setMovementInput(moveX, moveY, dt)
+    end
     
     -- Aim mode (LMB or gamepad right stick)
     if Input.isAimHeld() then
@@ -299,8 +362,24 @@ function Game:startGame()
     
     -- Create player at map center
     self.player = Player.new(Constants.MAP_WIDTH / 2, Constants.MAP_HEIGHT / 2, heroData)
-    self.player.sprite = Assets.getImage("player")
+    
+    -- Add starting skill with proper initialization
+    if self.player.startingSkillData then
+        self.player:addSkill(self.player.startingSkillData)
+    end
+    
+    -- Set player sprite from spritesheet
+    local spriteIndex = heroData.spriteIndex or Assets.images.player
+    self.player.spritesheet = Assets.getSpritesheet("rogues")
+    self.player.quad = Assets.getQuad("rogues", spriteIndex)
+    self.player.spriteIndex = spriteIndex
     self.player.isPlayer = true
+    
+    -- DEBUG (can remove later)
+    -- print("[GAME] Player sprite setup:")
+    -- print("  spriteIndex:", spriteIndex)
+    -- print("  spritesheet:", self.player.spritesheet ~= nil)
+    -- print("  quad:", self.player.quad ~= nil)
     
     -- Add to spatial hash
     self.spatialHash:insert(self.player)
@@ -310,6 +389,7 @@ function Game:startGame()
     self.projectiles = {}
     self.xpDrops = {}
     self.gameTime = 0
+    self.mobsKilled = 0
     self.spawnManager:reset()
     
     self.mode = "playing"
@@ -333,6 +413,8 @@ function Game:draw()
         self:drawCharSelect()
     elseif self.mode == "playing" then
         self:drawPlaying()
+    elseif self.mode == "game_over" then
+        self:drawGameOver()
     end
     
     -- Debug info
@@ -353,8 +435,40 @@ function Game:drawMenu()
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.printf("DOBLIKE ROGUELIKE", 0, 200, love.graphics.getWidth(), "center")
     
-    love.graphics.setFont(Assets.getFont("default"))
-    love.graphics.printf("Press SPACE to Start", 0, 400, love.graphics.getWidth(), "center")
+    -- Draw clickable "Start Game" button
+    local buttonWidth = 300
+    local buttonHeight = 60
+    local buttonX = (love.graphics.getWidth() - buttonWidth) / 2
+    local buttonY = 400
+    
+    -- Check if mouse is hovering over button
+    local mx, my = love.mouse.getPosition()
+    local isHovering = mx >= buttonX and mx <= buttonX + buttonWidth and
+                       my >= buttonY and my <= buttonY + buttonHeight
+    
+    -- Draw button background
+    if isHovering then
+        love.graphics.setColor(0.3, 0.6, 0.3, 0.8)  -- Green hover
+    else
+        love.graphics.setColor(0.2, 0.2, 0.3, 0.8)  -- Dark background
+    end
+    love.graphics.rectangle("fill", buttonX, buttonY, buttonWidth, buttonHeight, 10, 10)
+    
+    -- Draw button border
+    love.graphics.setColor(0.5, 0.5, 0.6, 1)
+    love.graphics.setLineWidth(2)
+    love.graphics.rectangle("line", buttonX, buttonY, buttonWidth, buttonHeight, 10, 10)
+    love.graphics.setLineWidth(1)
+    
+    -- Draw button text
+    love.graphics.setFont(Assets.getFont("large"))
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.printf("START GAME", buttonX, buttonY + 15, buttonWidth, "center")
+    
+    -- Draw instruction text below
+    love.graphics.setFont(Assets.getFont("small"))
+    love.graphics.setColor(0.7, 0.7, 0.7, 1)
+    love.graphics.printf("Click button or press SPACE", 0, buttonY + 80, love.graphics.getWidth(), "center")
 end
 
 function Game:drawCharSelect()
@@ -365,19 +479,110 @@ function Game:drawCharSelect()
     love.graphics.printf("Choose Your Hero", 0, 50, love.graphics.getWidth(), "center")
     
     -- Draw hero cards
-    local cardY = 200
     local hero = self.heroConfigs[self.selectedHeroIndex]
     
     if hero then
-        love.graphics.setFont(Assets.getFont("default"))
-        love.graphics.printf(hero.name, 0, cardY, love.graphics.getWidth(), "center")
-        love.graphics.printf("HP: " .. hero.baseHp .. " (+" .. hero.hpGrowth .. "/lvl)", 0, cardY + 40, love.graphics.getWidth(), "center")
-        love.graphics.printf("Armor: " .. hero.baseArmor .. " (+" .. hero.armorGrowth .. "/lvl)", 0, cardY + 60, love.graphics.getWidth(), "center")
-        love.graphics.printf("Speed: " .. hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. "/lvl)", 0, cardY + 80, love.graphics.getWidth(), "center")
+        local centerX = love.graphics.getWidth() / 2
+        local spriteY = 140
         
-        love.graphics.setFont(Assets.getFont("small"))
-        love.graphics.printf("< LEFT/RIGHT > to navigate, SPACE to select", 0, cardY + 150, love.graphics.getWidth(), "center")
+        -- Draw hero sprite (large)
+        local spriteIndex = hero.spriteIndex or Assets.images.player
+        local spritesheet = Assets.getSpritesheet("rogues")
+        local quad = Assets.getQuad("rogues", spriteIndex)
+        
+        if spritesheet and quad then
+            love.graphics.setColor(1, 1, 1, 1)
+            -- Draw sprite at 4x scale (32x32 -> 128x128)
+            love.graphics.draw(spritesheet, quad, centerX, spriteY, 0, 4, 4, 16, 16)
+        end
+        
+        -- Draw hero name
+        local cardY = 280
+        love.graphics.setFont(Assets.getFont("large"))
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.printf(hero.name, 0, cardY, love.graphics.getWidth(), "center")
+        
+        -- Draw stats
+        love.graphics.setFont(Assets.getFont("default"))
+        love.graphics.printf("HP: " .. hero.baseHp .. " (+" .. hero.hpGrowth .. "/lvl)", 0, cardY + 50, love.graphics.getWidth(), "center")
+        love.graphics.printf("Armor: " .. hero.baseArmor .. " (+" .. hero.armorGrowth .. "/lvl)", 0, cardY + 70, love.graphics.getWidth(), "center")
+        love.graphics.printf("Speed: " .. hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. "/lvl)", 0, cardY + 90, love.graphics.getWidth(), "center")
+        love.graphics.printf("Cast Speed: " .. hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. "/lvl)", 0, cardY + 110, love.graphics.getWidth(), "center")
+        
+        -- Draw innate ability
+        if hero.innateSkill then
+            love.graphics.setFont(Assets.getFont("small"))
+            love.graphics.setColor(0.8, 0.8, 1, 1)
+            love.graphics.printf("Innate: " .. hero.innateSkill.name, 0, cardY + 140, love.graphics.getWidth(), "center")
+            love.graphics.setColor(0.7, 0.7, 0.7, 1)
+            love.graphics.printf(hero.innateSkill.description or "", 0, cardY + 160, love.graphics.getWidth(), "center")
+        end
+        
+        -- Navigation instructions
+        love.graphics.setFont(Assets.getFont("default"))
+        love.graphics.setColor(0.5, 1, 0.5, 1)
+        love.graphics.printf("< LEFT/RIGHT arrows to navigate >", 0, cardY + 200, love.graphics.getWidth(), "center")
+        love.graphics.printf("Press SPACE or ENTER to select", 0, cardY + 220, love.graphics.getWidth(), "center")
+        
+        -- Show hero counter
+        love.graphics.setColor(0.7, 0.7, 0.7, 1)
+        love.graphics.printf(self.selectedHeroIndex .. " / " .. #self.heroConfigs, 0, cardY + 250, love.graphics.getWidth(), "center")
     end
+end
+
+function Game:drawGameOver()
+    love.graphics.clear(0.1, 0.05, 0.05, 1)  -- Dark red background
+    
+    local screenW = love.graphics.getWidth()
+    local screenH = love.graphics.getHeight()
+    
+    -- Title
+    love.graphics.setFont(Assets.getFont("large"))
+    love.graphics.setColor(1, 0.3, 0.3, 1)
+    love.graphics.printf("GAME OVER", 0, 150, screenW, "center")
+    
+    -- Stats
+    love.graphics.setFont(Assets.getFont("default"))
+    love.graphics.setColor(1, 1, 1, 1)
+    
+    local statsY = 250
+    love.graphics.printf("Time Survived: " .. Utils.formatTime(self.finalStats.time), 0, statsY, screenW, "center")
+    love.graphics.printf("Enemies Killed: " .. self.finalStats.kills, 0, statsY + 40, screenW, "center")
+    
+    -- Restart button
+    local buttonW = 300
+    local buttonH = 60
+    local buttonX = (screenW - buttonW) / 2
+    local buttonY = 400
+    
+    -- Check hover
+    local mx, my = love.mouse.getPosition()
+    local isHovering = mx >= buttonX and mx <= buttonX + buttonW and
+                       my >= buttonY and my <= buttonY + buttonH
+    
+    -- Button background
+    if isHovering then
+        love.graphics.setColor(0.4, 0.7, 0.4, 0.9)
+    else
+        love.graphics.setColor(0.3, 0.3, 0.4, 0.8)
+    end
+    love.graphics.rectangle("fill", buttonX, buttonY, buttonW, buttonH, 10, 10)
+    
+    -- Button border
+    love.graphics.setColor(0.6, 0.6, 0.7, 1)
+    love.graphics.setLineWidth(2)
+    love.graphics.rectangle("line", buttonX, buttonY, buttonW, buttonH, 10, 10)
+    love.graphics.setLineWidth(1)
+    
+    -- Button text
+    love.graphics.setFont(Assets.getFont("large"))
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.printf("RESTART", buttonX, buttonY + 15, buttonW, "center")
+    
+    -- Instruction
+    love.graphics.setFont(Assets.getFont("small"))
+    love.graphics.setColor(0.7, 0.7, 0.7, 1)
+    love.graphics.printf("Press SPACE or click button to restart", 0, buttonY + 80, screenW, "center")
 end
 
 function Game:drawPlaying()
@@ -391,33 +596,80 @@ function Game:drawPlaying()
     
     -- Draw XP drops
     for _, drop in ipairs(self.xpDrops) do
-        local sprite = Assets.getImage("xpDrop")
-        if sprite then
+        local xpIndex = Assets.images.xpDrop
+        local spritesheet = Assets.getSpritesheet("items")
+        local quad = Assets.getQuad("items", xpIndex)
+        
+        if spritesheet and quad then
             love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(sprite, drop.x, drop.y, 0, 1, 1, sprite:getWidth() / 2, sprite:getHeight() / 2)
+            love.graphics.draw(spritesheet, quad, drop.x, drop.y, 0, 1, 1, 16, 16)
         end
     end
     
     -- Draw mobs
     for _, mob in ipairs(self.mobs) do
         if self.camera:isPointVisible(mob.x, mob.y) then
-            mob.sprite = mob.mobType == "melee" and Assets.getImage("mobMelee") or Assets.getImage("mobRanged")
-            if mob.isBoss then
-                mob.sprite = Assets.getImage("boss")
-            end
             mob:draw()
         end
     end
     
     -- Draw projectiles
     for _, proj in ipairs(self.projectiles) do
-        proj.sprite = proj.owner == "player" and Assets.getImage("projectilePlayer") or Assets.getImage("projectileMob")
-        proj:draw()
+        local projIndex = proj.owner == "player" and Assets.images.projectilePlayer or Assets.images.projectileMob
+        local spritesheet = Assets.getSpritesheet("items")
+        local quad = Assets.getQuad("items", projIndex)
+        
+        if spritesheet and quad then
+            love.graphics.setColor(1, 1, 1, 1)
+            -- Calculate rotation angle towards movement direction
+            local angle = math.atan2(proj.dy, proj.dx)
+            -- Draw projectile with rotation
+            love.graphics.draw(spritesheet, quad, proj.x, proj.y, angle, 1.5, 1.5, 16, 16)
+        else
+            -- Fallback: draw as orange circle if sprite not found
+            love.graphics.setColor(1, 0.5, 0, 1)
+            love.graphics.circle("fill", proj.x, proj.y, 6)
+            love.graphics.setColor(1, 1, 1, 1)
+        end
     end
     
     -- Draw player
     if self.player then
         self.player:draw()
+    end
+    
+    -- Draw hitboxes for debugging
+    if Constants.DEBUG_DRAW_HITBOXES then
+        love.graphics.setLineWidth(2)
+        
+        -- Player hitbox (green)
+        if self.player then
+            love.graphics.setColor(0, 1, 0, 0.5)
+            love.graphics.circle("line", self.player.x, self.player.y, self.player.radius)
+        end
+        
+        -- Mob hitboxes (red)
+        love.graphics.setColor(1, 0, 0, 0.5)
+        for _, mob in ipairs(self.mobs) do
+            if self.camera:isPointVisible(mob.x, mob.y) then
+                love.graphics.circle("line", mob.x, mob.y, mob.radius)
+            end
+        end
+        
+        -- Projectile hitboxes (yellow)
+        love.graphics.setColor(1, 1, 0, 0.5)
+        for _, proj in ipairs(self.projectiles) do
+            love.graphics.circle("line", proj.x, proj.y, proj.radius)
+        end
+        
+        -- XP drop hitboxes (cyan)
+        love.graphics.setColor(0, 1, 1, 0.5)
+        for _, drop in ipairs(self.xpDrops) do
+            love.graphics.circle("line", drop.x, drop.y, drop.radius)
+        end
+        
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setLineWidth(1)
     end
     
     -- Clear camera
@@ -430,35 +682,149 @@ end
 function Game:drawHUD()
     if not self.player then return end
     
-    local hudBg = Assets.getImage("hudBg")
-    if hudBg then
-        love.graphics.setColor(0.5, 0.5, 0.5, 0.8)
-        love.graphics.rectangle("fill", 0, love.graphics.getHeight() - Constants.HUD_HEIGHT, love.graphics.getWidth(), Constants.HUD_HEIGHT)
+    local stats = self.player:getStats()
+    local screenW = love.graphics.getWidth()
+    local screenH = love.graphics.getHeight()
+    
+    -- Timer at top center
+    love.graphics.setFont(Assets.getFont("large"))
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.printf(Utils.formatTime(self.gameTime), 0, 10, screenW, "center")
+    
+    -- Stats Card (bottom left)
+    local statsCardW = 220
+    local statsCardH = 140
+    local statsCardX = 20
+    local statsCardY = screenH - statsCardH - 20
+    
+    -- Card background
+    love.graphics.setColor(0, 0, 0, 0.7)
+    love.graphics.rectangle("fill", statsCardX, statsCardY, statsCardW, statsCardH, 8, 8)
+    love.graphics.setColor(0.3, 0.3, 0.4, 1)
+    love.graphics.setLineWidth(2)
+    love.graphics.rectangle("line", statsCardX, statsCardY, statsCardW, statsCardH, 8, 8)
+    love.graphics.setLineWidth(1)
+    
+    -- Stats content
+    love.graphics.setFont(Assets.getFont("default"))
+    love.graphics.setColor(1, 1, 1, 1)
+    local textX = statsCardX + 10
+    local textY = statsCardY + 10
+    
+    -- Level
+    love.graphics.print("Level: " .. stats.level, textX, textY)
+    
+    -- HP Bar
+    textY = textY + 25
+    love.graphics.setFont(Assets.getFont("small"))
+    love.graphics.print("HP:", textX, textY)
+    local hpBarX = textX + 30
+    local hpBarW = statsCardW - 50
+    local hpBarH = 16
+    local hpPercent = math.max(0, math.min(1, stats.hp / stats.maxHp))
+    
+    -- HP bar background
+    love.graphics.setColor(0.2, 0, 0, 0.8)
+    love.graphics.rectangle("fill", hpBarX, textY, hpBarW, hpBarH, 3, 3)
+    -- HP bar fill
+    love.graphics.setColor(0.8, 0.2, 0.2, 1)
+    love.graphics.rectangle("fill", hpBarX, textY, hpBarW * hpPercent, hpBarH, 3, 3)
+    -- HP text
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.printf(math.floor(stats.hp) .. "/" .. math.floor(stats.maxHp), hpBarX, textY + 2, hpBarW, "center")
+    
+    -- XP Bar
+    textY = textY + 25
+    love.graphics.print("XP:", textX, textY)
+    local xpPercent = math.max(0, math.min(1, stats.xp / stats.xpToNext))
+    
+    -- XP bar background
+    love.graphics.setColor(0, 0, 0.2, 0.8)
+    love.graphics.rectangle("fill", hpBarX, textY, hpBarW, hpBarH, 3, 3)
+    -- XP bar fill
+    love.graphics.setColor(0.3, 0.5, 1, 1)
+    love.graphics.rectangle("fill", hpBarX, textY, hpBarW * xpPercent, hpBarH, 3, 3)
+    -- XP text
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.printf(math.floor(stats.xp) .. "/" .. math.floor(stats.xpToNext), hpBarX, textY + 2, hpBarW, "center")
+    
+    -- Armor
+    textY = textY + 25
+    love.graphics.setFont(Assets.getFont("default"))
+    love.graphics.print("Armor: " .. math.floor(stats.armor), textX, textY)
+    
+    -- Speed
+    textY = textY + 20
+    love.graphics.setFont(Assets.getFont("small"))
+    love.graphics.print("Speed: " .. math.floor(stats.speed), textX, textY)
+    
+    -- Skills Card (bottom right)
+    local skillsCardW = 250
+    local skillsCardH = 140
+    local skillsCardX = screenW - skillsCardW - 20
+    local skillsCardY = screenH - skillsCardH - 20
+    
+    -- Card background
+    love.graphics.setColor(0, 0, 0, 0.7)
+    love.graphics.rectangle("fill", skillsCardX, skillsCardY, skillsCardW, skillsCardH, 8, 8)
+    love.graphics.setColor(0.3, 0.3, 0.4, 1)
+    love.graphics.setLineWidth(2)
+    love.graphics.rectangle("line", skillsCardX, skillsCardY, skillsCardW, skillsCardH, 8, 8)
+    love.graphics.setLineWidth(1)
+    
+    -- Skills content
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setFont(Assets.getFont("default"))
+    local skillTextX = skillsCardX + 10
+    local skillTextY = skillsCardY + 10
+    love.graphics.print("Skills:", skillTextX, skillTextY)
+    
+    skillTextY = skillTextY + 25
+    love.graphics.setFont(Assets.getFont("small"))
+    
+    if #self.player.skills == 0 then
+        love.graphics.setColor(0.6, 0.6, 0.6, 1)
+        love.graphics.print("No skills yet", skillTextX, skillTextY)
+    else
+        for i, skill in ipairs(self.player.skills) do
+            local cooldown = skill.cooldownTimer or 0
+            local cdPercent = 0
+            if skill.cooldown and skill.cooldown > 0 then
+                cdPercent = math.max(0, math.min(1, cooldown / skill.cooldown))
+            end
+            
+            -- Skill name
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.print(skill.name or "Unknown", skillTextX, skillTextY)
+            
+            -- Cooldown bar (small)
+            local cdBarX = skillTextX + 100
+            local cdBarW = skillsCardW - 120
+            local cdBarH = 12
+            
+            if cooldown > 0 then
+                -- CD bar background
+                love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
+                love.graphics.rectangle("fill", cdBarX, skillTextY, cdBarW, cdBarH, 2, 2)
+                -- CD bar fill
+                love.graphics.setColor(1, 0.5, 0, 1)
+                love.graphics.rectangle("fill", cdBarX, skillTextY, cdBarW * cdPercent, cdBarH, 2, 2)
+                -- CD text
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.printf(string.format("%.1f", cooldown), cdBarX, skillTextY, cdBarW, "center")
+            else
+                -- Ready indicator
+                love.graphics.setColor(0.2, 1, 0.2, 0.8)
+                love.graphics.rectangle("fill", cdBarX, skillTextY, cdBarW, cdBarH, 2, 2)
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.printf("READY", cdBarX, skillTextY, cdBarW, "center")
+            end
+            
+            skillTextY = skillTextY + 20
+        end
     end
     
     love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.setFont(Assets.getFont("small"))
-    
-    local stats = self.player:getStats()
-    local x = Constants.HUD_PADDING
-    local y = love.graphics.getHeight() - Constants.HUD_HEIGHT + Constants.HUD_PADDING
-    
-    love.graphics.print("Level: " .. stats.level, x, y)
-    love.graphics.print("HP: " .. math.floor(stats.hp) .. "/" .. math.floor(stats.maxHp), x, y + 20)
-    love.graphics.print("XP: " .. math.floor(stats.xp) .. "/" .. math.floor(stats.xpToNext), x, y + 40)
-    love.graphics.print("Armor: " .. math.floor(stats.armor), x, y + 60)
-    
-    -- Timer
-    love.graphics.printf(Utils.formatTime(self.gameTime), 0, 20, love.graphics.getWidth(), "center")
-    
-    -- Skills
-    local skillX = x + 250
-    love.graphics.print("Skills:", skillX, y)
-    for i, skill in ipairs(self.player.skills) do
-        local skillY = y + 20 + (i - 1) * 20
-        local cdText = skill.cooldownTimer > 0 and string.format("%.1f", skill.cooldownTimer) or "Ready"
-        love.graphics.print(skill.name .. " - " .. cdText, skillX, skillY)
-    end
 end
 
 function Game:drawDebug()

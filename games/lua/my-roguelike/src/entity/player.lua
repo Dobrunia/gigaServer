@@ -42,10 +42,8 @@ function Player.new(x, y, heroData)
     self.innateSkill = heroData.innateSkill  -- Passive/modifier skill
     self.maxSkillSlots = Constants.MAX_ACTIVE_SKILLS
     
-    -- Add starting skill if provided
-    if heroData.startingSkill then
-        table.insert(self.skills, heroData.startingSkill)
-    end
+    -- Note: Starting skill will be added after construction using addSkill()
+    self.startingSkillData = heroData.startingSkill
     
     -- Pickup radius
     self.pickupRadius = Constants.PLAYER_DEFAULT_PICKUP_RADIUS
@@ -80,8 +78,7 @@ end
 function Player:setMovementInput(dx, dy, dt)
     if dx ~= 0 or dy ~= 0 then
         self:move(dx, dy, dt)
-        -- Update direction arrow
-        self.directionArrow = math.atan2(dy, dx)
+        -- Don't update directionArrow here - it should show attack direction, not movement
     else
         self:stopMovement()
     end

@@ -5,7 +5,7 @@
 function love.conf(t)
     t.identity = "doblike_roguelike"       -- Save directory name
     t.version = "11.4"                      -- LÖVE version
-    t.console = false                       -- Console on Windows (debug only)
+    t.console = true                        -- Console on Windows (debug)
     
     t.window.title = "Doblike Roguelike"
     t.window.icon = nil

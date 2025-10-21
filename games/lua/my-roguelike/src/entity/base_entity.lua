@@ -37,7 +37,10 @@ function BaseEntity.new(x, y)
     self.active = true
     
     -- Visual
-    self.sprite = nil
+    self.sprite = nil          -- Direct image (legacy)
+    self.spritesheet = nil     -- Spritesheet image
+    self.quad = nil            -- Quad for spritesheet
+    self.spriteIndex = nil     -- Index in spritesheet
     self.rotation = 0
     self.scale = 1
     
@@ -227,7 +230,19 @@ function BaseEntity:draw()
     
     love.graphics.setColor(1, 1, 1, 1)
     
-    if self.sprite then
+    -- Draw using spritesheet+quad if available, otherwise use direct sprite
+    if self.spritesheet and self.quad then
+        -- Spritesheet rendering with quad
+        love.graphics.draw(
+            self.spritesheet,
+            self.quad,
+            self.x, self.y,
+            self.rotation,
+            self.scale, self.scale,
+            16, 16  -- Assuming 32x32 sprites, origin at center (16, 16)
+        )
+    elseif self.sprite then
+        -- Direct sprite rendering (legacy/placeholders)
         love.graphics.draw(
             self.sprite,
             self.x, self.y,

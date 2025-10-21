@@ -5,6 +5,7 @@
 --   id = "unique_id",
 --   name = "Mob Name",
 --   type = "melee" | "ranged",
+--   spriteIndex = number (index in monsters.png spritesheet, 1-based),
 --   baseHp = number,
 --   hpGrowth = number (per level),
 --   baseArmor = number,
@@ -26,6 +27,7 @@ local mobs = {
         id = "zombie",
         name = "Zombie",
         type = "melee",
+        spriteIndex = 69,  -- Zombie from monsters.png (row 5, col 5)
         
         baseHp = 50,
         hpGrowth = 10,
@@ -47,6 +49,7 @@ local mobs = {
         id = "ghoul",
         name = "Ghoul",
         type = "melee",
+        spriteIndex = 70,  -- Ghoul from monsters.png (row 5, col 6)
         
         baseHp = 30,
         hpGrowth = 7,
@@ -68,6 +71,7 @@ local mobs = {
         id = "archer",
         name = "Skeleton Archer",
         type = "ranged",
+        spriteIndex = 66,  -- Skeleton archer from monsters.png (row 5, col 2)
         
         baseHp = 40,
         hpGrowth = 8,
@@ -91,6 +95,7 @@ local mobs = {
         id = "mage_mob",
         name = "Dark Mage",
         type = "ranged",
+        spriteIndex = 2,  -- Orc wizard from monsters.png (row 1, col 2)
         
         baseHp = 35,
         hpGrowth = 6,
@@ -114,6 +119,7 @@ local mobs = {
         id = "ogre",
         name = "Ogre",
         type = "melee",
+        spriteIndex = 1,  -- Orc from monsters.png (row 1, col 1)
         
         baseHp = 120,
         hpGrowth = 20,

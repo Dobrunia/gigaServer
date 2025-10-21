@@ -51,6 +51,10 @@ function Projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner)
         self.dirY = 0
     end
     
+    -- Store denormalized direction for drawing rotation
+    self.dx = self.dirX
+    self.dy = self.dirY
+    
     self.speed = speed or 300
     self.damage = damage or 10
     self.maxDistance = maxDist or 500

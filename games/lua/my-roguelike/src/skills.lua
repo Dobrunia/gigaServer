@@ -22,8 +22,16 @@ end
 -- === UPDATE ===
 
 -- Update and auto-cast player skills
-function Skills:update(dt, player, targets, projectilePool, spatialHash)
+function Skills:update(dt, player, targets, projectilePool, spatialHash, projectiles)
     if not player or not player.alive then return end
+    
+    if #player.skills == 0 then
+        print("[SKILLS] WARNING: Player has no skills!")
+        return
+    end
+    
+    -- DEBUG: Check player state
+    print("[SKILLS] Player state - alive:", player.alive, "castSpeed:", player.castSpeed, "skills:", #player.skills)
     
     for _, skill in ipairs(player.skills) do
         -- Update cooldown
@@ -35,17 +43,31 @@ function Skills:update(dt, player, targets, projectilePool, spatialHash)
         
         -- Auto-cast if ready
         if skill.cooldownTimer <= 0 and player:canAttack() then
+            print("[SKILLS] Skill ready:", skill.name, "cooldown:", skill.cooldownTimer, "canAttack:", player:canAttack())
             -- Check manual aim mode
             if player.manualAimMode then
                 -- Use player's aim direction
-                self:castSkill(player, skill, targets, projectilePool, spatialHash, player.aimDirection.x, player.aimDirection.y)
+                self:castSkill(player, skill, targets, projectilePool, spatialHash, projectiles, player.aimDirection.x, player.aimDirection.y)
             else
                 -- Auto-target nearest enemy
                 local nearest = self:findNearestTarget(player, targets, spatialHash, skill.range or 500)
                 if nearest then
                     local dx, dy = Utils.directionTo(player.x, player.y, nearest.x, nearest.y)
-                    self:castSkill(player, skill, targets, projectilePool, spatialHash, dx, dy)
+                    -- Update arrow to show attack direction
+                    player.directionArrow = math.atan2(dy, dx)
+                    print("[SKILLS] Casting", skill.name, "at target", nearest.x, nearest.y)
+                    self:castSkill(player, skill, targets, projectilePool, spatialHash, projectiles, dx, dy)
+                    print("[SKILLS] Auto-attacking nearest target at distance:", math.sqrt((nearest.x - player.x)^2 + (nearest.y - player.y)^2))
+                else
+                    print("[SKILLS] No targets in range for", skill.name)
                 end
+            end
+        else
+            if skill.cooldownTimer > 0 then
+                print("[SKILLS] Skill on cooldown:", skill.name, "time:", skill.cooldownTimer)
+            end
+            if not player:canAttack() then
+                print("[SKILLS] Player cannot attack (stunned?)")
             end
         end
     end
@@ -87,20 +109,30 @@ end
 
 -- === CASTING ===
 
-function Skills:castSkill(caster, skill, targets, projectilePool, spatialHash, dirX, dirY)
+function Skills:castSkill(caster, skill, targets, projectilePool, spatialHash, projectiles, dirX, dirY)
+    print("[SKILLS] Attempting to cast:", skill.name, "type:", skill.type)
     -- Check if can cast
-    if not caster:canCastSkill(skill) then return false end
+    if not caster:canCastSkill(skill) then 
+        print("[SKILLS] Cannot cast skill:", skill.name)
+        return false 
+    end
     
     -- Set cooldown
     caster:castSkill(skill, nil, nil)
+    print("[SKILLS] Set cooldown for:", skill.name, "to:", skill.cooldownTimer)
     
     -- Execute skill effect based on type
     if skill.type == "projectile" then
-        self:castProjectile(caster, skill, dirX, dirY, projectilePool)
+        print("[SKILLS] Casting projectile skill")
+        self:castProjectile(caster, skill, dirX, dirY, projectilePool, projectiles)
     elseif skill.type == "aoe" then
+        print("[SKILLS] Casting AOE skill")
         self:castAOE(caster, skill, targets, spatialHash)
     elseif skill.type == "buff" then
+        print("[SKILLS] Casting buff skill")
         self:castBuff(caster, skill)
+    else
+        print("[SKILLS] Unknown skill type:", skill.type)
     end
     
     return true
@@ -109,9 +141,13 @@ end
 -- === SKILL TYPES ===
 
 -- Projectile skill
-function Skills:castProjectile(caster, skill, dirX, dirY, projectilePool)
-    if not projectilePool then return end
+function Skills:castProjectile(caster, skill, dirX, dirY, projectilePool, projectiles)
+    if not projectilePool then 
+        print("[SKILLS] ERROR: No projectile pool!")
+        return 
+    end
     
+    print("[SKILLS] Creating projectile at", caster.x, caster.y, "direction", dirX, dirY)
     local projectile = projectilePool:acquire()
     projectile:init(
         caster.x,
@@ -126,6 +162,16 @@ function Skills:castProjectile(caster, skill, dirX, dirY, projectilePool)
     
     -- Store effect data on projectile
     projectile.effectData = skill.effect
+    
+    -- Add to projectiles array for rendering/updating
+    if projectiles then
+        table.insert(projectiles, projectile)
+        print("[SKILLS] Projectile added to array, total:", #projectiles)
+    else
+        print("[SKILLS] ERROR: No projectiles array provided!")
+    end
+    
+    print("[SKILLS] Projectile created successfully")
 end
 
 -- AOE skill (damage/effect in radius)

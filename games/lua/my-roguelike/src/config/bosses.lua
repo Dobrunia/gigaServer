@@ -1,6 +1,7 @@
 -- config/bosses.lua
 -- Boss configurations (similar to mobs but stronger)
 -- Bosses are just powerful mobs with special stats
+-- Format: Same as mobs.lua, but includes spriteIndex (from monsters.png)
 
 local bosses = {
     -- === BOSS 1: ZOMBIE LORD ===
@@ -8,6 +9,7 @@ local bosses = {
         id = "zombie_lord",
         name = "Zombie Lord",
         type = "melee",
+        spriteIndex = 67,  -- Lich from monsters.png (row 5, col 3)
         
         baseHp = 500,
         hpGrowth = 100,
@@ -29,6 +31,7 @@ local bosses = {
         id = "dark_sorcerer",
         name = "Dark Sorcerer",
         type = "ranged",
+        spriteIndex = 84,  -- Cultist from monsters.png (row 6, col 4)
         
         baseHp = 400,
         hpGrowth = 80,
@@ -52,6 +55,7 @@ local bosses = {
         id = "giant_ogre",
         name = "Giant Ogre",
         type = "melee",
+        spriteIndex = 17,  -- Ettin from monsters.png (row 2, col 1)
         
         baseHp = 800,
         hpGrowth = 150,

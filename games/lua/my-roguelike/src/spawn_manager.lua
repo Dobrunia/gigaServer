@@ -6,6 +6,7 @@
 local Constants = require("src.constants")
 local Utils = require("src.utils")
 local Mob = require("src.entity.mob")
+local Assets = require("src.assets")
 
 local SpawnManager = {}
 SpawnManager.__index = SpawnManager
@@ -80,6 +81,13 @@ function SpawnManager:trySpawnMob(player, mobs, mobConfigs)
     
     -- Create mob
     local mob = Mob.new(spawnX, spawnY, mobData, self.currentMobLevel)
+    
+    -- Set sprite from spritesheet based on mob ID or type
+    local spriteIndex = mobData.spriteIndex or (mob.mobType == "melee" and Assets.images.mobMelee or Assets.images.mobRanged)
+    mob.spritesheet = Assets.getSpritesheet("monsters")
+    mob.quad = Assets.getQuad("monsters", spriteIndex)
+    mob.spriteIndex = spriteIndex
+    
     table.insert(mobs, mob)
     
     -- Add to spatial hash
@@ -114,6 +122,13 @@ function SpawnManager:spawnBoss(player, mobs, bossConfigs)
     -- Create boss (using Mob class with boss data)
     local boss = Mob.new(spawnX, spawnY, bossData, self.currentMobLevel + 5)
     boss.isBoss = true
+    
+    -- Set boss sprite from spritesheet
+    local spriteIndex = bossData.spriteIndex or Assets.images.boss
+    boss.spritesheet = Assets.getSpritesheet("monsters")
+    boss.quad = Assets.getQuad("monsters", spriteIndex)
+    boss.spriteIndex = spriteIndex
+    
     table.insert(mobs, boss)
     
     if self.spatialHash then
