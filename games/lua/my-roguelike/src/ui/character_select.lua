@@ -92,8 +92,9 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         local spriteY = cardY + 100
         
         Colors.setColor(Colors.TEXT_PRIMARY)
-        local spritesheet = assets.getSpritesheet("rogues")
-        local quad = assets.getQuad("rogues", hero.spriteIndex)
+        local spritesheetName = hero.spritesheet or "rogues"  -- Default to "rogues" if not specified
+        local spritesheet = assets.getSpritesheet(spritesheetName)
+        local quad = assets.getQuad(spritesheetName, hero.spriteIndex)
         if spritesheet and quad then
             love.graphics.draw(spritesheet, quad, spriteX, spriteY, 0, 4, 4, 16, 16)
         end

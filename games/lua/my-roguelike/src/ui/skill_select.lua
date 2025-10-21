@@ -91,6 +91,18 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         yOffset = yOffset + 30
         love.graphics.print("Range: " .. skill.range, cardX + 20, cardY + yOffset)
         
+        -- Skill sprite (aligned with stats horizontally)
+        local spriteX = cardX + cardWidth - 120
+        local spriteY = cardY + 70  -- Same Y as first stat line
+        
+        Colors.setColor(Colors.TEXT_PRIMARY)
+        local spritesheetName = skill.spritesheet or "items"  -- Default to "items" if not specified
+        local spritesheet = assets.getSpritesheet(spritesheetName)
+        local quad = assets.getQuad(spritesheetName, skill.spriteIndex)
+        if spritesheet and quad then
+            love.graphics.draw(spritesheet, quad, spriteX, spriteY, 0, 4, 4, 16, 16)  -- Doubled sprite size
+        end
+        
         -- Description background
         local descY = cardY + 190
         local descHeight = 70

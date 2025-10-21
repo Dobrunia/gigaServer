@@ -12,6 +12,8 @@
 --   damage = number (base damage),
 --   range = number (pixels),
 --   projectileSpeed = number (pixels/sec, if type = projectile),
+--   spritesheet = "filename" (spritesheet file from assets/, without .png),
+--   spriteIndex = number (index in spritesheet, 1-based),
 --   effect = table (optional status effect)
 -- }
 
@@ -38,6 +40,8 @@ local startingSkills = {
         damage = 40,
         range = 400,
         projectileSpeed = 300,
+        spritesheet = "items",  -- items.png from assets/
+        spriteIndex = 371,  -- Bolt sprite from items.png
         effect = {
             type = "poison",  -- Fire DOT (reusing poison mechanics)
             duration = 3,

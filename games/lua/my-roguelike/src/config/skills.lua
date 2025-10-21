@@ -11,6 +11,8 @@
 --   range = number (distance),
 --   radius = number (for aoe),
 --   projectileSpeed = number (for projectile),
+--   spritesheet = "filename" (spritesheet file from assets/, without .png),
+--   spriteIndex = number (index in spritesheet, 1-based),
 --   effect = table (status effect: {type, duration, params})
 -- }
 

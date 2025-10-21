@@ -82,11 +82,13 @@ function SpawnManager:trySpawnMob(player, mobs, mobConfigs)
     -- Create mob
     local mob = Mob.new(spawnX, spawnY, mobData, self.currentMobLevel)
     
-    -- Set sprite from spritesheet based on mob ID or type
+    -- Set sprite from spritesheet based on mob config
+    local spritesheetName = mobData.spritesheet or "monsters"  -- Default to "monsters" if not specified
     local spriteIndex = mobData.spriteIndex or (mob.mobType == "melee" and Assets.images.mobMelee or Assets.images.mobRanged)
-    mob.spritesheet = Assets.getSpritesheet("monsters")
-    mob.quad = Assets.getQuad("monsters", spriteIndex)
+    mob.spritesheet = Assets.getSpritesheet(spritesheetName)
+    mob.quad = Assets.getQuad(spritesheetName, spriteIndex)
     mob.spriteIndex = spriteIndex
+    mob.spritesheetName = spritesheetName
     
     table.insert(mobs, mob)
     
@@ -123,11 +125,13 @@ function SpawnManager:spawnBoss(player, mobs, bossConfigs)
     local boss = Mob.new(spawnX, spawnY, bossData, self.currentMobLevel + 5)
     boss.isBoss = true
     
-    -- Set boss sprite from spritesheet
+    -- Set boss sprite from spritesheet based on boss config
+    local spritesheetName = bossData.spritesheet or "monsters"  -- Default to "monsters" if not specified
     local spriteIndex = bossData.spriteIndex or Assets.images.boss
-    boss.spritesheet = Assets.getSpritesheet("monsters")
-    boss.quad = Assets.getQuad("monsters", spriteIndex)
+    boss.spritesheet = Assets.getSpritesheet(spritesheetName)
+    boss.quad = Assets.getQuad(spritesheetName, spriteIndex)
     boss.spriteIndex = spriteIndex
+    boss.spritesheetName = spritesheetName
     
     table.insert(mobs, boss)
     

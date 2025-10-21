@@ -6,7 +6,8 @@
 -- {
 --   id = "unique_id",
 --   name = "Hero Name",
---   spriteIndex = number (index in rogues.png spritesheet, 1-based),
+--   spritesheet = "filename" (spritesheet file from assets/, without .png),
+--   spriteIndex = number (index in spritesheet, 1-based),
 --   baseHp = number,
 --   hpGrowth = number (per level),
 --   baseArmor = number,
@@ -46,6 +47,7 @@ local heroes = {
     {
         id = "mage",
         name = "Mage",
+        spritesheet = "rogues",  -- rogues.png from assets/
         spriteIndex = 30,  -- Male wizard from rogues.png (5.b in 7-col grid)
         
         baseHp = 80,

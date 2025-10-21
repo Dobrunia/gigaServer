@@ -5,7 +5,8 @@
 --   id = "unique_id",
 --   name = "Mob Name",
 --   type = "melee" | "ranged",
---   spriteIndex = number (index in monsters.png spritesheet, 1-based),
+--   spritesheet = "filename" (spritesheet file from assets/, without .png),
+--   spriteIndex = number (index in spritesheet, 1-based),
 --   baseHp = number,
 --   hpGrowth = number (per level),
 --   baseArmor = number,
@@ -49,6 +50,7 @@ local mobs = {
         id = "zombie",
         name = "Zombie",
         type = "melee",
+        spritesheet = "monsters",  -- monsters.png from assets/
         spriteIndex = 27,  -- Zombie from monsters.png (5.f zombie)
         
         baseHp = 50,

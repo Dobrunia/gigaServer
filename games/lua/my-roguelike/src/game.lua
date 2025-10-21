@@ -402,10 +402,12 @@ function Game:startGame()
     self.player:addSkill(startingSkill)
     
     -- Set player sprite from spritesheet
+    local spritesheetName = heroData.spritesheet or "rogues"  -- Default to "rogues" if not specified
     local spriteIndex = heroData.spriteIndex or Assets.images.player
-    self.player.spritesheet = Assets.getSpritesheet("rogues")
-    self.player.quad = Assets.getQuad("rogues", spriteIndex)
+    self.player.spritesheet = Assets.getSpritesheet(spritesheetName)
+    self.player.quad = Assets.getQuad(spritesheetName, spriteIndex)
     self.player.spriteIndex = spriteIndex
+    self.player.spritesheetName = spritesheetName
     self.player.isPlayer = true
     
     -- DEBUG (can remove later)
