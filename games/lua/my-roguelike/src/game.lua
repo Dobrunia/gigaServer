@@ -151,19 +151,19 @@ function Game:updateMenu(dt)
     
     -- Debug log - check Input state
     if Input.mouse.leftPressed then
-        print(string.format("[MENU] Mouse leftPressed=true at (%.0f, %.0f), hovering=%s", mx, my, tostring(isHovering)))
+        -- print(string.format("[MENU] Mouse leftPressed=true at (%.0f, %.0f), hovering=%s", mx, my, tostring(isHovering)))
     end
     
     if Input.isKeyPressed("space") then
-        print("[MENU] SPACE isKeyPressed=true")
+        -- print("[MENU] SPACE isKeyPressed=true")
     end
     
     -- Check for click on button or SPACE key
     if Input.isKeyPressed("space") then
-        print("[MENU] Starting game via SPACE!")
+        -- print("[MENU] Starting game via SPACE!")
         self.mode = "char_select"
     elseif Input.mouse.leftPressed and isHovering then
-        print("[MENU] Starting game via button click!")
+        --  print("[MENU] Starting game via button click!")
         self.mode = "char_select"
     end
 end

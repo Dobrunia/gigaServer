@@ -71,7 +71,7 @@ function Input.keypressed(key)
     Input.keys[key] = true
     Input.keysPressed[key] = true
     -- Debug: log key presses
-    print("[INPUT] Key pressed: " .. tostring(key))
+    -- print("[INPUT] Key pressed: " .. tostring(key))
 end
 
 function Input.keyreleased(key)
@@ -90,7 +90,7 @@ end
 
 function Input.mousepressed(x, y, button)
     -- Debug: log mouse clicks
-    print(string.format("[INPUT] Mouse pressed: button=%d at (%.0f, %.0f)", button, x, y))
+    -- print(string.format("[INPUT] Mouse pressed: button=%d at (%.0f, %.0f)", button, x, y))
     
     if button == 1 then
         Input.mouse.left = true
