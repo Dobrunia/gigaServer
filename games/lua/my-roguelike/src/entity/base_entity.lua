@@ -2,7 +2,9 @@
 -- Base class for all game entities (player, mobs, projectiles)
 -- Provides common properties and methods
 -- Public API: BaseEntity.new(x, y), entity:update(dt), entity:draw(), entity:takeDamage(amount)
--- Dependencies: none
+-- Dependencies: ui/colors.lua
+
+local Colors = require("src.ui.colors")
 
 local BaseEntity = {}
 BaseEntity.__index = BaseEntity
@@ -169,8 +171,8 @@ function BaseEntity:updateStatusEffects(dt)
         local effect = self.statusEffects[i]
         effect.timer = effect.timer + dt
         
-        -- Apply tick effects (poison)
-        if effect.type == "poison" then
+        -- Apply tick effects (poison, burning)
+        if effect.type == "poison" or effect.type == "burning" then
             local tickRate = effect.params.tickRate or 0.5
             local lastTick = effect.lastTick or 0
             if effect.timer - lastTick >= tickRate then
@@ -228,7 +230,7 @@ end
 function BaseEntity:draw()
     if not self.active then return end
     
-    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setColor(1, 1, 1, 1)  -- White for sprites (don't tint)
     
     -- Draw using spritesheet+quad if available, otherwise use direct sprite
     if self.spritesheet and self.quad then
@@ -256,12 +258,17 @@ function BaseEntity:draw()
         love.graphics.circle("fill", self.x, self.y, self.radius)
     end
     
+    -- Draw burning effect under entity if burning
+    if self:hasStatusEffect("burning") then
+        self:drawBurningEffect()
+    end
+    
     -- Draw HP bar if damaged
     if self.hp < self.maxHp then
         self:drawHPBar()
     end
     
-    -- Draw status effect icons
+    -- Draw status effect icons (except burning - it's drawn under entity)
     self:drawStatusIcons()
 end
 
@@ -272,52 +279,97 @@ function BaseEntity:drawHPBar()
     local y = self.y - self.radius - 10
     
     -- Background
-    love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
+    love.graphics.setColor(Colors.BAR_BACKGROUND)
     love.graphics.rectangle("fill", x, y, barWidth, barHeight)
     
     -- HP
     local hpPercent = self.hp / self.maxHp
-    love.graphics.setColor(0.2, 0.8, 0.2, 1)
+    love.graphics.setColor(Colors.BAR_HP)
     love.graphics.rectangle("fill", x, y, barWidth * hpPercent, barHeight)
     
-    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setColor(1, 1, 1, 1)  -- Reset to white
+end
+
+function BaseEntity:drawBurningEffect()
+    local Assets = require("src.assets")
+    
+    -- Find burning effect
+    local burningEffect = nil
+    for _, effect in ipairs(self.statusEffects) do
+        if effect.type == "burning" then
+            burningEffect = effect
+            break
+        end
+    end
+    
+    if not burningEffect then return end
+    
+    -- Draw animated flame sprite under entity's feet
+    local burningSprite = Assets.images.statusBurning
+    local burningQuads = Assets.quads.statusBurning
+    if burningSprite and burningQuads then
+        -- Calculate which frame to show based on effect timer
+        local frameCount = #burningQuads
+        local animSpeed = 0.1  -- 10 FPS animation
+        local frameIndex = math.floor(burningEffect.timer / animSpeed) % frameCount + 1
+        local quad = burningQuads[frameIndex]
+        
+        love.graphics.setColor(1, 1, 1, 1)  -- White for flame sprite
+        -- Draw flame at entity's feet (below hitbox)
+        -- Get actual quad size to calculate proper center
+        local _, _, quadW, quadH = quad:getViewport()
+        local flameScale = 2.5  -- 2.5x larger for visibility
+        local flameY = self.y + self.radius - 7  -- Below the hitbox
+        -- Center the flame sprite
+        love.graphics.draw(burningSprite, quad, self.x, flameY, 0, flameScale, flameScale, quadW/2, quadH/2)
+    end
+    
+    love.graphics.setColor(1, 1, 1, 1)  -- Reset to white
 end
 
 function BaseEntity:drawStatusIcons()
-    if #self.statusEffects == 0 then return end
+    -- Count non-burning effects for positioning
+    local iconEffects = {}
+    for _, effect in ipairs(self.statusEffects) do
+        if effect.type ~= "burning" then  -- Burning is drawn separately under entity
+            table.insert(iconEffects, effect)
+        end
+    end
     
-    local iconRadius = 5
+    if #iconEffects == 0 then return end
+    
+    local iconSize = 10  -- Smaller circles for icons
     local spacing = 3
-    local totalWidth = (#self.statusEffects * (iconRadius * 2 + spacing)) - spacing
-    local startX = self.x - totalWidth / 2 + iconRadius
+    local totalWidth = (#iconEffects * (iconSize * 2 + spacing)) - spacing
+    local startX = self.x - totalWidth / 2
     local y = self.y - self.radius - 18  -- Above HP bar
     
-    for i, effect in ipairs(self.statusEffects) do
-        local x = startX + (i - 1) * (iconRadius * 2 + spacing)
+    for i, effect in ipairs(iconEffects) do
+        local x = startX + (i - 1) * (iconSize * 2 + spacing) + iconSize
         
         -- Draw colored circle for effect type
         if effect.type == "slow" then
-            love.graphics.setColor(0.4, 0.6, 1, 0.9)  -- Blue for slow
+            love.graphics.setColor(Colors.STATUS_SLOW)  -- Blue for slow
         elseif effect.type == "poison" then
-            love.graphics.setColor(0.1, 0.9, 0.1, 0.9)  -- Green for poison
+            love.graphics.setColor(Colors.STATUS_POISON)  -- Green for poison
         elseif effect.type == "root" then
-            love.graphics.setColor(0.6, 0.4, 0.2, 0.9)  -- Brown for root
+            love.graphics.setColor(Colors.STATUS_ROOT)  -- Brown for root
         elseif effect.type == "stun" then
-            love.graphics.setColor(1, 1, 0.2, 0.9)  -- Yellow for stun
+            love.graphics.setColor(Colors.STATUS_STUN)  -- Yellow for stun
         else
-            love.graphics.setColor(0.5, 0.5, 0.5, 0.9)  -- Gray for unknown
+            love.graphics.setColor(Colors.STATUS_UNKNOWN)  -- Gray for unknown
         end
         
         -- Draw filled circle
-        love.graphics.circle("fill", x, y, iconRadius)
+        love.graphics.circle("fill", x, y, iconSize)
         
         -- Draw border for better visibility
-        love.graphics.setColor(0, 0, 0, 0.8)
+        love.graphics.setColor(0, 0, 0, 0.8)  -- Black border
         love.graphics.setLineWidth(1)
-        love.graphics.circle("line", x, y, iconRadius)
+        love.graphics.circle("line", x, y, iconSize)
     end
     
-    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setColor(1, 1, 1, 1)  -- Reset to white
     love.graphics.setLineWidth(1)
 end
 

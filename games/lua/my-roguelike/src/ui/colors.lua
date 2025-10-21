@@ -58,6 +58,13 @@ Colors.OVERLAY_PAUSE = {0, 0, 0, 0.7}              -- Pause screen overlay
 Colors.GAME_OVER_BG = {0.1, 0.05, 0.05, 1}         -- Dark red background
 Colors.GAME_OVER_TITLE = {1, 0.3, 0.3, 1}          -- Red title
 
+-- === STATUS EFFECT COLORS ===
+Colors.STATUS_SLOW = {0.4, 0.6, 1, 0.9}  -- Blue for slow
+Colors.STATUS_POISON = {0.1, 0.9, 0.1, 0.9}  -- Green for poison
+Colors.STATUS_ROOT = {0.6, 0.4, 0.2, 0.9}  -- Brown for root
+Colors.STATUS_STUN = {1, 1, 0.2, 0.9}  -- Yellow for stun
+Colors.STATUS_UNKNOWN = {0.5, 0.5, 0.5, 0.9}  -- Gray for unknown
+
 -- === УТИЛИТЫ ===
 
 function Colors.setColor(color)

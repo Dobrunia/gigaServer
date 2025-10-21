@@ -52,7 +52,7 @@ local startingSkills = {
         -- All sprites face RIGHT and are auto-scaled to fit hitbox
         animationSpeed = 0.15,  -- 0.15 seconds per frame for smooth animation
         effect = {
-            type = "poison",  -- Fire DOT (reusing poison mechanics)
+            type = "burning",  -- Fire damage over time
             duration = 3,
             damage = 5,
             tickRate = 0.5

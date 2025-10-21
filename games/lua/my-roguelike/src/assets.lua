@@ -220,6 +220,29 @@ function Assets.load()
     Assets.images.statusRoot = createPlaceholder(16, 16, 0.6, 0.4, 0.2)
     Assets.images.statusStun = createPlaceholder(16, 16, 1, 1, 0.2)
     
+    -- Load burning effect sprite (animated flame)
+    -- flame_on_ground.png is a horizontal animation strip
+    local burningSuccess, burningImage = pcall(love.graphics.newImage, "assets/flame_on_ground.png")
+    if burningSuccess then
+        Assets.images.statusBurning = burningImage
+        local imgW, imgH = burningImage:getDimensions()
+        -- Assuming square frames: width of one frame = height of image
+        local frameSize = imgH  -- Each frame is square (heightxheight)
+        local frames = math.floor(imgW / frameSize)
+        Assets.quads.statusBurning = {}
+        for i = 0, frames - 1 do
+            Assets.quads.statusBurning[i + 1] = love.graphics.newQuad(
+                i * frameSize, 0,
+                frameSize, frameSize,
+                imgW, imgH
+            )
+        end
+        Utils.log("Loaded burning effect sprite (" .. frames .. " frames, " .. frameSize .. "x" .. frameSize .. " each)")
+    else
+        Utils.logError("Failed to load flame_on_ground.png - using placeholder")
+        Assets.images.statusBurning = createPlaceholder(32, 32, 1, 0.5, 0)
+    end
+    
     -- UI elements
     Assets.images.menuBg = createPlaceholder(1280, 720, 0.1, 0.1, 0.15)
     Assets.images.hudBg = createPlaceholder(1280, 120, 0, 0, 0)
