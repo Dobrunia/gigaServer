@@ -60,7 +60,7 @@ local heroes = {
         castSpeedGrowth = 0.05,
         
         innateSkill = {
-            id = "mage_innate",
+            id = "сhronomancer_innate",
             name = "Spell Mastery",
             description = "All skills have 30% shorter cooldowns",
             modifiers = {

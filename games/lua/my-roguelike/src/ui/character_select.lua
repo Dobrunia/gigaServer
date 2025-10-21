@@ -34,7 +34,7 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
     local cardHeight = 320
     local cardSpacing = 40
     local cardsPerRow = 3
-    local startY = 80
+    local startY = 100  -- Increased from 80 to 100 for more space below title
     
     -- Calculate grid positioning
     local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))
@@ -79,17 +79,9 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         Colors.setColor(Colors.TEXT_PRIMARY)
         love.graphics.print(hero.name, cardX + 20, cardY + 30)
         
-        -- Key stats with growth
-        love.graphics.setFont(assets.getFont("default"))
-        Colors.setColor(Colors.TEXT_SECONDARY)
-        love.graphics.print("HP: " .. hero.baseHp .. " (+" .. hero.hpGrowth .. ")", cardX + 20, cardY + 70)
-        love.graphics.print("Armor: " .. hero.baseArmor .. " (+" .. hero.armorGrowth .. ")", cardX + 20, cardY + 100)
-        love.graphics.print("Speed: " .. hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. ")", cardX + 20, cardY + 130)
-        love.graphics.print("Cast: " .. hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. ")", cardX + 20, cardY + 160)
-        
-        -- Hero sprite
-        local spriteX = cardX + cardWidth - 120
-        local spriteY = cardY + 100
+        -- Hero sprite (moved to left side)
+        local spriteX = cardX + 70
+        local spriteY = cardY + 130
         
         Colors.setColor(Colors.TEXT_PRIMARY)
         local spritesheetName = hero.spritesheet or "rogues"  -- Default to "rogues" if not specified
@@ -99,17 +91,41 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
             love.graphics.draw(spritesheet, quad, spriteX, spriteY, 0, 4, 4, 16, 16)
         end
         
-        -- Passive ability description
+        -- Key stats with growth (moved to right side)
+        love.graphics.setFont(assets.getFont("default"))
+        Colors.setColor(Colors.TEXT_SECONDARY)
+        love.graphics.print("HP: " .. hero.baseHp .. " (+" .. hero.hpGrowth .. ")", cardX + 200, cardY + 70)
+        love.graphics.print("Armor: " .. hero.baseArmor .. " (+" .. hero.armorGrowth .. ")", cardX + 200, cardY + 100)
+        love.graphics.print("Speed: " .. hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. ")", cardX + 200, cardY + 130)
+        love.graphics.print("Cast: " .. hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. ")", cardX + 200, cardY + 160)
+        
+        -- Passive ability description with icon
         if hero.innateSkill and hero.innateSkill.description then
             local passiveY = cardY + 200
             local passiveHeight = 70
+            local iconSize = 40  -- Reduced size to fit better in panel
             
             Colors.setColor(Colors.ZONE_PASSIVE)
             love.graphics.rectangle("fill", cardX + 20, passiveY, cardWidth - 40, passiveHeight, 8, 8)
             
+            -- Draw innate skill icon (properly centered in panel)
+            local iconX = cardX + 50
+            local iconY = passiveY + passiveHeight / 2  -- Center vertically in panel
+            local innateIcon = assets.getImage("innate_" .. hero.innateSkill.id)
+            if innateIcon then
+                love.graphics.setColor(1, 1, 1, 1)  -- White for sprites
+                local iconW, iconH = innateIcon:getDimensions()
+                local scale = iconSize / math.max(iconW, iconH)
+                love.graphics.draw(innateIcon, iconX, iconY, 0, scale, scale, iconW/2, iconH/2)
+            else
+                -- Fallback: draw placeholder
+                Colors.setColor(Colors.TEXT_DIM)
+                love.graphics.rectangle("fill", iconX - iconSize/2, iconY - iconSize/2, iconSize, iconSize)
+            end
+            
             love.graphics.setFont(assets.getFont("default"))
             Colors.setColor(Colors.TEXT_ACCENT)
-            love.graphics.printf("Passive: " .. hero.innateSkill.description, cardX + 30, passiveY + 15, cardWidth - 60, "left")
+            love.graphics.printf("Passive: " .. hero.innateSkill.description, cardX + 100, passiveY + 15, cardWidth - 120, "left")
         end
         
         -- Selection indicator
@@ -134,7 +150,7 @@ function CharacterSelect:handleClick(x, y, heroes)
     local cardHeight = 320
     local cardSpacing = 40
     local cardsPerRow = 3
-    local startY = 80
+    local startY = 100
     
     -- Calculate grid positioning
     local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))

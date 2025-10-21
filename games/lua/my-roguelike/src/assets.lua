@@ -247,6 +247,25 @@ function Assets.load()
         Assets.images.statusBurning = createPlaceholder(32, 32, 1, 0.5, 0)
     end
     
+    -- === LOAD INNATE SKILL ICONS ===
+    -- Load all innate skill icons from assets/innateSkills/ folder
+    local innateSkills = {
+        "сhronomancer_innate"
+        -- Add more as needed
+    }
+    
+    for _, skillId in ipairs(innateSkills) do
+        local iconPath = "assets/innateSkills/".. skillId .. "/" .. skillId .. ".png"
+        local iconSuccess, iconImage = pcall(love.graphics.newImage, iconPath)
+        if iconSuccess then
+            Assets.images["innate_" .. skillId] = iconImage
+            Utils.log("Loaded innate skill icon: " .. skillId)
+        else
+            Utils.logError("Failed to load innate skill icon: " .. skillId)
+            Assets.images["innate_" .. skillId] = createPlaceholder(48, 48, 0.5, 0.5, 0.5)
+        end
+    end
+    
     -- UI elements
     Assets.images.menuBg = createPlaceholder(1280, 720, 0.1, 0.1, 0.15)
     Assets.images.hudBg = createPlaceholder(1280, 120, 0, 0, 0)

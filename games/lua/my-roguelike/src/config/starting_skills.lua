@@ -47,7 +47,7 @@ local startingSkills = {
         range = 400,
         projectileSpeed = 300,
         hitboxRadius = 14,  -- Larger hitbox for bigger fireball sprite
-        assetFolder = "fireballl",  -- assets/fireballl/ folder
+        assetFolder = "starting_skills/fireballl",  -- assets/starting_skills/fireballl/ folder
         -- Contains: i.png (icon), h.png (hit), 1.png, 2.png (flight animation)
         -- All sprites face RIGHT and are auto-scaled to fit hitbox
         animationSpeed = 0.15,  -- 0.15 seconds per frame for smooth animation
