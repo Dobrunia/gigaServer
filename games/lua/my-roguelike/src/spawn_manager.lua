@@ -82,14 +82,23 @@ function SpawnManager:trySpawnMob(player, mobs, mobConfigs)
     
     -- Create mob
     local mob = Mob.new(spawnX, spawnY, mobData, self.currentMobLevel)
-    
-    -- Set sprite from spritesheet based on mob config
-    local spritesheetName = mobData.spritesheet or "monsters"  -- Default to "monsters" if not specified
-    local spriteIndex = mobData.spriteIndex or (mob.mobType == "melee" and Assets.images.mobMelee or Assets.images.mobRanged)
-    mob.spritesheet = Assets.getSpritesheet(spritesheetName)
-    mob.quad = Assets.getQuad(spritesheetName, spriteIndex)
-    mob.spriteIndex = spriteIndex
-    mob.spritesheetName = spritesheetName
+
+    -- Set sprite from folder if assetFolder specified, otherwise fallback to spritesheet
+    if mobData.assetFolder then
+        -- Load sprites from folder (new system)
+        mob.mobSprites = Assets.loadMobSprites("assets/" .. mobData.assetFolder)
+        mob.assetFolder = mobData.assetFolder
+        Utils.log("Loaded mob sprites from folder: " .. mobData.assetFolder)
+    else
+        -- Fallback to spritesheet system (legacy)
+        local spritesheetName = mobData.spritesheet or "monsters"  -- Default to "monsters" if not specified
+        local spriteIndex = mobData.spriteIndex or (mob.mobType == "melee" and Assets.images.mobMelee or Assets.images.mobRanged)
+        mob.spritesheet = Assets.getSpritesheet(spritesheetName)
+        mob.quad = Assets.getQuad(spritesheetName, spriteIndex)
+        mob.spriteIndex = spriteIndex
+        mob.spritesheetName = spritesheetName
+        Utils.log("Using legacy spritesheet for mob: " .. spritesheetName .. " index " .. spriteIndex)
+    end
     
     table.insert(mobs, mob)
     

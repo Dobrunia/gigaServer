@@ -59,9 +59,8 @@ local mobs = {
         id = "zombie",
         name = "Zombie",
         type = "melee",
-        spritesheet = "monsters",  -- monsters.png from assets/
-        spriteIndex = 27,  -- Zombie from monsters.png (5.f zombie)
-        
+        assetFolder = "mobs/zombie",  -- assets/mobs/zombie/ folder with i.png
+
         baseHp = 50,
         hpGrowth = 10,
         baseArmor = 0,

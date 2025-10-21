@@ -464,5 +464,28 @@ function Assets.loadHeroSprites(folderPath)
     return sprites
 end
 
+-- Load mob sprites from a folder with standard naming:
+-- i.png - main sprite (no animation, static image)
+-- Returns table: { sprite = Image }
+function Assets.loadMobSprites(folderPath)
+    local sprites = {
+        sprite = nil
+    }
+
+    -- Load main sprite (required)
+    local spritePath = folderPath .. "/i.png"
+    local spriteSuccess, spriteImg = pcall(love.graphics.newImage, spritePath)
+    if spriteSuccess then
+        sprites.sprite = spriteImg
+        Utils.log("Loaded mob sprite: " .. spritePath)
+    else
+        Utils.logError("Failed to load mob sprite: " .. spritePath)
+        -- Create placeholder if sprite missing
+        sprites.sprite = createPlaceholder(32, 32, 0.5, 0.2, 0.5)
+    end
+
+    return sprites
+end
+
 return Assets
 

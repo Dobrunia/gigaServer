@@ -55,6 +55,9 @@ function BaseEntity.new(x, y)
     self.walkFrameIndex = 1    -- Current walking frame (1 or 2)
     self.walkTimer = 0         -- Walking animation timer
     self.walkSpeed = 0.3       -- Seconds per walking frame
+
+    -- Mob sprites (static, no animation)
+    self.mobSprites = nil      -- Loaded mob sprites
     
     -- Status effects
     self.statusEffects = {}
@@ -296,6 +299,25 @@ function BaseEntity:draw()
             self.rotation,
             self.scale, self.scale,
             originSize / 2, originSize / 2  -- Origin at center based on sprite size
+        )
+    elseif self.mobSprites and self.mobSprites.sprite then
+        -- Mob sprite rendering (static, no animation)
+        local sprite = self.mobSprites.sprite
+        local spriteW, spriteH = sprite:getDimensions()
+        -- Use configured sprite size or default
+        local targetSize = self.configSpriteSize or Constants.MOB_DEFAULT_SPRITE_SIZE
+        local scale = targetSize / math.max(spriteW, spriteH)
+
+        -- Flip horizontally if facing left (dx < 0)
+        local flipX = (self.dx and self.dx < 0) and -1 or 1
+        local flipY = 1
+
+        love.graphics.draw(
+            sprite,
+            self.x, self.y,
+            0,  -- No rotation
+            scale * flipX, scale * flipY,
+            spriteW / 2, spriteH / 2  -- Origin at center
         )
     elseif self.heroSprites then
         -- Hero sprite rendering with animation and direction flipping
