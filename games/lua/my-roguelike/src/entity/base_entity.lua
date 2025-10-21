@@ -286,31 +286,39 @@ end
 function BaseEntity:drawStatusIcons()
     if #self.statusEffects == 0 then return end
     
-    local iconSize = 12
-    local spacing = 2
-    local startX = self.x - (#self.statusEffects * (iconSize + spacing)) / 2
-    local y = self.y - self.radius - 20
+    local iconRadius = 5
+    local spacing = 3
+    local totalWidth = (#self.statusEffects * (iconRadius * 2 + spacing)) - spacing
+    local startX = self.x - totalWidth / 2 + iconRadius
+    local y = self.y - self.radius - 18  -- Above HP bar
     
     for i, effect in ipairs(self.statusEffects) do
-        local x = startX + (i - 1) * (iconSize + spacing)
+        local x = startX + (i - 1) * (iconRadius * 2 + spacing)
         
-        -- Draw colored square for effect type
+        -- Draw colored circle for effect type
         if effect.type == "slow" then
-            love.graphics.setColor(0.5, 0.5, 1, 0.8)
+            love.graphics.setColor(0.4, 0.6, 1, 0.9)  -- Blue for slow
         elseif effect.type == "poison" then
-            love.graphics.setColor(0.2, 0.8, 0.2, 0.8)
+            love.graphics.setColor(0.1, 0.9, 0.1, 0.9)  -- Green for poison
         elseif effect.type == "root" then
-            love.graphics.setColor(0.6, 0.4, 0.2, 0.8)
+            love.graphics.setColor(0.6, 0.4, 0.2, 0.9)  -- Brown for root
         elseif effect.type == "stun" then
-            love.graphics.setColor(1, 1, 0.2, 0.8)
+            love.graphics.setColor(1, 1, 0.2, 0.9)  -- Yellow for stun
         else
-            love.graphics.setColor(0.5, 0.5, 0.5, 0.8)
+            love.graphics.setColor(0.5, 0.5, 0.5, 0.9)  -- Gray for unknown
         end
         
-        love.graphics.rectangle("fill", x, y, iconSize, iconSize)
+        -- Draw filled circle
+        love.graphics.circle("fill", x, y, iconRadius)
+        
+        -- Draw border for better visibility
+        love.graphics.setColor(0, 0, 0, 0.8)
+        love.graphics.setLineWidth(1)
+        love.graphics.circle("line", x, y, iconRadius)
     end
     
     love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setLineWidth(1)
 end
 
 return BaseEntity

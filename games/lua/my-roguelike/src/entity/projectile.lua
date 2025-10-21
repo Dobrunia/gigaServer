@@ -39,6 +39,9 @@ function Projectile.new()
     self.hitTimer = 0
     self.hitDuration = 0.15  -- How long to show hit sprite
     
+    -- Effect data
+    self.effectData = nil  -- Status effect to apply on hit
+    
     return self
 end
 
@@ -106,6 +109,7 @@ function Projectile:reset()
     self.animationTimer = 0
     self.isHitting = false
     self.hitTimer = 0
+    self.effectData = nil
 end
 
 -- === UPDATE ===
@@ -181,6 +185,19 @@ end
 function Projectile:hit(target)
     if target and target.takeDamage then
         target:takeDamage(self.damage, self.owner)
+    end
+    
+    -- Apply status effect if projectile has one
+    if target and self.effectData and target.addStatusEffect then
+        target:addStatusEffect(
+            self.effectData.type,
+            self.effectData.duration,
+            {
+                damage = self.effectData.damage,
+                tickRate = self.effectData.tickRate,
+                slowPercent = self.effectData.slowPercent
+            }
+        )
     end
     
     -- Show hit animation if available
