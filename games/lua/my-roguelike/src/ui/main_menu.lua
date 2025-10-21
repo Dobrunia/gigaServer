@@ -65,7 +65,7 @@ function MainMenu:draw(assets)
     -- Draw instruction text below
     love.graphics.setFont(assets.getFont("small"))
     Colors.setColor(Colors.TEXT_DIM)
-    love.graphics.printf("Click button or press SPACE", 0, buttonY + 80, love.graphics.getWidth(), "center")
+    -- love.graphics.printf("Click button or press SPACE", 0, buttonY + 80, love.graphics.getWidth(), "center")
 end
 
 -- === INPUT ===

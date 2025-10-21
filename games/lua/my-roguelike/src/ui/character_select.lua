@@ -123,7 +123,7 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
     -- Instructions
     love.graphics.setFont(assets.getFont("default"))
     Colors.setColor(Colors.TEXT_DIM)
-    love.graphics.printf("Click on a hero to select, then press SPACE/ENTER to continue", 0, screenH - 40, screenW, "center")
+    -- love.graphics.printf("Click on a hero to select, then press SPACE/ENTER to continue", 0, screenH - 40, screenW, "center")
 end
 
 -- === INPUT ===

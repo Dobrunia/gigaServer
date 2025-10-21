@@ -160,10 +160,8 @@ function Game:update(dt)
 end
 
 function Game:updateMenu(dt)
-    -- Check for click on button or SPACE key
-    if Input.isKeyPressed("space") then
-        self.mode = "char_select"
-    elseif Input.mouse.leftPressed and self.mainMenu:isButtonHovered() then
+    -- Check for click on button
+    if Input.mouse.leftPressed and self.mainMenu:isButtonHovered() then
         self.mode = "char_select"
     end
 end
@@ -175,18 +173,17 @@ function Game:updateCharSelect(dt)
         local clickedHeroIndex = self.characterSelect:handleClick(mx, my, self.heroConfigs)
         if clickedHeroIndex then
             self.selectedHeroIndex = clickedHeroIndex
+            -- Proceed to skill selection immediately after clicking hero
+            self.mode = "skill_select"
+            self.selectedSkillIndex = 1
         end
     end
     
-    -- Navigate with arrow keys, select with space
+    -- Navigate with arrow keys
     if Input.isKeyPressed("left") then
         self.selectedHeroIndex = math.max(1, self.selectedHeroIndex - 1)
     elseif Input.isKeyPressed("right") then
         self.selectedHeroIndex = math.min(#self.heroConfigs, self.selectedHeroIndex + 1)
-    elseif Input.isKeyPressed("space") or Input.isKeyPressed("return") then
-        -- Proceed to skill selection
-        self.mode = "skill_select"
-        self.selectedSkillIndex = 1
     end
 end
 
@@ -197,22 +194,22 @@ function Game:updateSkillSelect(dt)
         local clickedSkillIndex = self.skillSelect:handleClick(mx, my, self.startingSkillConfigs)
         if clickedSkillIndex then
             self.selectedSkillIndex = clickedSkillIndex
+            -- Start game immediately after clicking skill
+            self:startGame()
         end
     end
     
-    -- Navigate with arrow keys, select with space
+    -- Navigate with arrow keys
     if Input.isKeyPressed("left") then
         self.selectedSkillIndex = math.max(1, self.selectedSkillIndex - 1)
     elseif Input.isKeyPressed("right") then
         self.selectedSkillIndex = math.min(#self.startingSkillConfigs, self.selectedSkillIndex + 1)
-    elseif Input.isKeyPressed("space") or Input.isKeyPressed("return") then
-        self:startGame()
     end
 end
 
 function Game:updateGameOver(dt)
-    -- Restart on SPACE or click
-    if Input.isKeyPressed("space") or Input.isKeyPressed("return") or Input.mouse.leftPressed then
+    -- Restart on LMB click
+    if Input.mouse.leftPressed then
         self:startGame()  -- Restart game
     end
 end

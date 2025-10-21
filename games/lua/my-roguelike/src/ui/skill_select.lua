@@ -133,7 +133,7 @@ function SkillSelect:draw(assets, skills, selectedIndex)
     -- Instructions
     love.graphics.setFont(assets.getFont("default"))
     Colors.setColor(Colors.TEXT_DIM)
-    love.graphics.printf("Click on a skill to select, then press SPACE/ENTER to start", 0, screenH - 40, screenW, "center")
+    -- love.graphics.printf("Click on a skill to select, then press SPACE/ENTER to start", 0, screenH - 40, screenW, "center")
 end
 
 -- === INPUT ===
