@@ -47,14 +47,19 @@ function Player.new(x, y, heroData)
     
     -- Pickup radius
     self.pickupRadius = Constants.PLAYER_DEFAULT_PICKUP_RADIUS
-    
+
+    -- Size configuration (use config values or defaults)
+    self.configSpriteSize = heroData.spriteSize or Constants.PLAYER_DEFAULT_SPRITE_SIZE
+    -- Hitbox radius calculated automatically based on sprite size (25% of sprite size)
+    self.configHitboxRadius = self.configSpriteSize * 0.4
+
     -- Combat
     self.autoAttackTimer = 0
     self.manualAimMode = false
     self.aimDirection = {x = 1, y = 0}
-    
-    -- Visual
-    self.radius = Constants.PLAYER_HITBOX_RADIUS
+
+    -- Visual (override base entity defaults with config values)
+    self.radius = self.configHitboxRadius
     self.directionArrow = 0  -- Angle for direction indicator
     
     return self

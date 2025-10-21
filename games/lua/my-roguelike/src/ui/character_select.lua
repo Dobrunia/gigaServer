@@ -93,13 +93,15 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         if hero.loadedSprites and hero.loadedSprites.idle then
             local sprite = hero.loadedSprites.idle
             local spriteW, spriteH = sprite:getDimensions()
-            -- Scale sprite to fit nicely in card
-            local scale = 100 / math.max(spriteW, spriteH)
+            -- Scale sprite to fit configured size in card
+            local targetSize = hero.spriteSize or Constants.PLAYER_DEFAULT_SPRITE_SIZE
+            local scale = targetSize / math.max(spriteW, spriteH)
             love.graphics.draw(sprite, spriteX, spriteY, 0, scale, scale, spriteW/2, spriteH/2)
         else
-            -- Fallback: draw placeholder
+            -- Fallback: draw placeholder with configured size
+            local targetSize = hero.spriteSize or Constants.PLAYER_DEFAULT_SPRITE_SIZE
             Colors.setColor(Colors.TEXT_DIM)
-            love.graphics.rectangle("fill", spriteX - 32, spriteY - 32, 64, 64)
+            love.graphics.rectangle("fill", spriteX - targetSize/2, spriteY - targetSize/2, targetSize, targetSize)
         end
         
         -- Key stats with growth (moved to right side)

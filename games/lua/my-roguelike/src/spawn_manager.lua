@@ -76,8 +76,9 @@ function SpawnManager:trySpawnMob(player, mobs, mobConfigs)
         Constants.MOB_SPAWN_MAX_DISTANCE
     )
     
-    -- Clamp to map bounds
-    spawnX, spawnY = self.map:clampToBounds(spawnX, spawnY, Constants.MOB_HITBOX_RADIUS)
+    -- Clamp to map bounds (use mob's configured hitbox size)
+    local mobHitboxRadius = (mobData.spriteSize or Constants.MOB_DEFAULT_SPRITE_SIZE) * 0.375
+    spawnX, spawnY = self.map:clampToBounds(spawnX, spawnY, mobHitboxRadius)
     
     -- Create mob
     local mob = Mob.new(spawnX, spawnY, mobData, self.currentMobLevel)
@@ -119,7 +120,7 @@ function SpawnManager:spawnBoss(player, mobs, bossConfigs)
         Constants.MOB_SPAWN_MIN_DISTANCE + 100
     )
     
-    spawnX, spawnY = self.map:clampToBounds(spawnX, spawnY, Constants.MOB_HITBOX_RADIUS * 2)
+    spawnX, spawnY = self.map:clampToBounds(spawnX, spawnY, (bossData.spriteSize or Constants.MOB_DEFAULT_SPRITE_SIZE) * 0.375)
     
     -- Create boss (using Mob class with boss data)
     local boss = Mob.new(spawnX, spawnY, bossData, self.currentMobLevel + 5)

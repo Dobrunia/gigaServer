@@ -54,10 +54,15 @@ function Mob.new(x, y, mobData, level)
     
     -- XP drop
     self.xpDrop = mobData.xpDrop + (level - 1) * mobData.xpDropGrowth
-    
-    -- Visual
-    self.radius = Constants.MOB_HITBOX_RADIUS
-    
+
+    -- Size configuration (use config values or defaults)
+    self.configSpriteSize = mobData.spriteSize or Constants.MOB_DEFAULT_SPRITE_SIZE
+    -- Hitbox radius calculated automatically based on sprite size (37.5% of sprite size)
+    self.configHitboxRadius = self.configSpriteSize * 0.375
+
+    -- Visual (override base entity defaults with config values)
+    self.radius = self.configHitboxRadius
+
     return self
 end
 

@@ -22,8 +22,7 @@ Constants.SPATIAL_CELL_SIZE = 128           -- Grid cell size for spatial hash
 
 -- === PLAYER ===
 Constants.PLAYER_DEFAULT_PICKUP_RADIUS = 80
-Constants.PLAYER_SPRITE_SIZE = 32
-Constants.PLAYER_HITBOX_RADIUS = 14
+Constants.PLAYER_DEFAULT_SPRITE_SIZE = 64    -- Default hero sprite size if not specified in config
 
 -- === MOBS ===
 Constants.MOB_SPAWN_INTERVAL = 2.0          -- Seconds between spawn attempts
@@ -31,8 +30,7 @@ Constants.MOB_SPAWN_MIN_DISTANCE = 400      -- Min distance from player
 Constants.MOB_SPAWN_MAX_DISTANCE = 600      -- Max distance from player
 Constants.MOB_LEVEL_UP_INTERVAL = 60.0      -- Mobs level up every 60 seconds
 Constants.MOB_AI_UPDATE_RATE = 1/10         -- AI decisions 10Hz
-Constants.MOB_SPRITE_SIZE = 32
-Constants.MOB_HITBOX_RADIUS = 12
+Constants.MOB_DEFAULT_SPRITE_SIZE = 32      -- Default mob sprite size if not specified in config
 
 -- === PROJECTILES ===
 Constants.PROJECTILE_POOL_SIZE = 500        -- Pre-allocated projectile pool
@@ -61,7 +59,7 @@ Constants.CHAR_CARD_HEIGHT = 200
 
 -- === RENDERING ===
 Constants.SPRITE_BATCH_SIZE = 1000          -- Max sprites per batch
-Constants.DEBUG_DRAW_HITBOXES = false        -- Toggle hitbox rendering
+Constants.DEBUG_DRAW_HITBOXES = true        -- Toggle hitbox rendering
 
 -- === INPUT ===
 Constants.GAMEPAD_DEADZONE = 0.25           -- Joystick deadzone

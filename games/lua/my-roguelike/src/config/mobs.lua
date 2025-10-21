@@ -23,6 +23,8 @@
 --   -- Or legacy spritesheet approach:
 --   projectileSpritesheet = "filename" (ranged only, spritesheet for projectiles),
 --   projectileSpriteIndex = number (ranged only, sprite index for projectiles),
+--   spriteSize = number (optional, display size in pixels, default: 32)
+--   -- hitboxRadius calculated automatically: spriteSize * 0.375
 --   xpDrop = number,
 --   xpDropGrowth = number (per level),
 --   xpDropSpritesheet = "filename" (spritesheet for XP drop, default "items"),
@@ -52,7 +54,7 @@ local mobs = {
     --     xpDropGrowth = 2      -- Moderate XP scaling
     -- },
 
-    -- === MELEE MOB ===
+    -- === MELEE MOB (standard size) ===
     {
         id = "zombie",
         name = "Zombie",
@@ -70,7 +72,11 @@ local mobs = {
         damageGrowth = 3,
         
         attackSpeed = 1.0,  -- 1 attack per second
-        
+
+        -- Size parameters (optional, uses defaults if not specified)
+        spriteSize = 32,      -- Display size in pixels (default: 32)
+        -- hitboxRadius calculated automatically: spriteSize * 0.375 (12px for 32px sprite)
+
         xpDrop = 10,
         xpDropGrowth = 2,
         xpDropSpritesheet = "items",  -- items.png from assets/

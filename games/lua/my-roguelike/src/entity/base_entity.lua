@@ -25,7 +25,7 @@ function BaseEntity.new(x, y)
     self.vy = 0
     self.speed = 100
     
-    -- Hitbox (circle)
+    -- Hitbox (circle) - default size, can be overridden by subclasses
     self.radius = 16
     
     -- Combat stats
@@ -287,13 +287,15 @@ function BaseEntity:draw()
     -- Draw using spritesheet+quad if available, otherwise use direct sprite
     if self.spritesheet and self.quad then
         -- Spritesheet rendering with quad
+        -- Use configured sprite size for origin calculation (assuming square sprites)
+        local originSize = self.configSpriteSize or Constants.MOB_DEFAULT_SPRITE_SIZE
         love.graphics.draw(
             self.spritesheet,
             self.quad,
             self.x, self.y,
             self.rotation,
             self.scale, self.scale,
-            16, 16  -- Origin at center (16, 16) for 32x32 sprites
+            originSize / 2, originSize / 2  -- Origin at center based on sprite size
         )
     elseif self.heroSprites then
         -- Hero sprite rendering with animation and direction flipping
@@ -313,14 +315,14 @@ function BaseEntity:draw()
         
         if sprite then
             local spriteW, spriteH = sprite:getDimensions()
-            -- Fixed size for hero sprites (not based on hitbox)
-            local targetSize = 64  -- Standard hero size
+            -- Use configured sprite size or default
+            local targetSize = self.configSpriteSize or Constants.PLAYER_DEFAULT_SPRITE_SIZE
             local scale = targetSize / math.max(spriteW, spriteH)
-            
+
             -- Flip horizontally if facing left (dx < 0)
             local flipX = (self.dx and self.dx < 0) and -1 or 1
             local flipY = 1
-            
+
             love.graphics.draw(
                 sprite,
                 self.x, self.y,
@@ -340,7 +342,7 @@ function BaseEntity:draw()
             self.sprite:getHeight() / 2
         )
     else
-        -- Fallback: draw circle
+        -- Fallback: draw circle with configured radius
         love.graphics.circle("fill", self.x, self.y, self.radius)
     end
     

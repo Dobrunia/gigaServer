@@ -20,6 +20,8 @@
 --   speedGrowth = number,
 --   baseCastSpeed = number (multiplier, 1.0 = normal),
 --   castSpeedGrowth = number,
+--   spriteSize = number (optional, display size in pixels, default: 64)
+--   -- hitboxRadius calculated automatically: spriteSize * 0.25
 --   innateSkill = table (passive modifier)
 -- }
 
@@ -47,7 +49,7 @@ local heroes = {
     --     },
     -- },
 
-    -- === MAGE ===
+    -- === MAGE (medium size) ===
     {
         id = "сhronomancer",
         name = "Chronomancer",
@@ -63,7 +65,11 @@ local heroes = {
         speedGrowth = 1,
         baseCastSpeed = 1.3,  -- Casts faster
         castSpeedGrowth = 0.05,
-        
+
+        -- Size parameters (optional, uses defaults if not specified)
+        spriteSize = 64,      -- Display size in pixels (default: 64)
+        -- hitboxRadius calculated automatically: spriteSize * 0.25 (16px for 64px sprite)
+
         innateSkill = {
             id = "сhronomancer_innate",
             name = "Spell Mastery",
