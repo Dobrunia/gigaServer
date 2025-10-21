@@ -68,7 +68,6 @@ local heroes = {
 
         -- Size parameters (optional, uses defaults if not specified)
         spriteSize = 64,      -- Display size in pixels (default: 64)
-        -- hitboxRadius calculated automatically: spriteSize * 0.25 (16px for 64px sprite)
 
         innateSkill = {
             id = "сhronomancer_innate",

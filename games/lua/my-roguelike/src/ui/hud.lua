@@ -50,8 +50,10 @@ function HUD:drawStats(player, assets)
     local y = love.graphics.getHeight() - Constants.HUD_HEIGHT + Constants.HUD_PADDING
     local lineHeight = 18
     
-    -- Level
+    -- Level (accent color)
+    Colors.setColor(Colors.TEXT_ACCENT)
     love.graphics.print("Level: " .. stats.level, x, y)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     y = y + lineHeight
     
     -- HP bar
@@ -70,9 +72,11 @@ function HUD:drawStats(player, assets)
     Colors.setColor(Colors.BAR_HP)
     love.graphics.rectangle("fill", barX, barY, barWidth * hpPercent, barHeight)
     
-    -- HP text
-    Colors.setColor(Colors.TEXT_PRIMARY)
+    -- HP text with growth (current/max + growth)
     love.graphics.print(math.floor(stats.hp) .. "/" .. math.floor(stats.maxHp), barX + barWidth + 10, barY)
+    Colors.setColor(Colors.TEXT_ACCENT)
+    love.graphics.print(" + " .. Utils.round(stats.hpGrowth, 0), barX + barWidth + 10 + 70, barY)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     
     y = y + lineHeight
     
@@ -95,12 +99,26 @@ function HUD:drawStats(player, assets)
     
     y = y + lineHeight
     
-    -- Other stats
-    love.graphics.print("Armor: " .. Utils.round(stats.armor, 1), x, y)
+    -- Other stats (current + next level bonus)
+    -- Armor: current + growth (growth in accent color)
+    love.graphics.print("Armor: ", x, y)
+    Colors.setColor(Colors.TEXT_ACCENT)
+    love.graphics.print(Utils.round(stats.armor, 1) .. " + " .. Utils.round(stats.armorGrowth, 1), x + 50, y)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     y = y + lineHeight
-    love.graphics.print("Speed: " .. Utils.round(stats.speed, 0), x, y)
+
+    -- Speed: current + growth (growth in accent color)
+    love.graphics.print("Speed: ", x, y)
+    Colors.setColor(Colors.TEXT_ACCENT)
+    love.graphics.print(Utils.round(stats.speed, 0) .. " + " .. Utils.round(stats.speedGrowth, 0), x + 50, y)
+    Colors.setColor(Colors.TEXT_PRIMARY)
     y = y + lineHeight
-    love.graphics.print("Cast Speed: " .. Utils.round(stats.castSpeed, 2) .. "x", x, y)
+
+    -- Cast Speed: current + growth (growth in accent color)
+    love.graphics.print("Cast Speed: ", x, y)
+    Colors.setColor(Colors.TEXT_ACCENT)
+    love.graphics.print(Utils.round(stats.castSpeed, 2) .. "x + " .. Utils.round(stats.castSpeedGrowth, 2) .. "x", x + 80, y)
+    Colors.setColor(Colors.TEXT_PRIMARY)
 end
 
 function HUD:drawSkills(player, assets)

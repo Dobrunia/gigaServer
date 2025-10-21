@@ -50,7 +50,7 @@ function Player.new(x, y, heroData)
 
     -- Size configuration (use config values or defaults)
     self.configSpriteSize = heroData.spriteSize or Constants.PLAYER_DEFAULT_SPRITE_SIZE
-    -- Hitbox radius calculated automatically based on sprite size (25% of sprite size)
+    -- Hitbox radius calculated automatically based on sprite size (40% of sprite size for heroes)
     self.configHitboxRadius = self.configSpriteSize * 0.4
 
     -- Combat
@@ -261,6 +261,11 @@ function Player:getStats()
         armor = self.armor,
         speed = self.speed,
         castSpeed = self.castSpeed,
+        -- Growth bonuses
+        hpGrowth = self.hpGrowth,
+        armorGrowth = self.armorGrowth,
+        speedGrowth = self.speedGrowth,
+        castSpeedGrowth = self.castSpeedGrowth,
     }
 end
 
