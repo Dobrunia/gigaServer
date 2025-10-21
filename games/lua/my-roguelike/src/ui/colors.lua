@@ -65,6 +65,13 @@ Colors.STATUS_ROOT = {0.6, 0.4, 0.2, 0.9}  -- Brown for root
 Colors.STATUS_STUN = {1, 1, 0.2, 0.9}  -- Yellow for stun
 Colors.STATUS_UNKNOWN = {0.5, 0.5, 0.5, 0.9}  -- Gray for unknown
 
+-- === MINIMAP COLORS ===
+Colors.MINIMAP_BG = {0, 0, 0, 0.7}              -- Dark background with transparency
+Colors.MINIMAP_BORDER = {0.5, 0.5, 0.5, 1}     -- Gray border
+Colors.MINIMAP_MAP_BORDER = {0.3, 0.3, 0.3, 1} -- Darker gray for map boundary
+Colors.MINIMAP_PLAYER = {0, 1, 0, 1}           -- Green for player
+Colors.MINIMAP_MOB = {1, 0, 0, 1}              -- Red for enemies
+
 -- === УТИЛИТЫ ===
 
 function Colors.setColor(color)

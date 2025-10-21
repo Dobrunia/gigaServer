@@ -459,11 +459,6 @@ upgradeScaling = {
     - Keybinding customization
     - Gamepad sensitivity
 
-12. **Minimap**
-
-    - Small map in corner showing player, mobs, bosses
-    - Helpful for navigation
-
 13. **Achievements / Unlocks**
 
     - Track kills, boss defeats

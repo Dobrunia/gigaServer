@@ -68,13 +68,29 @@ function SpawnManager:trySpawnMob(player, mobs, mobConfigs)
     -- Pick random mob type
     local mobData = Utils.randomChoice(mobConfigs)
     
-    -- Find spawn position (ring around player)
-    local spawnX, spawnY = Utils.randomPointInRing(
-        player.x,
-        player.y,
-        Constants.MOB_SPAWN_MIN_DISTANCE,
-        Constants.MOB_SPAWN_MAX_DISTANCE
-    )
+    -- Find spawn position (anywhere on map, but not too close to player)
+    local spawnX, spawnY
+    local attempts = 0
+    local maxAttempts = 50
+
+    while attempts < maxAttempts do
+        -- Generate random position within map bounds
+        spawnX = math.random(Constants.MAP_BOUNDARY_WIDTH, Constants.MAP_WIDTH - Constants.MAP_BOUNDARY_WIDTH)
+        spawnY = math.random(Constants.MAP_BOUNDARY_WIDTH, Constants.MAP_HEIGHT - Constants.MAP_BOUNDARY_WIDTH)
+
+        -- Check if position is far enough from player
+        local distance = Utils.distance(player.x, player.y, spawnX, spawnY)
+        if distance >= Constants.MOB_SPAWN_MIN_DISTANCE then
+            break
+        end
+
+        attempts = attempts + 1
+    end
+
+    -- If we couldn't find a valid spawn position after max attempts, use the last one anyway
+    if attempts >= maxAttempts then
+        Utils.log("Warning: Could not find spawn position far from player, using fallback")
+    end
     
     -- Clamp to map bounds (use mob's configured hitbox size)
     local mobHitboxRadius = (mobData.spriteSize or Constants.MOB_DEFAULT_SPRITE_SIZE) * 0.375

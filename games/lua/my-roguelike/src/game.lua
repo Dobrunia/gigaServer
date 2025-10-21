@@ -21,6 +21,7 @@ local MainMenu = require("src.ui.main_menu")
 local CharacterSelect = require("src.ui.character_select")
 local SkillSelect = require("src.ui.skill_select")
 local HUD = require("src.ui.hud")
+local Minimap = require("src.ui.minimap")
 
 local Game = {}
 Game.__index = Game
@@ -57,6 +58,7 @@ function Game.new()
     self.characterSelect = nil
     self.skillSelect = nil
     self.hud = nil
+    self.minimap = nil
     
     -- Entities
     self.player = nil
@@ -111,6 +113,7 @@ function Game:load()
     self.characterSelect = CharacterSelect.new()
     self.skillSelect = SkillSelect.new()
     self.hud = HUD.new()
+    self.minimap = Minimap.new()
     
     -- Initialize projectile pool
     self.projectilePool = Pool.new(
@@ -694,6 +697,11 @@ function Game:drawPlaying()
     -- Draw HUD (UI overlay, no camera) using HUD module
     if self.hud then
         self.hud:draw(self.player, self.gameTime, Assets)
+    end
+    
+    -- Draw minimap (UI overlay, no camera)
+    if self.minimap then
+        self.minimap:draw(self.player, self.mobs, self.camera, Assets)
     end
     
     -- Draw pause screen overlay

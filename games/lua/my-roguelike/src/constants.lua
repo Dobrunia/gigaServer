@@ -57,6 +57,14 @@ Constants.MENU_BUTTON_HEIGHT = 60
 Constants.CHAR_CARD_WIDTH = 600
 Constants.CHAR_CARD_HEIGHT = 200
 
+-- === MINIMAP ===
+Constants.MINIMAP_SIZE = 200                    -- Square minimap size
+Constants.MINIMAP_PADDING = 10                 -- Distance from screen edge
+Constants.MINIMAP_BORDER_WIDTH = 2             -- Border thickness
+Constants.MINIMAP_PLAYER_SIZE = 4              -- Player dot size
+Constants.MINIMAP_MOB_SIZE = 2                 -- Mob dot size
+Constants.MINIMAP_BACKGROUND_ALPHA = 0.7       -- Background transparency
+
 -- === RENDERING ===
 Constants.SPRITE_BATCH_SIZE = 1000          -- Max sprites per batch
 Constants.DEBUG_DRAW_HITBOXES = true        -- Toggle hitbox rendering
