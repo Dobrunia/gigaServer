@@ -132,9 +132,8 @@ function Game:loadConfigs()
     local allMobs = require("src.config.mobs")
     local allBosses = require("src.config.bosses")
     
-    -- TEMPORARY: Limit to 1 hero and 1 mob for testing
-    self.heroConfigs = {allHeroes[1]}  -- Only Mage (ranged)
-    self.mobConfigs = {allMobs[1]}     -- Only Zombie (melee)
+    self.heroConfigs = allHeroes
+    self.mobConfigs = allMobs
     self.bossConfigs = {}              -- No bosses for now
     
     self.skillConfigs = require("src.config.skills")

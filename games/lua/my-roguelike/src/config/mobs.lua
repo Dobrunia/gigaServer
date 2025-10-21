@@ -32,7 +32,11 @@
 --   xpDrop = number,
 --   xpDropGrowth = number (per level),
 --   xpDropSpritesheet = "filename" (spritesheet for XP drop, default "items"),
---   xpDropSpriteIndex = number (sprite index for XP drop, default 324)
+--   xpDropSpriteIndex = number (sprite index for XP drop, default 324),
+--   spawnWeight = number (relative spawn probability, 1=common, 10=rare),
+--   spawnStartTime = number (seconds from game start when mob can spawn),
+--   spawnEndTime = number (seconds from game start when mob stops spawning, nil=forever),
+--   spawnGroupSize = number (mobs per spawn group, default 1)
 -- }
 
 local mobs = {
@@ -58,7 +62,7 @@ local mobs = {
     --     xpDropGrowth = 2      -- Moderate XP scaling
     -- },
 
-    -- === MELEE MOB (standard size) ===
+    -- === MELEE MOB ===
     {
         id = "zombie",
         name = "Zombie",
@@ -70,7 +74,7 @@ local mobs = {
         baseArmor = 0,
         armorGrowth = 0.5,
         baseMoveSpeed = 60,
-        speedGrowth = 1,
+        speedGrowth = 5,
         baseDamage = 10,
         damageGrowth = 3,
         
@@ -84,6 +88,46 @@ local mobs = {
         xpDropGrowth = 2,
         xpDropSpritesheet = "items",  -- items.png from assets/
         -- xpDropSpriteIndex optional; default comes from Assets.images.xpDrop
+
+        -- Spawn parameters
+        spawnWeight = 1,           -- Common mob (1=very common, 10=very rare)
+        spawnStartTime = 0,         -- Can spawn from game start
+        spawnEndTime = nil,         -- Spawns forever (no end time)
+        spawnGroupSize = 1,         -- Single mob spawns
+    },
+
+
+    -- === RANGED MOB ===
+    {
+        id = "fireclaw",
+        name = "Fireclaw",
+        type = "ranged",
+        assetFolder = "mobs/fireclaw",
+        
+        baseHp = 30,
+        hpGrowth = 5,
+        baseArmor = 0,
+        armorGrowth = 0.2,
+        baseMoveSpeed = 40,
+        speedGrowth = 1,
+        baseDamage = 15,
+        damageGrowth = 5,
+        
+        attackSpeed = 0.5,
+        attackRange = 400,
+        projectileSpeed = 100,
+        projectileHitboxRadius = 4,
+        projectileAssetFolder = "starting_skills/fireball",-- TODO:
+        
+        xpDrop = 15,
+        xpDropGrowth = 3,
+        xpDropSpritesheet = "items",
+        
+        -- Spawn parameters
+        spawnWeight = 3,
+        spawnStartTime = 0,
+        spawnEndTime = nil,
+        spawnGroupSize = 2,
     }
 }
 

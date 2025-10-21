@@ -24,22 +24,22 @@ function Mob.new(x, y, mobData, level)
     level = level or 1
     self.level = level
     
-    self.maxHp = mobData.baseHp + (level - 1) * mobData.hpGrowth
+    self.maxHp = mobData.baseHp + (level - 1) * (mobData.hpGrowth or Constants.MOB_DEFAULT_HP_GROWTH)
     self.hp = self.maxHp
-    self.armor = mobData.baseArmor + (level - 1) * mobData.armorGrowth
-    self.speed = mobData.baseMoveSpeed + (level - 1) * mobData.speedGrowth
-    self.damage = mobData.baseDamage + (level - 1) * mobData.damageGrowth
+    self.armor = mobData.baseArmor + (level - 1) * (mobData.armorGrowth or Constants.MOB_DEFAULT_ARMOR_GROWTH)
+    self.speed = mobData.baseMoveSpeed + (level - 1) * (mobData.speedGrowth or Constants.MOB_DEFAULT_SPEED_GROWTH)
+    self.damage = mobData.baseDamage + (level - 1) * (mobData.damageGrowth or Constants.MOB_DEFAULT_DAMAGE_GROWTH)
     
     -- Combat
-    self.attackSpeed = mobData.attackSpeed  -- Attacks per second
+    self.attackSpeed = mobData.attackSpeed or Constants.MOB_DEFAULT_ATTACK_SPEED  -- Attacks per second
     self.attackCooldownTimer = 0           -- Timer for attack cooldown (prevents spam)
     self.attackCooldown = 1 / self.attackSpeed  -- Cooldown duration between attacks
     
     -- Ranged-specific
     if self.mobType == "ranged" then
-        self.attackRange = mobData.attackRange
-        self.projectileSpeed = mobData.projectileSpeed
-        self.projectileHitboxRadius = mobData.projectileHitboxRadius  -- Optional custom hitbox
+        self.attackRange = mobData.attackRange or Constants.MOB_DEFAULT_ATTACK_RANGE
+        self.projectileSpeed = mobData.projectileSpeed or Constants.MOB_DEFAULT_PROJECTILE_SPEED
+        self.projectileHitboxRadius = mobData.projectileHitboxRadius or Constants.MOB_DEFAULT_PROJECTILE_RADIUS  -- Optional custom hitbox
         self.projectileAssetFolder = mobData.projectileAssetFolder  -- Optional asset folder
         -- Legacy spritesheet approach (fallback)
         self.projectileSpritesheet = mobData.projectileSpritesheet or "items"
@@ -52,8 +52,11 @@ function Mob.new(x, y, mobData, level)
     self.aiUpdateInterval = Constants.MOB_AI_UPDATE_RATE
     self.target = nil  -- Usually player
     
+    -- Direction for sprite flipping (1 = right, -1 = left)
+    self.facingDirection = 1
+    
     -- XP drop
-    self.xpDrop = mobData.xpDrop + (level - 1) * mobData.xpDropGrowth
+    self.xpDrop = mobData.xpDrop + (level - 1) * (mobData.xpDropGrowth or Constants.MOB_DEFAULT_XP_GROWTH)
 
     -- Size configuration (use config values or defaults)
     self.configSpriteSize = mobData.spriteSize or Constants.MOB_DEFAULT_SPRITE_SIZE
@@ -107,6 +110,18 @@ end
 function Mob:startAttackAnimation()
     self.isAttacking = true
     self.attackAnimationTimer = 0
+end
+
+-- Update facing direction based on target
+function Mob:updateFacingDirection()
+    if self.target and self.target.alive then
+        local dx = self.target.x - self.x
+        if dx > 0 then
+            self.facingDirection = 1  -- Face right
+        elseif dx < 0 then
+            self.facingDirection = -1  -- Face left
+        end
+    end
 end
 
 -- === UPDATE ===
@@ -173,6 +188,8 @@ function Mob:executeBehavior(dt)
         if self.target then
             local dx, dy = Utils.directionTo(self.x, self.y, self.target.x, self.target.y)
             self:move(dx, dy, dt)
+            -- Update facing direction while moving
+            self:updateFacingDirection()
             -- Start walking animation when moving (only if not attacking)
             if not self.isAttacking then
                 self.isWalking = true
@@ -214,6 +231,9 @@ end
 function Mob:attackRanged()
     if not self.target or not self.target.alive then return end
     if not self:canAttack() then return end
+
+    -- Update facing direction before attacking
+    self:updateFacingDirection()
 
     -- Start attack animation
     self:startAttackAnimation()
@@ -290,8 +310,8 @@ function Mob:draw()
             local targetSize = self.configSpriteSize or Constants.MOB_DEFAULT_SPRITE_SIZE
             local scale = targetSize / math.max(spriteW, spriteH)
 
-            -- Flip horizontally if facing left (dx < 0)
-            local flipX = (self.dx and self.dx < 0) and -1 or 1
+            -- Flip horizontally based on facing direction
+            local flipX = self.facingDirection
             local flipY = 1
 
             love.graphics.draw(

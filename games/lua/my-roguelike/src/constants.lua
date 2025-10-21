@@ -32,6 +32,17 @@ Constants.MOB_LEVEL_UP_INTERVAL = 60.0      -- Mobs level up every 60 seconds
 Constants.MOB_AI_UPDATE_RATE = 1/10         -- AI decisions 10Hz
 Constants.MOB_DEFAULT_SPRITE_SIZE = 32      -- Default mob sprite size if not specified in config
 
+-- === MOB DEFAULT STATS ===
+Constants.MOB_DEFAULT_HP_GROWTH = 0         -- Default HP growth per level
+Constants.MOB_DEFAULT_ARMOR_GROWTH = 0      -- Default armor growth per level
+Constants.MOB_DEFAULT_SPEED_GROWTH = 0      -- Default speed growth per level
+Constants.MOB_DEFAULT_DAMAGE_GROWTH = 0     -- Default damage growth per level
+Constants.MOB_DEFAULT_XP_GROWTH = 0         -- Default XP drop growth per level
+Constants.MOB_DEFAULT_ATTACK_SPEED = 1.0    -- Default attacks per second
+Constants.MOB_DEFAULT_ATTACK_RANGE = 200    -- Default attack range for ranged mobs
+Constants.MOB_DEFAULT_PROJECTILE_SPEED = 150 -- Default projectile speed
+Constants.MOB_DEFAULT_PROJECTILE_RADIUS = 4 -- Default projectile hitbox radius
+
 -- === PROJECTILES ===
 Constants.PROJECTILE_POOL_SIZE = 500        -- Pre-allocated projectile pool
 Constants.PROJECTILE_SPRITE_SIZE = 16
