@@ -18,6 +18,11 @@
 --   attackSpeed = number (attacks per second),
 --   attackRange = number (ranged only),
 --   projectileSpeed = number (ranged only),
+--   projectileHitboxRadius = number (ranged only, collision radius for projectile),
+--   projectileAssetFolder = "foldername" (ranged only, folder in assets/),
+--   -- Or legacy spritesheet approach:
+--   projectileSpritesheet = "filename" (ranged only, spritesheet for projectiles),
+--   projectileSpriteIndex = number (ranged only, sprite index for projectiles),
 --   xpDrop = number,
 --   xpDropGrowth = number (per level)
 -- }

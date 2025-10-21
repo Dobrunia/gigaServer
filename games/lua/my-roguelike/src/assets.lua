@@ -199,6 +199,13 @@ function Assets.load()
         Assets.quads.items = {}
     end
     
+    -- NOTE: Skill/mob sprites are now loaded dynamically from asset folders
+    -- Each skill/mob has its own folder in assets/ with:
+    --   i.png - icon for UI
+    --   h.png - hit effect (optional)
+    --   1.png, 2.png, 3.png... - animation frames
+    -- Use Assets.loadFolderSprites("assets/foldername") to load them
+    
     -- XP drop (use blue potion sprite from items.png - 21.d = row 21, col 4)
     -- Index calculation: (row-1) * 16 + col = (21-1) * 16 + 4 = 324
     Assets.images.xpDrop = 324  -- Blue potion index
@@ -287,6 +294,66 @@ function Assets.loadSound(name, path, sourceType)
         Utils.logError("Failed to load sound: " .. path)
         return false
     end
+end
+
+-- === FOLDER-BASED SPRITE LOADING ===
+
+-- Load sprites from a folder with standard naming:
+-- i.png - icon for UI
+-- h.png - hit effect (optional)
+-- 1.png, 2.png, 3.png... - flight animation frames
+-- Returns table: { icon = Image, hit = Image or nil, flight = {Image, Image, ...} }
+function Assets.loadFolderSprites(folderPath)
+    local sprites = {
+        icon = nil,
+        hit = nil,
+        flight = {}
+    }
+    
+    -- Load icon (required)
+    local iconPath = folderPath .. "/i.png"
+    local iconSuccess, iconImg = pcall(love.graphics.newImage, iconPath)
+    if iconSuccess then
+        sprites.icon = iconImg
+        Utils.log("Loaded icon: " .. iconPath)
+    else
+        Utils.logError("Failed to load icon: " .. iconPath)
+        -- Create placeholder if icon missing
+        sprites.icon = createPlaceholder(32, 32, 1, 0.5, 0)
+    end
+    
+    -- Load hit effect (optional)
+    local hitPath = folderPath .. "/h.png"
+    local hitSuccess, hitImg = pcall(love.graphics.newImage, hitPath)
+    if hitSuccess then
+        sprites.hit = hitImg
+        Utils.log("Loaded hit sprite: " .. hitPath)
+    end
+    
+    -- Load flight animation frames (1.png, 2.png, 3.png, etc.)
+    local frameIndex = 1
+    while true do
+        local framePath = folderPath .. "/" .. frameIndex .. ".png"
+        local frameSuccess, frameImg = pcall(love.graphics.newImage, framePath)
+        if frameSuccess then
+            table.insert(sprites.flight, frameImg)
+            frameIndex = frameIndex + 1
+        else
+            break  -- No more frames
+        end
+    end
+    
+    if #sprites.flight > 0 then
+        Utils.log("Loaded " .. #sprites.flight .. " flight animation frames from " .. folderPath)
+    else
+        Utils.logError("No flight animation frames found in " .. folderPath)
+        -- Use icon as fallback for flight
+        if sprites.icon then
+            table.insert(sprites.flight, sprites.icon)
+        end
+    end
+    
+    return sprites
 end
 
 return Assets

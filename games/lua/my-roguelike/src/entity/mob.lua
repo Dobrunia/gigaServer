@@ -39,6 +39,11 @@ function Mob.new(x, y, mobData, level)
     if self.mobType == "ranged" then
         self.attackRange = mobData.attackRange
         self.projectileSpeed = mobData.projectileSpeed
+        self.projectileHitboxRadius = mobData.projectileHitboxRadius  -- Optional custom hitbox
+        self.projectileAssetFolder = mobData.projectileAssetFolder  -- Optional asset folder
+        -- Legacy spritesheet approach (fallback)
+        self.projectileSpritesheet = mobData.projectileSpritesheet or "items"
+        self.projectileSpriteIndex = mobData.projectileSpriteIndex or 371
     end
     
     -- AI state machine
@@ -154,7 +159,12 @@ function Mob:attackRanged()
         targetX = self.target.x,
         targetY = self.target.y,
         damage = self.damage,
-        speed = self.projectileSpeed
+        speed = self.projectileSpeed,
+        hitboxRadius = self.projectileHitboxRadius,
+        assetFolder = self.projectileAssetFolder,
+        -- Legacy fallback
+        spritesheet = self.projectileSpritesheet,
+        spriteIndex = self.projectileSpriteIndex
     }
     
     self.attackTimer = self.attackCooldown

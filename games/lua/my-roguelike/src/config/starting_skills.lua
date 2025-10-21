@@ -12,8 +12,14 @@
 --   damage = number (base damage),
 --   range = number (pixels),
 --   projectileSpeed = number (pixels/sec, if type = projectile),
---   spritesheet = "filename" (spritesheet file from assets/, without .png),
---   spriteIndex = number (index in spritesheet, 1-based),
+--   hitboxRadius = number (pixels, collision radius for projectile, default 6),
+--   assetFolder = "foldername" (folder in assets/ containing sprite files),
+--   -- Sprite files in folder:
+--   --   i.png - icon for UI/menu (any size, auto-scaled)
+--   --   h.png - hit effect (optional, any size, auto-scaled)
+--   --   1.png, 2.png, 3.png... - flight animation frames (any size, auto-scaled)
+--   --   NOTE: All sprites should be oriented FACING RIGHT
+--   animationSpeed = number (seconds per frame, default 0.1),
 --   effect = table (optional status effect)
 -- }
 
@@ -40,8 +46,11 @@ local startingSkills = {
         damage = 40,
         range = 400,
         projectileSpeed = 300,
-        spritesheet = "items",  -- items.png from assets/
-        spriteIndex = 371,  -- Bolt sprite from items.png
+        hitboxRadius = 14,  -- Larger hitbox for bigger fireball sprite
+        assetFolder = "fireballl",  -- assets/fireballl/ folder
+        -- Contains: i.png (icon), h.png (hit), 1.png, 2.png (flight animation)
+        -- All sprites face RIGHT and are auto-scaled to fit hitbox
+        animationSpeed = 0.15,  -- 0.15 seconds per frame for smooth animation
         effect = {
             type = "poison",  -- Fire DOT (reusing poison mechanics)
             duration = 3,

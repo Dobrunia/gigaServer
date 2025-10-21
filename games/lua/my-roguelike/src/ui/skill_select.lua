@@ -91,16 +91,23 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         yOffset = yOffset + 30
         love.graphics.print("Range: " .. skill.range, cardX + 20, cardY + yOffset)
         
-        -- Skill sprite (aligned with stats horizontally)
+        -- Skill sprite (aligned with stats horizontally) - use icon sprite from folder
         local spriteX = cardX + cardWidth - 120
         local spriteY = cardY + 70  -- Same Y as first stat line
         
         Colors.setColor(Colors.TEXT_PRIMARY)
-        local spritesheetName = skill.spritesheet or "items"  -- Default to "items" if not specified
-        local spritesheet = assets.getSpritesheet(spritesheetName)
-        local quad = assets.getQuad(spritesheetName, skill.spriteIndex)
-        if spritesheet and quad then
-            love.graphics.draw(spritesheet, quad, spriteX, spriteY, 0, 4, 4, 16, 16)  -- Doubled sprite size
+        
+        -- Load icon sprite from asset folder if needed
+        if skill.assetFolder and not skill.loadedSprites then
+            skill.loadedSprites = assets.loadFolderSprites("assets/" .. skill.assetFolder)
+        end
+        
+        if skill.loadedSprites and skill.loadedSprites.icon then
+            local icon = skill.loadedSprites.icon
+            local iconW, iconH = icon:getDimensions()
+            -- Scale icon to fit nicely in card
+            local scale = 64 / math.max(iconW, iconH)
+            love.graphics.draw(icon, spriteX, spriteY, 0, scale, scale, iconW / 2, iconH / 2)
         end
         
         -- Description background

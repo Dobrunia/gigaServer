@@ -1,7 +1,7 @@
 -- entity/projectile.lua
 -- Projectile entity for ranged attacks
 -- Uses object pooling for performance
--- Public API: Projectile.new(), projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner), projectile:update(dt)
+-- Public API: Projectile.new(), projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner, spritesheet, spriteIndex), projectile:update(dt)
 -- Dependencies: base_entity.lua, constants.lua, utils.lua
 
 local BaseEntity = require("src.entity.base_entity")
@@ -29,13 +29,26 @@ function Projectile.new()
     self.distanceTraveled = 0
     self.maxDistance = 500
     
+    -- Animation (using direct Image objects, not indices)
+    self.flightSprites = nil  -- Array of Image objects
+    self.hitSprite = nil  -- Single Image object
+    self.currentFrameIndex = 1
+    self.animationTimer = 0
+    self.animationSpeed = 0.1
+    self.isHitting = false
+    self.hitTimer = 0
+    self.hitDuration = 0.15  -- How long to show hit sprite
+    
     return self
 end
 
 -- === POOLING SUPPORT ===
 
 -- Initialize projectile when acquired from pool
-function Projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner)
+-- flightSprites: array of Image objects for animation
+-- hitSprite: single Image object for hit effect (optional)
+-- hitboxRadius: collision radius in pixels
+function Projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner, flightSprites, hitSprite, animSpeed, hitboxRadius)
     self.x = x
     self.y = y
     self.prevX = x
@@ -60,6 +73,20 @@ function Projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner)
     self.maxDistance = maxDist or 500
     self.owner = owner or "player"
     
+    -- Hitbox
+    self.radius = hitboxRadius or Constants.PROJECTILE_HITBOX_RADIUS
+    
+    -- Sprite info (direct Image objects)
+    self.flightSprites = flightSprites or {}
+    self.hitSprite = hitSprite or nil
+    self.animationSpeed = animSpeed or 0.1
+    
+    -- Animation state
+    self.currentFrameIndex = 1
+    self.animationTimer = 0
+    self.isHitting = false
+    self.hitTimer = 0
+    
     self.distanceTraveled = 0
     self.active = true
     self.alive = true
@@ -73,12 +100,27 @@ function Projectile:reset()
     self.alive = false
     self.distanceTraveled = 0
     self.owner = nil
+    self.flightSprites = nil
+    self.hitSprite = nil
+    self.currentFrameIndex = 1
+    self.animationTimer = 0
+    self.isHitting = false
+    self.hitTimer = 0
 end
 
 -- === UPDATE ===
 
 function Projectile:update(dt)
     if not self.active then return end
+    
+    -- If hitting, show hit animation then deactivate
+    if self.isHitting then
+        self.hitTimer = self.hitTimer + dt
+        if self.hitTimer >= self.hitDuration then
+            self:deactivate()
+        end
+        return
+    end
     
     -- Store previous position
     self.prevX = self.x
@@ -93,6 +135,18 @@ function Projectile:update(dt)
     
     -- Track distance
     self.distanceTraveled = self.distanceTraveled + math.sqrt(moveX * moveX + moveY * moveY)
+    
+    -- Update flight animation
+    if self.flightSprites and #self.flightSprites > 1 then
+        self.animationTimer = self.animationTimer + dt
+        if self.animationTimer >= self.animationSpeed then
+            self.animationTimer = self.animationTimer - self.animationSpeed
+            self.currentFrameIndex = self.currentFrameIndex + 1
+            if self.currentFrameIndex > #self.flightSprites then
+                self.currentFrameIndex = 1
+            end
+        end
+    end
     
     -- Check if exceeded max distance
     if self.distanceTraveled >= self.maxDistance then
@@ -113,6 +167,9 @@ end
 function Projectile:checkHit(target)
     if not self.active or not target.alive then return false end
     
+    -- Don't check collision if already hitting (showing hit animation)
+    if self.isHitting then return false end
+    
     -- Don't hit owner type (player projectiles don't hit player)
     if self.owner == "player" and target.isPlayer then return false end
     if self.owner == "mob" and target.mobId then return false end
@@ -125,7 +182,14 @@ function Projectile:hit(target)
     if target and target.takeDamage then
         target:takeDamage(self.damage, self.owner)
     end
-    self:deactivate()
+    
+    -- Show hit animation if available
+    if self.hitSprite then
+        self.isHitting = true
+        self.hitTimer = 0
+    else
+        self:deactivate()
+    end
 end
 
 -- === LIFECYCLE ===

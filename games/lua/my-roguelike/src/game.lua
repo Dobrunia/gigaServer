@@ -432,10 +432,34 @@ function Game:startGame()
 end
 
 function Game:spawnMobProjectile(projData)
+    -- Load sprites from folder if assetFolder specified
+    local flightSprites = {}
+    local hitSprite = nil
+    
+    if projData.assetFolder then
+        if not projData.loadedSprites then
+            projData.loadedSprites = Assets.loadFolderSprites("assets/" .. projData.assetFolder)
+        end
+        flightSprites = projData.loadedSprites.flight or {}
+        hitSprite = projData.loadedSprites.hit
+    end
+    
     local proj = self.projectilePool:acquire()
     local dx, dy = Utils.directionTo(projData.x, projData.y, projData.targetX, projData.targetY)
-    proj:init(projData.x, projData.y, dx, dy, projData.speed, projData.damage, 500, "mob")
-    proj.sprite = Assets.getImage("projectileMob")
+    proj:init(
+        projData.x, 
+        projData.y, 
+        dx, 
+        dy, 
+        projData.speed, 
+        projData.damage, 
+        500, 
+        "mob",
+        flightSprites,
+        hitSprite,
+        projData.animationSpeed or 0.1,
+        projData.hitboxRadius or nil  -- Custom hitbox radius
+    )
     table.insert(self.projectiles, proj)
 end
 
@@ -558,21 +582,47 @@ function Game:drawPlaying()
     
     -- Draw projectiles
     for _, proj in ipairs(self.projectiles) do
-        local projIndex = proj.owner == "player" and Assets.images.projectilePlayer or Assets.images.projectileMob
-        local spritesheet = Assets.getSpritesheet("items")
-        local quad = Assets.getQuad("items", projIndex)
+        local sprite = nil
         
-        if spritesheet and quad then
-            love.graphics.setColor(1, 1, 1, 1)
+        -- Determine which sprite to show based on projectile state
+        if proj.isHitting and proj.hitSprite then
+            -- Show hit effect
+            sprite = proj.hitSprite
+        elseif proj.flightSprites and #proj.flightSprites > 0 then
+            -- Show current flight animation frame
+            sprite = proj.flightSprites[proj.currentFrameIndex]
+        end
+        
+        if sprite then
+            Colors.setColor(Colors.TEXT_PRIMARY)
+            
+            -- Get sprite dimensions
+            local spriteW, spriteH = sprite:getDimensions()
+            
+            -- Calculate target display size based on hitbox radius
+            -- Make sprite slightly larger than hitbox for visibility (3x diameter)
+            local targetSize = proj.radius * 3
+            
+            -- Calculate scale to fit target size (maintain aspect ratio)
+            local scale = targetSize / math.max(spriteW, spriteH)
+            
+            -- Calculate center point (half of actual sprite size for proper origin)
+            local centerX = spriteW / 2
+            local centerY = spriteH / 2
+            
             -- Calculate rotation angle towards movement direction
+            -- Sprites are oriented FACING RIGHT (angle = 0)
+            -- math.atan2(dy, dx) returns correct angle for this orientation
+            -- Both flight and hit sprites rotate to match projectile direction
             local angle = math.atan2(proj.dy, proj.dx)
-            -- Draw projectile with rotation
-            love.graphics.draw(spritesheet, quad, proj.x, proj.y, angle, 1.5, 1.5, 16, 16)
+            
+            -- Draw projectile with rotation, centered and scaled
+            love.graphics.draw(sprite, proj.x, proj.y, angle, scale, scale, centerX, centerY)
         else
-            -- Fallback: draw as orange circle if sprite not found
-            love.graphics.setColor(1, 0.5, 0, 1)
-            love.graphics.circle("fill", proj.x, proj.y, 6)
-            love.graphics.setColor(1, 1, 1, 1)
+            -- Fallback: draw as orange circle using hitbox radius if sprite not found
+            Colors.setColor(Colors.ACCENT)
+            love.graphics.circle("fill", proj.x, proj.y, proj.radius)
+            Colors.setColor(Colors.TEXT_PRIMARY)
         end
     end
     
@@ -587,12 +637,12 @@ function Game:drawPlaying()
         
         -- Player hitbox (green)
         if self.player then
-            love.graphics.setColor(0, 1, 0, 0.5)
+            love.graphics.setColor(Colors.PRIMARY)
             love.graphics.circle("line", self.player.x, self.player.y, self.player.radius)
         end
         
         -- Mob hitboxes (red)
-        love.graphics.setColor(1, 0, 0, 0.5)
+        love.graphics.setColor(Colors.ACCENT)
         for _, mob in ipairs(self.mobs) do
             if self.camera:isPointVisible(mob.x, mob.y) then
                 love.graphics.circle("line", mob.x, mob.y, mob.radius)
@@ -600,20 +650,20 @@ function Game:drawPlaying()
         end
         
         -- Projectile hitboxes (yellow)
-        love.graphics.setColor(1, 1, 0, 0.5)
+        love.graphics.setColor(Colors.ACCENT)
         for _, proj in ipairs(self.projectiles) do
             love.graphics.circle("line", proj.x, proj.y, proj.radius)
         end
         
         -- XP drop hitboxes (cyan)
-        love.graphics.setColor(0, 1, 1, 0.5)
+        love.graphics.setColor(Colors.PRIMARY)
         for _, drop in ipairs(self.xpDrops) do
             love.graphics.circle("line", drop.x, drop.y, drop.radius)
         end
         
         -- Player skill ranges (blue)
         if self.player and self.player.skills then
-            love.graphics.setColor(0, 0, 1, 0.3)
+            love.graphics.setColor(Colors.SECONDARY)
             for _, skill in ipairs(self.player.skills) do
                 if skill.range then
                     love.graphics.circle("line", self.player.x, self.player.y, skill.range)
@@ -621,7 +671,7 @@ function Game:drawPlaying()
             end
         end
         
-        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setColor(Colors.ACCENT)
         love.graphics.setLineWidth(1)
     end
     

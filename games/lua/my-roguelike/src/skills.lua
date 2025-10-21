@@ -148,6 +148,13 @@ function Skills:castProjectile(caster, skill, dirX, dirY, projectilePool, projec
     end
     
     -- print("[SKILLS] Creating projectile at", caster.x, caster.y, "direction", dirX, dirY)
+    
+    -- Load sprites from folder if needed
+    if skill.assetFolder and not skill.loadedSprites then
+        local Assets = require("src.assets")
+        skill.loadedSprites = Assets.loadFolderSprites("assets/" .. skill.assetFolder)
+    end
+    
     local projectile = projectilePool:acquire()
     projectile:init(
         caster.x,
@@ -157,7 +164,11 @@ function Skills:castProjectile(caster, skill, dirX, dirY, projectilePool, projec
         skill.projectileSpeed or 300,
         skill.damage or 10,
         skill.range or 500,
-        caster.heroId and "player" or "mob"
+        caster.heroId and "player" or "mob",
+        skill.loadedSprites and skill.loadedSprites.flight or {},  -- Flight animation sprites
+        skill.loadedSprites and skill.loadedSprites.hit or nil,  -- Hit sprite
+        skill.animationSpeed or 0.1,  -- Animation speed
+        skill.hitboxRadius or nil  -- Hitbox radius (uses default if nil)
     )
     
     -- Store effect data on projectile
