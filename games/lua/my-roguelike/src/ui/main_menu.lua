@@ -25,7 +25,9 @@ function MainMenu:draw(assets)
     local bg = assets.getImage("menuBg")
     if bg then
         Colors.setColor(Colors.TEXT_PRIMARY)
-        love.graphics.draw(bg, 0, 0)
+        local scaleX = love.graphics.getWidth() / bg:getWidth()
+        local scaleY = love.graphics.getHeight() / bg:getHeight()
+        love.graphics.draw(bg, 0, 0, 0, scaleX, scaleY)
     end
     
     love.graphics.setFont(assets.getFont("large"))

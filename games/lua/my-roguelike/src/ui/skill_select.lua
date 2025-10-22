@@ -22,6 +22,14 @@ function SkillSelect:draw(assets, skills, selectedIndex)
     Colors.setColor(Colors.BACKGROUND_PRIMARY)
     love.graphics.clear()
     
+    local bg = assets.getImage("menuBg")
+    if bg then
+        Colors.setColor(Colors.TEXT_PRIMARY)
+        local scaleX = love.graphics.getWidth() / bg:getWidth()
+        local scaleY = love.graphics.getHeight() / bg:getHeight()
+        love.graphics.draw(bg, 0, 0, 0, scaleX, scaleY)
+    end
+    
     -- Title
     love.graphics.setFont(assets.getFont("large"))
     Colors.setColor(Colors.TEXT_PRIMARY)

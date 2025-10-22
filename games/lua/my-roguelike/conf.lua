@@ -15,7 +15,7 @@ function love.conf(t)
     t.window.resizable = true
     t.window.minwidth = 800
     t.window.minheight = 600
-    t.window.fullscreen = false
+    t.window.fullscreen = true
     t.window.fullscreentype = "desktop"
     t.window.vsync = 1                      -- V-sync on
     t.window.msaa = 0                       -- No anti-aliasing (pixel art style)
