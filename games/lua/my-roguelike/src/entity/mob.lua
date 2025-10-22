@@ -41,6 +41,7 @@ function Mob.new(x, y, mobData, level)
         self.projectileSpeed = mobData.projectileSpeed or Constants.MOB_DEFAULT_PROJECTILE_SPEED
         self.projectileHitboxRadius = mobData.projectileHitboxRadius or Constants.MOB_DEFAULT_PROJECTILE_RADIUS  -- Optional custom hitbox
         self.projectileAssetFolder = mobData.projectileAssetFolder  -- Optional asset folder
+        self.projectileAnimationSpeed = mobData.projectileAnimationSpeed or Constants.MOB_DEFAULT_PROJECTILE_ANIMATION_SPEED  -- Animation speed for projectile
         -- Legacy spritesheet approach (fallback)
         self.projectileSpritesheet = mobData.projectileSpritesheet or "items"
         self.projectileSpriteIndex = mobData.projectileSpriteIndex or 371
@@ -248,6 +249,7 @@ function Mob:attackRanged()
         speed = self.projectileSpeed,
         hitboxRadius = self.projectileHitboxRadius,
         assetFolder = self.projectileAssetFolder,
+        animationSpeed = self.projectileAnimationSpeed,
         -- Legacy fallback
         spritesheet = self.projectileSpritesheet,
         spriteIndex = self.projectileSpriteIndex

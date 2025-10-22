@@ -116,8 +116,7 @@ local mobs = {
         attackSpeed = 0.5,
         attackRange = 400,
         projectileSpeed = 100,
-        projectileHitboxRadius = 4,
-        projectileAssetFolder = "starting_skills/fireball",-- TODO:
+        projectileAssetFolder = "starting_skills/fireballl",
         
         xpDrop = 15,
         xpDropGrowth = 3,
