@@ -26,7 +26,6 @@ function HUD.new()
     
     -- Canvas for static elements
     self.playerCardCanvas = nil
-    self.statsCanvas = nil
     self.levelUp = true
     
     return self
@@ -64,23 +63,15 @@ function HUD:draw(player, gameTime, assets)
     -- Draw player card from canvas or redraw if needed
     if self.levelUp then
         self:updatePlayerCardCanvas(player, assets)
-        self:updateStatsCanvas(player, assets)
         self.levelUp = false
     end
     
+    -- Draw canvas to screen
     if self.playerCardCanvas then
         local screenH = love.graphics.getHeight()
-        local cardHeight = UIConstants.CARD_HEIGHT / 2
-        local cardY = screenH - UIConstants.HUD_HEIGHT - cardHeight - UIConstants.HUD_PADDING
+        local cardHeight = UIConstants.HUD_HEIGHT
+        local cardY = screenH - UIConstants.HUD_HEIGHT
         love.graphics.draw(self.playerCardCanvas, self.cardX, cardY)
-    end
-    
-    
-    if self.statsCanvas then
-        local screenH = love.graphics.getHeight()
-        local cardHeight = UIConstants.CARD_HEIGHT / 2
-        local cardY = screenH - UIConstants.HUD_HEIGHT - cardHeight - UIConstants.HUD_PADDING
-        love.graphics.draw(self.statsCanvas, self.cardX, cardY + cardHeight)
     end
     
     -- Draw skills (always redraw for cooldowns)
@@ -95,11 +86,11 @@ function HUD:updatePlayerCardCanvas(player, assets)
     local screenW = love.graphics.getWidth()
     local screenH = love.graphics.getHeight()
     
-    -- Card dimensions
+    -- Card dimensions (full size now)
     local cardWidth = UIConstants.CARD_WIDTH / 2
-    local cardHeight = UIConstants.CARD_HEIGHT / 2
-    local cardX = UIConstants.HUD_PADDING
-    local cardY = screenH - UIConstants.HUD_HEIGHT - cardHeight - UIConstants.HUD_PADDING
+    local cardHeight = UIConstants.HUD_HEIGHT
+    local cardX = 0
+    local cardY = screenH - UIConstants.HUD_HEIGHT
     
     -- Store positions for optimization
     self.cardX = cardX
@@ -141,40 +132,10 @@ function HUD:updatePlayerCardCanvas(player, assets)
     self.xpY = xpY
     self:drawXPBar(stats, levelX, xpY, cardWidth)
     
-    -- Reset canvas
-    love.graphics.setCanvas()
-end
-
-function HUD:updateStatsCanvas(player, assets)
-    local stats = player:getStats()
-    
-    -- Card dimensions
-    local cardWidth = UIConstants.CARD_WIDTH / 2
-    local cardHeight = UIConstants.CARD_HEIGHT / 2
-    
-    -- Create or clear canvas
-    if not self.statsCanvas then
-        self.statsCanvas = love.graphics.newCanvas(cardWidth, cardHeight)
-    end
-    
-    -- Draw to canvas
-    love.graphics.setCanvas(self.statsCanvas)
-    love.graphics.clear()
-    
-    -- Stats background
-    Colors.setColor(Colors.CARD_DEFAULT)
-    love.graphics.rectangle("fill", 0, 0, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
-    
-    -- Stats border
-    Colors.setColor(Colors.BORDER_DEFAULT)
-    love.graphics.setLineWidth(1)
-    love.graphics.rectangle("line", 0, 0, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
-    love.graphics.setLineWidth(1)
-    
-    -- Stats with icons
+    -- Stats with icons (bottom part of card)
     love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
-    local statsX = UIConstants.CARD_PADDING
-    local statsY = UIConstants.CARD_PADDING
+    local statsX = levelX + 6
+    local statsY = xpY + UIConstants.FONT_MEDIUM + UIConstants.HUD_ELEMENTS_OFFSET_Y
     local statsOffset = UIConstants.HUD_ELEMENTS_OFFSET_Y
     
     -- Armor
@@ -193,49 +154,6 @@ function HUD:updateStatsCanvas(player, assets)
     
     -- Reset canvas
     love.graphics.setCanvas()
-end
-
-function HUD:drawPlayerCard(player, assets)
-    local stats = player:getStats()
-    local screenW = love.graphics.getWidth()
-    local screenH = love.graphics.getHeight()
-    
-    -- Card dimensions and position (bottom left)
-    local cardWidth = UIConstants.CARD_WIDTH / 2  -- Half size of character select cards
-    local cardHeight = UIConstants.CARD_HEIGHT / 2
-    local cardX = UIConstants.HUD_PADDING
-    local cardY = screenH - UIConstants.HUD_HEIGHT - cardHeight - UIConstants.HUD_PADDING
-    
-    -- Store positions for optimization
-    self.cardX = cardX
-    self.cardWidth = cardWidth
-    
-    -- Card background
-    Colors.setColor(Colors.CARD_DEFAULT)
-    love.graphics.rectangle("fill", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
-    
-    -- Card border
-    Colors.setColor(Colors.BORDER_DEFAULT)
-    love.graphics.setLineWidth(1)
-    love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
-    love.graphics.setLineWidth(1)
-    
-    -- Level (top of card)
-    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_MEDIUM))
-    Colors.setColor(Colors.TEXT_ACCENT)
-    local levelX = cardX + UIConstants.CARD_PADDING
-    local levelY = cardY + UIConstants.CARD_PADDING
-    love.graphics.print("Level: " .. stats.level, levelX, levelY)
-    
-    -- HP bar
-    local hpY = levelY + UIConstants.FONT_MEDIUM + UIConstants.HUD_ELEMENTS_OFFSET_Y
-    self.hpY = hpY
-    self:drawHPBar(stats, levelX, hpY, cardWidth)
-    
-    -- XP bar
-    local xpY = hpY + UIConstants.FONT_MEDIUM
-    self.xpY = xpY
-    self:drawXPBar(stats, levelX, xpY, cardWidth)
 end
 
 function HUD:drawHPBar(stats, x, y, cardWidth)
