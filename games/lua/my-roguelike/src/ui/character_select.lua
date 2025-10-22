@@ -78,11 +78,13 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         -- Hero name
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
         Colors.setColor(Colors.TEXT_PRIMARY)
-        love.graphics.print(hero.name, cardX + UIConstants.CARD_PADDING, cardY + UIConstants.CARD_PADDING)
+        local nameX = cardX + UIConstants.CARD_PADDING
+        local nameY = cardY + UIConstants.CARD_PADDING
+        love.graphics.print(hero.name, nameX, nameY)
         
         -- Hero sprite
-        local spriteX = cardX + UIConstants.CARD_ELEMENTS_OFFSET_X
-        local spriteY = cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y 
+        local spriteX = nameX + UIConstants.CARD_PADDING + UIConstants.CARD_MAIN_SPRITE_SIZE / 2
+        local spriteY = nameY + UIConstants.CARD_ELEMENTS_OFFSET_Y 
         
         Colors.setColor(Colors.TEXT_PRIMARY)
         
@@ -95,12 +97,12 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
             local sprite = hero.loadedSprites.idle
             local spriteW, spriteH = sprite:getDimensions()
             -- Scale sprite to fit configured size in card
-            local targetSize = hero.spriteSize or Constants.PLAYER_DEFAULT_SPRITE_SIZE
+            local targetSize = hero.spriteSize or UIConstants.CARD_MAIN_SPRITE_SIZE
             local scale = targetSize / math.max(spriteW, spriteH)
             love.graphics.draw(sprite, spriteX, spriteY, 0, scale, scale, spriteW/2, spriteH/2)
         else
             -- Fallback: draw placeholder with configured size
-            local targetSize = hero.spriteSize or Constants.PLAYER_DEFAULT_SPRITE_SIZE
+            local targetSize = hero.spriteSize or UIConstants.CARD_MAIN_SPRITE_SIZE
             Colors.setColor(Colors.TEXT_DIM)
             love.graphics.rectangle("fill", spriteX - targetSize/2, spriteY - targetSize/2, targetSize, targetSize)
         end
@@ -108,35 +110,42 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         -- Key stats with growth (moved to right side) with icons
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
         Colors.setColor(Colors.TEXT_SECONDARY)
-        
+
+        local statsX = spriteX + UIConstants.CARD_ELEMENTS_OFFSET_X
+        local statsY = spriteY - UIConstants.CARD_MAIN_SPRITE_SIZE / 2
+        local statsOffset = UIConstants.ICON_STAT_SIZE + 10
+
         -- HP with heart icon
         local hpIcon = Icons.getHP()
-        Icons.drawWithText(hpIcon, hero.baseHp .. " (+" .. hero.hpGrowth .. ")", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y, UIConstants.ICON_STAT_SIZE)
+        Icons.drawWithText(hpIcon, hero.baseHp .. " (+" .. hero.hpGrowth .. ")", statsX, statsY, UIConstants.ICON_STAT_SIZE)
         
         -- Armor with shield icon
+        local armorY = statsY + statsOffset
         local armorIcon = Icons.getArmor()
-        Icons.drawWithText(armorIcon, hero.baseArmor .. " (+" .. hero.armorGrowth .. ")", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y + UIConstants.CARD_ELEMENTS_OFFSET_Y, UIConstants.ICON_STAT_SIZE)
+        Icons.drawWithText(armorIcon, hero.baseArmor .. " (+" .. hero.armorGrowth .. ")", statsX, armorY, UIConstants.ICON_STAT_SIZE)
         
         -- Speed with shoe icon
+        local speedY = armorY + statsOffset
         local speedIcon = Icons.getSpeed()
-        Icons.drawWithText(speedIcon, hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. ")", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y + UIConstants.CARD_ELEMENTS_OFFSET_Y * 2, UIConstants.ICON_STAT_SIZE)
+        Icons.drawWithText(speedIcon, hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. ")", statsX, speedY, UIConstants.ICON_STAT_SIZE)
         
         -- Cast Speed with hourglass icon
+        local castSpeedY = speedY + statsOffset
         local castIcon = Icons.getCastSpeed()
-        Icons.drawWithText(castIcon, hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. ")", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y + UIConstants.CARD_ELEMENTS_OFFSET_Y * 3, UIConstants.ICON_STAT_SIZE)
+        Icons.drawWithText(castIcon, hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. ")", statsX, castSpeedY, UIConstants.ICON_STAT_SIZE)
         
         -- Passive ability description with icon (description section)
         if hero.innateSkill and hero.innateSkill.description then
-            local passiveY = cardY + UIConstants.CARD_DESCRIPTION_HEIGHT
-            local passiveHeight = UIConstants.CARD_DESCRIPTION_HEIGHT
-            local iconSize = UIConstants.CARD_INNATE_SPRITE_SIZE
+            local innateY = castSpeedY + UIConstants.CARD_ELEMENTS_OFFSET_Y - 60
+            local innateX = cardX + UIConstants.CARD_PADDING
             
             Colors.setColor(Colors.ZONE_PASSIVE)
-            love.graphics.rectangle("fill", cardX + UIConstants.CARD_PADDING, passiveY, cardWidth - UIConstants.CARD_PADDING * 2, passiveHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+            love.graphics.rectangle("fill", innateX, innateY, cardWidth - UIConstants.CARD_PADDING * 2, UIConstants.CARD_DESCRIPTION_HEIGHT, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
             
             -- Draw innate skill icon (properly centered in panel)
-            local iconX = cardX + UIConstants.CARD_ELEMENTS_OFFSET_X
-            local iconY = passiveY + passiveHeight / 2  -- Center vertically in panel
+            local iconX = innateX + UIConstants.CARD_PADDING + UIConstants.CARD_INNATE_SPRITE_SIZE / 2
+            local iconY = innateY + UIConstants.CARD_PADDING + UIConstants.CARD_INNATE_SPRITE_SIZE / 2
+            local iconSize = UIConstants.CARD_INNATE_SPRITE_SIZE
             local innateIcon = assets.getImage("innate_" .. hero.innateSkill.id)
             if innateIcon then
                 love.graphics.setColor(1, 1, 1, 1)  -- White for sprites
@@ -151,7 +160,9 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
             
             love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
             Colors.setColor(Colors.TEXT_ACCENT)
-            love.graphics.printf("Passive: " .. hero.innateSkill.description, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, passiveY + UIConstants.CARD_ELEMENTS_OFFSET_Y, cardWidth - UIConstants.CARD_ELEMENTS_OFFSET_X - UIConstants.CARD_PADDING, "left")
+            local descriptionX = iconX + UIConstants.CARD_PADDING + iconSize / 2
+            local descriptionY = iconY - 10
+            love.graphics.printf(hero.innateSkill.description, descriptionX, descriptionY, cardWidth - UIConstants.CARD_ELEMENTS_OFFSET_X - UIConstants.CARD_PADDING, "left")
         end
         
     end
