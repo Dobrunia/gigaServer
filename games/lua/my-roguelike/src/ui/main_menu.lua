@@ -5,6 +5,7 @@
 
 local Constants = require("src.constants")
 local Colors = require("src.ui.colors")
+local UIConstants = require("src.ui.constants")
 
 local MainMenu = {}
 MainMenu.__index = MainMenu
@@ -30,15 +31,15 @@ function MainMenu:draw(assets)
         love.graphics.draw(bg, 0, 0, 0, scaleX, scaleY)
     end
     
-    love.graphics.setFont(assets.getFont("large"))
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
     Colors.setColor(Colors.TEXT_PRIMARY)
-    love.graphics.printf("DOBLIKE ROGUELIKE", 0, 200, love.graphics.getWidth(), "center")
+    love.graphics.printf("DOBLIKE ROGUELIKE", 0, UIConstants.START_Y * 6, love.graphics.getWidth(), "center")
     
     -- Draw clickable "Start Game" button
-    local buttonWidth = 300
-    local buttonHeight = 60
+    local buttonWidth = UIConstants.MENU_BUTTON_WIDTH
+    local buttonHeight = UIConstants.MENU_BUTTON_HEIGHT
     local buttonX = (love.graphics.getWidth() - buttonWidth) / 2
-    local buttonY = 400
+    local buttonY = (love.graphics.getHeight() - buttonHeight) / 2
     
     -- Check if mouse is hovering over button
     local mx, my = love.mouse.getPosition()
@@ -51,21 +52,21 @@ function MainMenu:draw(assets)
     else
         Colors.setColor(Colors.BUTTON_DEFAULT)
     end
-    love.graphics.rectangle("fill", buttonX, buttonY, buttonWidth, buttonHeight, 10, 10)
+    love.graphics.rectangle("fill", buttonX, buttonY, buttonWidth, buttonHeight, UIConstants.BUTTON_BORDER_RADIUS, UIConstants.BUTTON_BORDER_RADIUS)
     
     -- Draw button border
     Colors.setColor(Colors.BUTTON_BORDER)
-    love.graphics.setLineWidth(2)
-    love.graphics.rectangle("line", buttonX, buttonY, buttonWidth, buttonHeight, 10, 10)
+    love.graphics.setLineWidth(UIConstants.BUTTON_BORDER_WIDTH)
+    love.graphics.rectangle("line", buttonX, buttonY, buttonWidth, buttonHeight, UIConstants.BUTTON_BORDER_RADIUS, UIConstants.BUTTON_BORDER_RADIUS)
     love.graphics.setLineWidth(1)
     
     -- Draw button text
-    love.graphics.setFont(assets.getFont("large"))
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
     Colors.setColor(Colors.TEXT_PRIMARY)
-    love.graphics.printf("START GAME", buttonX, buttonY + 15, buttonWidth, "center")
+    love.graphics.printf("START GAME", buttonX, buttonY + buttonHeight / 2 - UIConstants.FONT_LARGE / 2, buttonWidth, "center")
     
     -- Draw instruction text below
-    love.graphics.setFont(assets.getFont("small"))
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
     Colors.setColor(Colors.TEXT_DIM)
     -- love.graphics.printf("Click button or press SPACE", 0, buttonY + 80, love.graphics.getWidth(), "center")
 end
@@ -73,10 +74,10 @@ end
 -- === INPUT ===
 
 function MainMenu:isButtonHovered()
-    local buttonWidth = 300
-    local buttonHeight = 60
+    local buttonWidth = UIConstants.MENU_BUTTON_WIDTH
+    local buttonHeight = UIConstants.MENU_BUTTON_HEIGHT
     local buttonX = (love.graphics.getWidth() - buttonWidth) / 2
-    local buttonY = 400
+    local buttonY = (love.graphics.getHeight() - buttonHeight) / 2
     
     local mx, my = love.mouse.getPosition()
     return mx >= buttonX and mx <= buttonX + buttonWidth and

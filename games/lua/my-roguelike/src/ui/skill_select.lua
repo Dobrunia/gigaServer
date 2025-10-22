@@ -5,6 +5,8 @@
 
 local Constants = require("src.constants")
 local Colors = require("src.ui.colors")
+local Icons = require("src.ui.icons")
+local UIConstants = require("src.ui.constants")
 
 local SkillSelect = {}
 SkillSelect.__index = SkillSelect
@@ -31,18 +33,18 @@ function SkillSelect:draw(assets, skills, selectedIndex)
     end
     
     -- Title
-    love.graphics.setFont(assets.getFont("large"))
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
     Colors.setColor(Colors.TEXT_PRIMARY)
-    love.graphics.printf("Choose Your Starting Skill", 0, 30, love.graphics.getWidth(), "center")
+    love.graphics.printf("Choose Your Starting Skill", 0, UIConstants.START_Y, love.graphics.getWidth(), "center")
     
     -- Skill cards grid
     local screenW = love.graphics.getWidth()
     local screenH = love.graphics.getHeight()
-    local cardWidth = 500
-    local cardHeight = 280
-    local cardSpacing = 40
-    local cardsPerRow = 2
-    local startY = 100
+    local cardWidth = UIConstants.CARD_WIDTH
+    local cardHeight = UIConstants.CARD_HEIGHT
+    local cardSpacing = UIConstants.CARD_SPACING
+    local cardsPerRow = UIConstants.CARDS_PER_ROW
+    local startY = UIConstants.CARDS_START_Y
     
     -- Calculate grid positioning
     local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))
@@ -65,22 +67,22 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         else
             Colors.setColor(Colors.CARD_DEFAULT)
         end
-        love.graphics.rectangle("fill", cardX, cardY, cardWidth, cardHeight, 8, 8)
+        love.graphics.rectangle("fill", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         
         -- Card border
         Colors.setColor(Colors.BORDER_DEFAULT)
         love.graphics.setLineWidth(1)
-        love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, 8, 8)
+        love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         love.graphics.setLineWidth(1)
         
         -- Skill name
-        love.graphics.setFont(assets.getFont("large"))
+        love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
         Colors.setColor(Colors.TEXT_PRIMARY)
-        love.graphics.print(skill.name, cardX + 20, cardY + 20)
+        love.graphics.print(skill.name, cardX + UIConstants.CARD_PADDING, cardY + UIConstants.CARD_PADDING)
         
         -- Skill sprite (moved to left side)
-        local spriteX = cardX + 80
-        local spriteY = cardY + 110
+        local spriteX = cardX + UIConstants.CARD_ELEMENTS_OFFSET_X
+        local spriteY = cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y
         
         Colors.setColor(Colors.TEXT_PRIMARY)
         
@@ -93,28 +95,41 @@ function SkillSelect:draw(assets, skills, selectedIndex)
             local icon = skill.loadedSprites.icon
             local iconW, iconH = icon:getDimensions()
             -- Scale icon to fit nicely in card
-            local scale = 64 / math.max(iconW, iconH)
+            local scale = UIConstants.CARD_MAIN_SPRITE_SIZE / math.max(iconW, iconH)
             love.graphics.draw(icon, spriteX, spriteY, 0, scale, scale, iconW / 2, iconH / 2)
         end
         
-        -- Skill stats (moved to right side)
-        love.graphics.setFont(assets.getFont("default"))
+        -- Skill stats (moved to right side) with icons
+        love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
         Colors.setColor(Colors.TEXT_SECONDARY)
-        local yOffset = 70
-        love.graphics.print("Type: " .. skill.type, cardX + 200, cardY + yOffset)
-        yOffset = yOffset + 30
-        love.graphics.print("Damage: " .. skill.damage, cardX + 200, cardY + yOffset)
-        yOffset = yOffset + 30
-        love.graphics.print("Cooldown: " .. skill.cooldown .. "s", cardX + 200, cardY + yOffset)
-        yOffset = yOffset + 30
-        love.graphics.print("Range: " .. skill.range, cardX + 200, cardY + yOffset)
+        local yOffset = UIConstants.CARD_ELEMENTS_OFFSET_Y
+        
+        -- Type with melee icon (if applicable)
+        if skill.type == "melee" then
+            local meleeIcon = Icons.getSkillMelee()
+            Icons.drawWithText(meleeIcon, skill.type, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y, UIConstants.ICON_STAT_SIZE)
+        else
+            love.graphics.print("Type: " .. skill.type, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y)
+        end
+        yOffset = UIConstants.CARD_ELEMENTS_OFFSET_Y + UIConstants.CARD_ELEMENTS_OFFSET_Y
+        
+        -- Damage (no specific icon yet, keep as text)
+        love.graphics.print("Damage: " .. skill.damage, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + yOffset)
+        yOffset = yOffset + UIConstants.CARD_ELEMENTS_OFFSET_Y
+        
+        -- Cooldown (no specific icon yet, keep as text)
+        love.graphics.print("Cooldown: " .. skill.cooldown .. "s", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + yOffset)
+        yOffset = yOffset + UIConstants.CARD_ELEMENTS_OFFSET_Y
+        
+        -- Range (no specific icon yet, keep as text)
+        love.graphics.print("Range: " .. skill.range, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + yOffset)
         
         -- Description background
-        local descY = cardY + 190
-        local descHeight = 70
+        local descY = cardY + UIConstants.CARD_DESCRIPTION_HEIGHT
+        local descHeight = UIConstants.CARD_DESCRIPTION_HEIGHT
         
         Colors.setColor(Colors.ZONE_PASSIVE)
-        love.graphics.rectangle("fill", cardX + 20, descY, cardWidth - 40, descHeight, 8, 8)
+        love.graphics.rectangle("fill", cardX + UIConstants.CARD_PADDING, descY, cardWidth - UIConstants.CARD_PADDING * 2, descHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         
         -- Description text
         -- love.graphics.setFont(assets.getFont("default"))
@@ -123,8 +138,8 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         
         -- Effect display (if skill has effect)
         if skill.effect then
-            local effectY = descY + 15
-            love.graphics.setFont(assets.getFont("small"))
+            local effectY = descY + UIConstants.CARD_ELEMENTS_OFFSET_Y
+            love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
             Colors.setColor(Colors.TEXT_ACCENT)
             
             local effectText = ""
@@ -142,13 +157,13 @@ function SkillSelect:draw(assets, skills, selectedIndex)
                 effectText = "Effect: " .. skill.effect.type .. " for " .. skill.effect.duration .. "s"
             end
             
-            love.graphics.printf(effectText, cardX + 30, effectY, cardWidth - 60, "left")
+            love.graphics.printf(effectText, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, effectY, cardWidth - UIConstants.CARD_PADDING * 3, "left")
         end
         
     end
     
     -- Instructions
-    love.graphics.setFont(assets.getFont("default"))
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
     Colors.setColor(Colors.TEXT_DIM)
     -- love.graphics.printf("Click on a skill to select, then press SPACE/ENTER to start", 0, screenH - 40, screenW, "center")
 end
@@ -157,11 +172,11 @@ end
 
 function SkillSelect:handleClick(x, y, skills)
     local screenW = love.graphics.getWidth()
-    local cardWidth = 500
-    local cardHeight = 280
-    local cardSpacing = 40
-    local cardsPerRow = 2
-    local startY = 100
+    local cardWidth = UIConstants.CARD_WIDTH
+    local cardHeight = UIConstants.CARD_HEIGHT
+    local cardSpacing = UIConstants.CARD_SPACING
+    local cardsPerRow = UIConstants.CARDS_PER_ROW
+    local startY = UIConstants.CARDS_START_Y
     
     -- Calculate grid positioning
     local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))

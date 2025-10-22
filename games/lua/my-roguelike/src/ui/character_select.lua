@@ -5,6 +5,8 @@
 
 local Constants = require("src.constants")
 local Colors = require("src.ui.colors")
+local Icons = require("src.ui.icons")
+local UIConstants = require("src.ui.constants")
 
 local CharacterSelect = {}
 CharacterSelect.__index = CharacterSelect
@@ -31,18 +33,18 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
     end
     
     -- Title
-    love.graphics.setFont(assets.getFont("large"))
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
     Colors.setColor(Colors.TEXT_PRIMARY)
-    love.graphics.printf("Choose Your Hero", 0, 30, love.graphics.getWidth(), "center")
+    love.graphics.printf("Choose Your Hero", 0, UIConstants.START_Y, love.graphics.getWidth(), "center")
     
     -- Hero cards grid
     local screenW = love.graphics.getWidth()
     local screenH = love.graphics.getHeight()
-    local cardWidth = 500
-    local cardHeight = 320
-    local cardSpacing = 40
-    local cardsPerRow = 3
-    local startY = 100  -- Increased from 80 to 100 for more space below title
+    local cardWidth = UIConstants.CARD_WIDTH
+    local cardHeight = UIConstants.CARD_HEIGHT
+    local cardSpacing = UIConstants.CARD_SPACING
+    local cardsPerRow = UIConstants.CARDS_PER_ROW
+    local startY = UIConstants.CARDS_START_Y
     
     -- Calculate grid positioning
     local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))
@@ -65,22 +67,22 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         else
             Colors.setColor(Colors.CARD_DEFAULT)
         end
-        love.graphics.rectangle("fill", cardX, cardY, cardWidth, cardHeight, 8, 8)
+        love.graphics.rectangle("fill", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         
         -- Card border
         Colors.setColor(Colors.BORDER_DEFAULT)
         love.graphics.setLineWidth(1)
-        love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, 8, 8)
+        love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         love.graphics.setLineWidth(1)
         
         -- Hero name
-        love.graphics.setFont(assets.getFont("large"))
+        love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
         Colors.setColor(Colors.TEXT_PRIMARY)
-        love.graphics.print(hero.name, cardX + 20, cardY + 30)
+        love.graphics.print(hero.name, cardX + UIConstants.CARD_PADDING, cardY + UIConstants.CARD_PADDING)
         
-        -- Hero sprite (moved to left side)
-        local spriteX = cardX + 70
-        local spriteY = cardY + 130
+        -- Hero sprite
+        local spriteX = cardX + UIConstants.CARD_ELEMENTS_OFFSET_X
+        local spriteY = cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y 
         
         Colors.setColor(Colors.TEXT_PRIMARY)
         
@@ -103,25 +105,37 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
             love.graphics.rectangle("fill", spriteX - targetSize/2, spriteY - targetSize/2, targetSize, targetSize)
         end
         
-        -- Key stats with growth (moved to right side)
-        love.graphics.setFont(assets.getFont("default"))
+        -- Key stats with growth (moved to right side) with icons
+        love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
         Colors.setColor(Colors.TEXT_SECONDARY)
-        love.graphics.print("HP: " .. hero.baseHp .. " (+" .. hero.hpGrowth .. ")", cardX + 200, cardY + 70)
-        love.graphics.print("Armor: " .. hero.baseArmor .. " (+" .. hero.armorGrowth .. ")", cardX + 200, cardY + 100)
-        love.graphics.print("Speed: " .. hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. ")", cardX + 200, cardY + 130)
-        love.graphics.print("Cast: " .. hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. ")", cardX + 200, cardY + 160)
         
-        -- Passive ability description with icon
+        -- HP with heart icon
+        local hpIcon = Icons.getHP()
+        Icons.drawWithText(hpIcon, hero.baseHp .. " (+" .. hero.hpGrowth .. ")", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y, UIConstants.ICON_STAT_SIZE)
+        
+        -- Armor with shield icon
+        local armorIcon = Icons.getArmor()
+        Icons.drawWithText(armorIcon, hero.baseArmor .. " (+" .. hero.armorGrowth .. ")", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y + UIConstants.CARD_ELEMENTS_OFFSET_Y, UIConstants.ICON_STAT_SIZE)
+        
+        -- Speed with shoe icon
+        local speedIcon = Icons.getSpeed()
+        Icons.drawWithText(speedIcon, hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. ")", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y + UIConstants.CARD_ELEMENTS_OFFSET_Y * 2, UIConstants.ICON_STAT_SIZE)
+        
+        -- Cast Speed with hourglass icon
+        local castIcon = Icons.getCastSpeed()
+        Icons.drawWithText(castIcon, hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. ")", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y + UIConstants.CARD_ELEMENTS_OFFSET_Y * 3, UIConstants.ICON_STAT_SIZE)
+        
+        -- Passive ability description with icon (description section)
         if hero.innateSkill and hero.innateSkill.description then
-            local passiveY = cardY + 200
-            local passiveHeight = 70
-            local iconSize = 40  -- Reduced size to fit better in panel
+            local passiveY = cardY + UIConstants.CARD_DESCRIPTION_HEIGHT
+            local passiveHeight = UIConstants.CARD_DESCRIPTION_HEIGHT
+            local iconSize = UIConstants.CARD_INNATE_SPRITE_SIZE
             
             Colors.setColor(Colors.ZONE_PASSIVE)
-            love.graphics.rectangle("fill", cardX + 20, passiveY, cardWidth - 40, passiveHeight, 8, 8)
+            love.graphics.rectangle("fill", cardX + UIConstants.CARD_PADDING, passiveY, cardWidth - UIConstants.CARD_PADDING * 2, passiveHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
             
             -- Draw innate skill icon (properly centered in panel)
-            local iconX = cardX + 50
+            local iconX = cardX + UIConstants.CARD_ELEMENTS_OFFSET_X
             local iconY = passiveY + passiveHeight / 2  -- Center vertically in panel
             local innateIcon = assets.getImage("innate_" .. hero.innateSkill.id)
             if innateIcon then
@@ -135,15 +149,15 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
                 love.graphics.rectangle("fill", iconX - iconSize/2, iconY - iconSize/2, iconSize, iconSize)
             end
             
-            love.graphics.setFont(assets.getFont("default"))
+            love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
             Colors.setColor(Colors.TEXT_ACCENT)
-            love.graphics.printf("Passive: " .. hero.innateSkill.description, cardX + 100, passiveY + 15, cardWidth - 120, "left")
+            love.graphics.printf("Passive: " .. hero.innateSkill.description, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, passiveY + UIConstants.CARD_ELEMENTS_OFFSET_Y, cardWidth - UIConstants.CARD_ELEMENTS_OFFSET_X - UIConstants.CARD_PADDING, "left")
         end
         
     end
     
     -- Instructions
-    love.graphics.setFont(assets.getFont("default"))
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
     Colors.setColor(Colors.TEXT_DIM)
     -- love.graphics.printf("Click on a hero to select, then press SPACE/ENTER to continue", 0, screenH - 40, screenW, "center")
 end
@@ -152,11 +166,11 @@ end
 
 function CharacterSelect:handleClick(x, y, heroes)
     local screenW = love.graphics.getWidth()
-    local cardWidth = 500
-    local cardHeight = 320
-    local cardSpacing = 40
-    local cardsPerRow = 3
-    local startY = 100
+    local cardWidth = UIConstants.CARD_WIDTH
+    local cardHeight = UIConstants.CARD_HEIGHT
+    local cardSpacing = UIConstants.CARD_SPACING
+    local cardsPerRow = UIConstants.CARDS_PER_ROW
+    local startY = UIConstants.CARDS_START_Y
     
     -- Calculate grid positioning
     local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))

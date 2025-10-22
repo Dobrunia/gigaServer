@@ -60,24 +60,6 @@ Constants.MAX_ACTIVE_SKILLS = 4             -- Default max skill slots (can be m
 -- === BOSS ===
 Constants.BOSS_SPAWN_INTERVAL = 600.0       -- Boss every 10 minutes
 
--- === UI ===
-Constants.HUD_HEIGHT = 120
-Constants.HUD_PADDING = 10
-Constants.SKILL_ICON_SIZE = 64  -- Square skill slots (Dota-style)
-Constants.MENU_BUTTON_WIDTH = 200
-Constants.MENU_BUTTON_HEIGHT = 60
-Constants.CHAR_CARD_WIDTH = 600
-Constants.CHAR_CARD_HEIGHT = 200
-
--- === MINIMAP ===
-Constants.MINIMAP_SIZE = 200                    -- Square minimap size
-Constants.MINIMAP_PADDING = 10                 -- Distance from screen edge
-Constants.MINIMAP_BORDER_WIDTH = 2             -- Border thickness
-Constants.MINIMAP_PLAYER_SIZE = 4              -- Player dot size
-Constants.MINIMAP_MOB_SIZE = 2                 -- Mob dot size
-Constants.MINIMAP_PROJECTILE_SIZE = 1          -- Projectile dot size
-Constants.MINIMAP_BACKGROUND_ALPHA = 0.7       -- Background transparency
-
 -- === RENDERING ===
 Constants.SPRITE_BATCH_SIZE = 1000          -- Max sprites per batch
 Constants.DEBUG_DRAW_HITBOXES = false        -- Toggle hitbox rendering
