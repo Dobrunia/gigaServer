@@ -80,7 +80,8 @@ Constants.MINIMAP_BACKGROUND_ALPHA = 0.7       -- Background transparency
 
 -- === RENDERING ===
 Constants.SPRITE_BATCH_SIZE = 1000          -- Max sprites per batch
-Constants.DEBUG_DRAW_HITBOXES = true        -- Toggle hitbox rendering
+Constants.DEBUG_DRAW_HITBOXES = false        -- Toggle hitbox rendering
+Constants.DEBUG_DRAW_DIRECTION_ARROW = false -- Toggle direction arrow rendering
 
 -- === INPUT ===
 Constants.GAMEPAD_DEADZONE = 0.25           -- Joystick deadzone

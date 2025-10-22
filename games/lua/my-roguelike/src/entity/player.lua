@@ -357,6 +357,8 @@ function Player:draw()
 end
 
 function Player:drawDirectionArrow()
+    if not Constants.DEBUG_DRAW_DIRECTION_ARROW then return end
+    
     local arrowLength = self.radius + 8
     local arrowX = self.x + math.cos(self.directionArrow) * arrowLength
     local arrowY = self.y + math.sin(self.directionArrow) * arrowLength
