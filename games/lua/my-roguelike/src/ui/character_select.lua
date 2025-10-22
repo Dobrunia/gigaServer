@@ -1,9 +1,7 @@
 -- ui/character_select.lua
 -- Character selection UI
 -- Public API: CharacterSelect.new(), characterSelect:draw(assets, heroes, selectedIndex), characterSelect:handleClick(x, y, heroes)
--- Dependencies: constants.lua, colors.lua
 
-local Constants = require("src.constants")
 local Colors = require("src.ui.colors")
 local Icons = require("src.ui.icons")
 local UIConstants = require("src.ui.constants")

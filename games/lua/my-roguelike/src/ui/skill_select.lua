@@ -1,9 +1,7 @@
 -- ui/skill_select.lua
 -- Starting skill selection UI
 -- Public API: SkillSelect.new(), skillSelect:draw(assets, skills, selectedIndex), skillSelect:handleClick(x, y, skills)
--- Dependencies: constants.lua, colors.lua
 
-local Constants = require("src.constants")
 local Colors = require("src.ui.colors")
 local Icons = require("src.ui.icons")
 local UIConstants = require("src.ui.constants")
@@ -78,11 +76,13 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         -- Skill name
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
         Colors.setColor(Colors.TEXT_PRIMARY)
-        love.graphics.print(skill.name, cardX + UIConstants.CARD_PADDING, cardY + UIConstants.CARD_PADDING)
+        local nameX = cardX + UIConstants.CARD_PADDING
+        local nameY = cardY + UIConstants.CARD_PADDING
+        love.graphics.print(skill.name, nameX, nameY)
         
         -- Skill sprite (moved to left side)
-        local spriteX = cardX + UIConstants.CARD_ELEMENTS_OFFSET_X
-        local spriteY = cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y
+        local spriteX = nameX + UIConstants.CARD_PADDING + UIConstants.CARD_MAIN_SPRITE_SIZE / 2
+        local spriteY = nameY + UIConstants.CARD_ELEMENTS_OFFSET_Y
         
         Colors.setColor(Colors.TEXT_PRIMARY)
         
@@ -102,43 +102,43 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         -- Skill stats (moved to right side) with icons
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
         Colors.setColor(Colors.TEXT_SECONDARY)
-        local yOffset = UIConstants.CARD_ELEMENTS_OFFSET_Y
+        
+        local statsX = spriteX + UIConstants.CARD_ELEMENTS_OFFSET_X
+        local statsY = spriteY - UIConstants.CARD_MAIN_SPRITE_SIZE / 2
+        local statsOffset = UIConstants.ICON_STAT_SIZE + 10
         
         -- Type with melee icon (if applicable)
         if skill.type == "melee" then
             local meleeIcon = Icons.getSkillMelee()
-            Icons.drawWithText(meleeIcon, skill.type, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y, UIConstants.ICON_STAT_SIZE)
+            Icons.drawWithText(meleeIcon, skill.type, statsX, statsY, UIConstants.ICON_STAT_SIZE)
         else
-            love.graphics.print("Type: " .. skill.type, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + UIConstants.CARD_ELEMENTS_OFFSET_Y)
+            love.graphics.print("Type: " .. skill.type, statsX, statsY)
         end
-        yOffset = UIConstants.CARD_ELEMENTS_OFFSET_Y + UIConstants.CARD_ELEMENTS_OFFSET_Y
         
         -- Damage (no specific icon yet, keep as text)
-        love.graphics.print("Damage: " .. skill.damage, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + yOffset)
-        yOffset = yOffset + UIConstants.CARD_ELEMENTS_OFFSET_Y
+        local damageY = statsY + statsOffset
+        love.graphics.print("Damage: " .. skill.damage, statsX, damageY)
         
         -- Cooldown (no specific icon yet, keep as text)
-        love.graphics.print("Cooldown: " .. skill.cooldown .. "s", cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + yOffset)
-        yOffset = yOffset + UIConstants.CARD_ELEMENTS_OFFSET_Y
+        local cooldownY = damageY + statsOffset
+        love.graphics.print("Cooldown: " .. skill.cooldown .. "s", statsX, cooldownY)
         
         -- Range (no specific icon yet, keep as text)
-        love.graphics.print("Range: " .. skill.range, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, cardY + yOffset)
+        local rangeY = cooldownY + statsOffset
+        love.graphics.print("Range: " .. skill.range, statsX, rangeY)
         
         -- Description background
-        local descY = cardY + UIConstants.CARD_DESCRIPTION_HEIGHT
+        local descY = rangeY + UIConstants.CARD_ELEMENTS_OFFSET_Y - 60
+        local descX = cardX + UIConstants.CARD_PADDING
         local descHeight = UIConstants.CARD_DESCRIPTION_HEIGHT
         
         Colors.setColor(Colors.ZONE_PASSIVE)
-        love.graphics.rectangle("fill", cardX + UIConstants.CARD_PADDING, descY, cardWidth - UIConstants.CARD_PADDING * 2, descHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
-        
-        -- Description text
-        -- love.graphics.setFont(assets.getFont("default"))
-        -- Colors.setColor(Colors.TEXT_ACCENT)
-        -- love.graphics.printf(skill.description, cardX + 30, descY + 15, cardWidth - 60, "left")
+        love.graphics.rectangle("fill", descX, descY, cardWidth - UIConstants.CARD_PADDING * 2, descHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         
         -- Effect display (if skill has effect)
         if skill.effect then
-            local effectY = descY + UIConstants.CARD_ELEMENTS_OFFSET_Y
+            local effectX = descX + UIConstants.CARD_PADDING
+            local effectY = descY + UIConstants.CARD_PADDING
             love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
             Colors.setColor(Colors.TEXT_ACCENT)
             
@@ -157,7 +157,7 @@ function SkillSelect:draw(assets, skills, selectedIndex)
                 effectText = "Effect: " .. skill.effect.type .. " for " .. skill.effect.duration .. "s"
             end
             
-            love.graphics.printf(effectText, cardX + UIConstants.CARD_ELEMENTS_OFFSET_X, effectY, cardWidth - UIConstants.CARD_PADDING * 3, "left")
+            love.graphics.printf(effectText, effectX, effectY, cardWidth - UIConstants.CARD_ELEMENTS_OFFSET_X - UIConstants.CARD_PADDING, "left")
         end
         
     end

@@ -46,12 +46,14 @@ function Icons.drawWithText(icon, text, x, y, size)
     local iconW, iconH = icon:getDimensions()
     local scale = size / math.max(iconW, iconH)
     
+    -- Draw icon centered at x, y
     love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(icon, x, y, 0, scale, scale, iconW/2, iconH/2)
+    love.graphics.draw(icon, x, y, 0, scale, scale, iconW/2, iconH/4)
     
     if text then
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.print(text, x + size/2 + 4, y - 4)
+        -- Position text to the right of icon, vertically centered
+        love.graphics.print(text, x + size/2 + 4, y - size/4)
     end
 end
 
