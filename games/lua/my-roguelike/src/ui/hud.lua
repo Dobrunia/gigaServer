@@ -56,13 +56,13 @@ function HUD:drawStats(player, assets)
     Colors.setColor(Colors.TEXT_ACCENT)
     love.graphics.print("Level: " .. stats.level, x, y)
     Colors.setColor(Colors.TEXT_PRIMARY)
-    y = y + lineHeight
+    local levelY = y + lineHeight
     
     -- HP bar with heart icon
     local hpIcon = Icons.getHP()
-    Icons.drawWithText(hpIcon, nil, x, y, UIConstants.ICON_STAT_SIZE)
+    Icons.drawWithText(hpIcon, nil, x, levelY, UIConstants.ICON_STAT_SIZE)
     local barX = x + UIConstants.CARD_ELEMENTS_OFFSET_X
-    local barY = y
+    local barY = levelY
     local barWidth = UIConstants.CARD_DESCRIPTION_WIDTH
     local barHeight = UIConstants.HUD_ELEMENTS_OFFSET_Y
     
@@ -81,49 +81,51 @@ function HUD:drawStats(player, assets)
     love.graphics.print(" + " .. Utils.round(stats.hpGrowth, 0), barX + barWidth + UIConstants.CARD_ELEMENTS_OFFSET_X + UIConstants.CARD_ELEMENTS_OFFSET_X, barY)
     Colors.setColor(Colors.TEXT_PRIMARY)
     
-    y = y + lineHeight
+    local xpY = levelY + lineHeight
     
     -- XP bar (no icon for XP yet)
-    love.graphics.print("XP:", x, y)
-    barY = y
+    love.graphics.print("XP:", x, xpY)
+    local xpBarY = xpY
     
     -- XP bar background
     Colors.setColor(Colors.BAR_BACKGROUND)
-    love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
+    love.graphics.rectangle("fill", barX, xpBarY, barWidth, barHeight)
     
     -- XP bar fill
     local xpPercent = stats.xp / stats.xpToNext
     Colors.setColor(Colors.BAR_XP)
-    love.graphics.rectangle("fill", barX, barY, barWidth * xpPercent, barHeight)
+    love.graphics.rectangle("fill", barX, xpBarY, barWidth * xpPercent, barHeight)
     
     -- XP text
     Colors.setColor(Colors.TEXT_PRIMARY)
-    love.graphics.print(math.floor(stats.xp) .. "/" .. math.floor(stats.xpToNext), barX + barWidth + UIConstants.CARD_ELEMENTS_OFFSET_X, barY)
+    love.graphics.print(math.floor(stats.xp) .. "/" .. math.floor(stats.xpToNext), barX + barWidth + UIConstants.CARD_ELEMENTS_OFFSET_X, xpBarY)
     
-    y = y + lineHeight
+    local armorY = xpY + lineHeight
     
     -- Other stats (current + next level bonus) with icons
     -- Armor: current + growth (growth in accent color)
     local armorIcon = Icons.getArmor()
-    Icons.drawWithText(armorIcon, nil, x, y, UIConstants.ICON_STAT_SIZE)
+    Icons.drawWithText(armorIcon, nil, x, armorY, UIConstants.ICON_STAT_SIZE)
     Colors.setColor(Colors.TEXT_ACCENT)
-    love.graphics.print(Utils.round(stats.armor, 1) .. " + " .. Utils.round(stats.armorGrowth, 1), x + UIConstants.CARD_ELEMENTS_OFFSET_X, y)
+    love.graphics.print(Utils.round(stats.armor, 1) .. " + " .. Utils.round(stats.armorGrowth, 1), x + UIConstants.CARD_ELEMENTS_OFFSET_X, armorY)
     Colors.setColor(Colors.TEXT_PRIMARY)
-    y = y + lineHeight
+
+    local speedY = armorY + lineHeight
 
     -- Speed: current + growth (growth in accent color)
     local speedIcon = Icons.getSpeed()
-    Icons.drawWithText(speedIcon, nil, x, y, UIConstants.ICON_STAT_SIZE)
+    Icons.drawWithText(speedIcon, nil, x, speedY, UIConstants.ICON_STAT_SIZE)
     Colors.setColor(Colors.TEXT_ACCENT)
-    love.graphics.print(Utils.round(stats.speed, 0) .. " + " .. Utils.round(stats.speedGrowth, 0), x + UIConstants.CARD_ELEMENTS_OFFSET_X, y)
+    love.graphics.print(Utils.round(stats.speed, 0) .. " + " .. Utils.round(stats.speedGrowth, 0), x + UIConstants.CARD_ELEMENTS_OFFSET_X, speedY)
     Colors.setColor(Colors.TEXT_PRIMARY)
-    y = y + lineHeight
+
+    local castSpeedY = speedY + lineHeight
 
     -- Cast Speed: current + growth (growth in accent color)
     local castIcon = Icons.getCastSpeed()
-    Icons.drawWithText(castIcon, nil, x, y, UIConstants.ICON_STAT_SIZE)
+    Icons.drawWithText(castIcon, nil, x, castSpeedY, UIConstants.ICON_STAT_SIZE)
     Colors.setColor(Colors.TEXT_ACCENT)
-    love.graphics.print(Utils.round(stats.castSpeed, 2) .. "x + " .. Utils.round(stats.castSpeedGrowth, 2) .. "x", x + UIConstants.CARD_ELEMENTS_OFFSET_X, y)
+    love.graphics.print(Utils.round(stats.castSpeed, 2) .. "x + " .. Utils.round(stats.castSpeedGrowth, 2) .. "x", x + UIConstants.CARD_ELEMENTS_OFFSET_X, castSpeedY)
     Colors.setColor(Colors.TEXT_PRIMARY)
 end
 
@@ -180,40 +182,32 @@ function HUD:drawSkills(player, assets)
                 Colors.setColor(Colors.OVERLAY_COOLDOWN)
                 love.graphics.rectangle("fill", x, y, skillSize, skillSize)
                 
-                -- Circular cooldown indicator
-                local centerX = x + skillSize / 2
-                local centerY = y + skillSize / 2
-                local radius = skillSize / 2 - UIConstants.SKILL_COOLDOWN_RADIUS_OFFSET
+                -- -- Circular cooldown indicator
+                -- local centerX = x + skillSize / 2
+                -- local centerY = y + skillSize / 2
+                -- local radius = skillSize / 2 - UIConstants.SKILL_COOLDOWN_RADIUS_OFFSET
                 
-                -- Draw cooldown circle
-                love.graphics.setColor(0.2, 0.2, 0.2, 0.8)  -- Dark circle
-                love.graphics.circle("fill", centerX, centerY, radius)
-                
-                -- Draw progress arc
-                love.graphics.setColor(0.8, 0.8, 0.8, 1)  -- Light gray progress
-                love.graphics.setLineWidth(UIConstants.CARD_ELEMENTS_OFFSET_X)
-                local startAngle = -math.pi / 2  -- Start from top
-                local endAngle = startAngle + (1 - cooldownPercent) * 2 * math.pi
-                love.graphics.arc("line", centerX, centerY, radius - UIConstants.SKILL_COOLDOWN_RADIUS_OFFSET, startAngle, endAngle)
-                love.graphics.setLineWidth(1)
+                -- -- Draw cooldown circle (only darkening, no progress arc)
+                -- love.graphics.setColor(0.2, 0.2, 0.2, 0.8)  -- Dark circle
+                -- love.graphics.circle("fill", centerX, centerY, radius)
                 
                 -- Cooldown text
                 love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
-                Colors.setColor(Colors.TEXT_PRIMARY)
+                love.graphics.setColor(1, 1, 1, 1)  -- White text, no background
                 local timeText = string.format("%.1f", skill.cooldownTimer)
-                love.graphics.printf(timeText, x, y + skillSize/2 - UIConstants.CARD_ELEMENTS_OFFSET_Y, skillSize, "center")
+                love.graphics.printf(timeText, x, y + skillSize/2 - 8, skillSize, "center")
             end
             
             -- Skill level indicator (small number in corner)
             if skill.level and skill.level > 1 then
                 love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
                 Colors.setColor(Colors.TEXT_ACCENT)
-                love.graphics.print(skill.level, x + skillSize - UIConstants.CARD_ELEMENTS_OFFSET_X, y + UIConstants.CARD_ELEMENTS_OFFSET_Y)
+                love.graphics.print(skill.level, x + skillSize - 8, y + 2)
             end
         else
             -- Empty slot - draw black square
             Colors.setColor(Colors.OVERLAY_EMPTY)
-            love.graphics.rectangle("fill", x + UIConstants.CARD_ELEMENTS_OFFSET_X, y + UIConstants.CARD_ELEMENTS_OFFSET_Y, skillSize - UIConstants.CARD_ELEMENTS_OFFSET_X * 2, skillSize - UIConstants.CARD_ELEMENTS_OFFSET_Y * 2)
+            love.graphics.rectangle("fill", x + 4, y + 4, skillSize - 8, skillSize - 8)
         end
     end
 end
