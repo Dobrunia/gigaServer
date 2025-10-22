@@ -59,12 +59,8 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         local mx, my = love.mouse.getPosition()
         local isHovered = mx >= cardX and mx <= cardX + cardWidth and
                          my >= cardY and my <= cardY + cardHeight
-        local isSelected = (i == selectedIndex)
-        
         -- Card background
-        if isSelected then
-            Colors.setColor(Colors.CARD_SELECTED)
-        elseif isHovered then
+        if isHovered then
             Colors.setColor(Colors.CARD_HOVER)
         else
             Colors.setColor(Colors.CARD_DEFAULT)
@@ -72,13 +68,8 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         love.graphics.rectangle("fill", cardX, cardY, cardWidth, cardHeight, 8, 8)
         
         -- Card border
-        if isSelected then
-            Colors.setColor(Colors.BORDER_SELECTED)
-            love.graphics.setLineWidth(3)
-        else
-            Colors.setColor(Colors.BORDER_DEFAULT)
-            love.graphics.setLineWidth(1)
-        end
+        Colors.setColor(Colors.BORDER_DEFAULT)
+        love.graphics.setLineWidth(1)
         love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, 8, 8)
         love.graphics.setLineWidth(1)
         
@@ -149,12 +140,6 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
             love.graphics.printf("Passive: " .. hero.innateSkill.description, cardX + 100, passiveY + 15, cardWidth - 120, "left")
         end
         
-        -- Selection indicator
-        if isSelected then
-            Colors.setColor(Colors.ACCENT)
-            love.graphics.setFont(assets.getFont("small"))
-            love.graphics.printf("SELECTED", cardX, cardY + cardHeight - 20, cardWidth, "center")
-        end
     end
     
     -- Instructions
