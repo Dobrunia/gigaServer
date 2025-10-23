@@ -45,6 +45,7 @@
 --   damage = number                     -- Damage per tick (base: 7.5, mult: 0.3x)
 --   radius = number                     -- Aura radius (base: 100)
 --   tickRate = number                   -- Damage application frequency (base: 1.0)
+--   REQUIRES: i.png (UI icon) + aura.png (visual effect around player)
 --
 -- TYPE: "laser" (continuous beam attack to single target)
 --   cooldown = number                   -- Skill cooldown in seconds (base: 2.4, mult: 1.2x)

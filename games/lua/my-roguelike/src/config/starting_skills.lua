@@ -17,6 +17,7 @@
 --   i.png - icon for UI/menu (any size, auto-scaled)
 --   h.png - hit effect (optional, any size, auto-scaled)
 --   1.png, 2.png, 3.png... - flight animation frames (any size, auto-scaled)
+--   aura.png - aura visual effect around player (for aura skills only)
 --   NOTE: All sprites should be oriented FACING RIGHT
 --
 -- TYPE: "projectile" (ranged attack that travels to target)
@@ -52,6 +53,7 @@
 --   damage = number                     -- Damage per tick (base: 7.5, mult: 0.3x)
 --   radius = number                     -- Aura radius (base: 100)
 --   tickRate = number                   -- Damage application frequency (base: 1.0)
+--   REQUIRES: i.png (UI icon) + aura.png (visual effect around player)
 --
 -- TYPE: "laser" (continuous beam attack to single target)
 --   cooldown = number                   -- Skill cooldown in seconds (base: 2.4, mult: 1.2x)
@@ -87,6 +89,17 @@ local startingSkills = {
     -- BUFF SKILL
     -- SUMMON SKILL
     -- AURA SKILL
+    {
+        id = "satan-aura",
+        name = "Satan Aura",
+        description = "Creates a satan aura around the player that deals damage over time",
+        assetFolder = "skills/satan-aura",
+        type = "aura",
+        cooldown = 14,
+        damage = 5,
+        radius = 400,
+        tickRate = 1,
+    },
     -- LASER SKILL
 }
 
