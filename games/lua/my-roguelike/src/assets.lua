@@ -69,6 +69,15 @@ local function generateQuads(image, tileSize, tilesPerRow)
     return quads
 end
 
+-- === PIXEL PERFECT SETUP ===
+
+-- Set nearest filtering for pixel-perfect rendering
+local function setNearestFilter(image)
+    if image and image.setFilter then
+        image:setFilter("nearest", "nearest")
+    end
+end
+
 -- === LOADING ===
 
 function Assets.load()
@@ -85,6 +94,7 @@ function Assets.load()
     -- Load tiles spritesheet (for map/environment)
     local tilesSuccess, tilesImage = pcall(love.graphics.newImage, "assets/tiles.png")
     if tilesSuccess then
+        setNearestFilter(tilesImage)
         Assets.spritesheets.tiles = tilesImage
         Assets.quads.tiles = generateQuads(tilesImage)
         Utils.log("Loaded tiles spritesheet (" .. #Assets.quads.tiles .. " tiles)")
@@ -96,6 +106,7 @@ function Assets.load()
     -- Load rogues/heroes spritesheet
     local roguesSuccess, roguesImage = pcall(love.graphics.newImage, "assets/rogues.png")
     if roguesSuccess then
+        setNearestFilter(roguesImage)
         Assets.spritesheets.rogues = roguesImage
         Assets.quads.rogues = generateQuads(roguesImage)
         Utils.log("Loaded rogues spritesheet (" .. #Assets.quads.rogues .. " sprites)")
@@ -108,6 +119,7 @@ function Assets.load()
     -- Load monsters spritesheet
     local monstersSuccess, monstersImage = pcall(love.graphics.newImage, "assets/monsters.png")
     if monstersSuccess then
+        setNearestFilter(monstersImage)
         Assets.spritesheets.monsters = monstersImage
         Assets.quads.monsters = generateQuads(monstersImage)
         Utils.log("Loaded monsters spritesheet (" .. #Assets.quads.monsters .. " sprites)")
@@ -190,6 +202,7 @@ function Assets.load()
     -- Load items spritesheet for XP drops, potions, etc
     local itemsSuccess, itemsImage = pcall(love.graphics.newImage, "assets/items.png")
     if itemsSuccess then
+        setNearestFilter(itemsImage)
         Assets.spritesheets.items = itemsImage
         local imgW, imgH = itemsImage:getDimensions()
         local cols = math.floor(imgW / 32)
@@ -228,6 +241,7 @@ function Assets.load()
     -- flame_on_ground.png is a horizontal animation strip
     local burningSuccess, burningImage = pcall(love.graphics.newImage, "assets/flame_on_ground.png")
     if burningSuccess then
+        setNearestFilter(burningImage)
         Assets.images.statusBurning = burningImage
         local imgW, imgH = burningImage:getDimensions()
         -- Assuming square frames: width of one frame = height of image
@@ -258,6 +272,7 @@ function Assets.load()
         local iconPath = "assets/innateSkills/".. skillId .. "/" .. skillId .. ".png"
         local iconSuccess, iconImage = pcall(love.graphics.newImage, iconPath)
         if iconSuccess then
+            setNearestFilter(iconImage)
             Assets.images["innate_" .. skillId] = iconImage
             Utils.log("Loaded innate skill icon: " .. skillId)
         else
@@ -320,6 +335,7 @@ end
 function Assets.loadImage(name, path)
     local success, img = pcall(love.graphics.newImage, path)
     if success then
+        setNearestFilter(img)
         Assets.images[name] = img
         Utils.log("Loaded image: " .. name)
         return true
@@ -360,6 +376,7 @@ function Assets.loadFolderSprites(folderPath)
     local iconPath = folderPath .. "/i.png"
     local iconSuccess, iconImg = pcall(love.graphics.newImage, iconPath)
     if iconSuccess then
+        setNearestFilter(iconImg)
         sprites.icon = iconImg
         Utils.log("Loaded icon: " .. iconPath)
     else
@@ -372,6 +389,7 @@ function Assets.loadFolderSprites(folderPath)
     local hitPath = folderPath .. "/h.png"
     local hitSuccess, hitImg = pcall(love.graphics.newImage, hitPath)
     if hitSuccess then
+        setNearestFilter(hitImg)
         sprites.hit = hitImg
         Utils.log("Loaded hit sprite: " .. hitPath)
     end
@@ -382,6 +400,7 @@ function Assets.loadFolderSprites(folderPath)
         local framePath = folderPath .. "/" .. frameIndex .. ".png"
         local frameSuccess, frameImg = pcall(love.graphics.newImage, framePath)
         if frameSuccess then
+            setNearestFilter(frameImg)
             table.insert(sprites.flight, frameImg)
             frameIndex = frameIndex + 1
         else
@@ -420,6 +439,7 @@ function Assets.loadHeroSprites(folderPath)
     local idlePath = folderPath .. "/i.png"
     local idleSuccess, idleImg = pcall(love.graphics.newImage, idlePath)
     if idleSuccess then
+        setNearestFilter(idleImg)
         sprites.idle = idleImg
         Utils.log("Loaded hero idle sprite: " .. idlePath)
     else
@@ -434,6 +454,7 @@ function Assets.loadHeroSprites(folderPath)
         local framePath = folderPath .. "/" .. frameIndex .. ".png"
         local frameSuccess, frameImg = pcall(love.graphics.newImage, framePath)
         if frameSuccess then
+            setNearestFilter(frameImg)
             table.insert(sprites.idleFrames, frameImg)
             frameIndex = frameIndex + 1
         else
@@ -455,6 +476,7 @@ function Assets.loadHeroSprites(folderPath)
     local attackPath = folderPath .. "/a.png"
     local attackSuccess, attackImg = pcall(love.graphics.newImage, attackPath)
     if attackSuccess then
+        setNearestFilter(attackImg)
         sprites.attack = attackImg
         Utils.log("Loaded hero attack sprite: " .. attackPath)
     else
@@ -480,6 +502,7 @@ function Assets.loadMobSprites(folderPath)
     local idlePath = folderPath .. "/i.png"
     local idleSuccess, idleImg = pcall(love.graphics.newImage, idlePath)
     if idleSuccess then
+        setNearestFilter(idleImg)
         sprites.idle = idleImg
         Utils.log("Loaded mob idle sprite: " .. idlePath)
     else
@@ -494,6 +517,7 @@ function Assets.loadMobSprites(folderPath)
         local framePath = folderPath .. "/" .. frameIndex .. ".png"
         local frameSuccess, frameImg = pcall(love.graphics.newImage, framePath)
         if frameSuccess then
+            setNearestFilter(frameImg)
             table.insert(sprites.idleFrames, frameImg)
             frameIndex = frameIndex + 1
         else
@@ -515,6 +539,7 @@ function Assets.loadMobSprites(folderPath)
     local attackPath = folderPath .. "/a.png"
     local attackSuccess, attackImg = pcall(love.graphics.newImage, attackPath)
     if attackSuccess then
+        setNearestFilter(attackImg)
         sprites.attack = attackImg
         Utils.log("Loaded mob attack sprite: " .. attackPath)
     else
