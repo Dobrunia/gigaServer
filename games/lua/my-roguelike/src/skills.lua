@@ -55,6 +55,14 @@ function Skills:update(dt, player, targets, projectilePool, spatialHash, project
                     local dx, dy = Utils.directionTo(player.x, player.y, nearest.x, nearest.y)
                     -- Update arrow to show attack direction
                     player.directionArrow = math.atan2(dy, dx)
+                    
+                    -- Update facing direction for auto-attack (like mob does)
+                    if dx < 0 then
+                        player.facingDirection = -1  -- Face left
+                    elseif dx > 0 then
+                        player.facingDirection = 1   -- Face right
+                    end
+                    
                     -- print("[SKILLS] Casting", skill.name, "at target", nearest.x, nearest.y)
                     self:castSkill(player, skill, targets, projectilePool, spatialHash, projectiles, dx, dy)
                     -- print("[SKILLS] Auto-attacking nearest target at distance:", math.sqrt((nearest.x - player.x)^2 + (nearest.y - player.y)^2))

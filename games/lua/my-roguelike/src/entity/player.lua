@@ -57,6 +57,9 @@ function Player.new(x, y, heroData)
     self.autoAttackTimer = 0
     self.manualAimMode = false
     self.aimDirection = {x = 1, y = 0}
+    
+    -- Direction for sprite flipping (1 = right, -1 = left)
+    self.facingDirection = 1
 
     -- Visual (override base entity defaults with config values)
     self.radius = self.configHitboxRadius
@@ -123,11 +126,12 @@ function Player:update(dt)
         self:updateHeroAnimation(dt)
     end
 
-    -- Continuous attack animation check (for repeated attacks while aiming)
-    if self.heroSprites and self.manualAimMode and (self.aimDirection.x ~= 0 or self.aimDirection.y ~= 0) then
-        -- Allow restart attack animation if previous one finished or is almost finished
-        if not self.isAttacking or self.attackTimer >= self.attackDuration * 0.8 then
-            self:startAttackAnimation()
+    -- Update facing direction when aiming (like mob does)
+    if self.manualAimMode and (self.aimDirection.x ~= 0 or self.aimDirection.y ~= 0) then
+        if self.aimDirection.x < 0 then
+            self.facingDirection = -1  -- Face left
+        elseif self.aimDirection.x > 0 then
+            self.facingDirection = 1   -- Face right
         end
     end
 end
@@ -138,6 +142,15 @@ function Player:setMovementInput(dx, dy, dt)
     if dx ~= 0 or dy ~= 0 then
         self:move(dx, dy, dt)
         -- Don't update directionArrow here - it should show attack direction, not movement
+        
+        -- Update facing direction for movement (only if not aiming)
+        if not self.manualAimMode then
+            if dx < 0 then
+                self.facingDirection = -1  -- Face left
+            elseif dx > 0 then
+                self.facingDirection = 1   -- Face right
+            end
+        end
         
         -- Start walking animation when moving (only if not attacking)
         if not self.isAttacking then
@@ -159,9 +172,11 @@ function Player:setAimDirection(dx, dy)
         self.aimDirection.y = dy / len
         self.directionArrow = math.atan2(dy, dx)
         
-        -- Start attack animation when aiming (initial trigger)
-        if not self.isAttacking then
-            self:startAttackAnimation()
+        -- Update facing direction when aiming (like mob does)
+        if dx < 0 then
+            self.facingDirection = -1  -- Face left
+        elseif dx > 0 then
+            self.facingDirection = 1   -- Face right
         end
     else
         -- When not aiming, ensure we're not stuck in attack state
@@ -187,7 +202,17 @@ end
 function Player:castSkill(skill, targetX, targetY)
     if not self:canCastSkill(skill) then return false end
 
-    -- Start attack animation when casting skill
+    -- Update facing direction before attacking (like mob does)
+    if targetX and targetY then
+        local dx = targetX - self.x
+        if dx < 0 then
+            self.facingDirection = -1  -- Face left
+        elseif dx > 0 then
+            self.facingDirection = 1   -- Face right
+        end
+    end
+
+    -- Start attack animation when casting skill (only when projectile is actually fired)
     self:startAttackAnimation()
 
     -- Calculate effective cooldown (affected by cast speed)
@@ -312,8 +337,8 @@ function Player:draw()
             local targetSize = self.configSpriteSize or Constants.PLAYER_DEFAULT_SPRITE_SIZE
             local scale = targetSize / math.max(spriteW, spriteH)
 
-            -- Flip horizontally if facing left (dx < 0)
-            local flipX = (self.dx and self.dx < 0) and -1 or 1
+            -- Flip horizontally based on facing direction (like mob does)
+            local flipX = self.facingDirection
             local flipY = 1
 
             love.graphics.draw(
