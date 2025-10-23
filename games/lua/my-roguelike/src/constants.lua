@@ -57,12 +57,41 @@ Constants.XP_DROP_LIFETIME = 30.0           -- Disappears after 30 seconds
 Constants.SKILL_CHOICE_COUNT = 3            -- Number of skills to choose from on level up
 Constants.MAX_ACTIVE_SKILLS = 4             -- Default max skill slots (can be modified by innate)
 
+-- === SKILL BASE STATS (BALANCE REFERENCE) ===
+-- These are baseline values for skill balance calculations
+Constants.SKILL_BASE_COOLDOWN = 2.0         -- Baseline cooldown (seconds)
+Constants.SKILL_BASE_DAMAGE = 25            -- Baseline damage
+Constants.SKILL_BASE_RANGE = 300           -- Baseline range (pixels)
+Constants.SKILL_BASE_PROJECTILE_SPEED = 250 -- Baseline projectile speed
+Constants.SKILL_BASE_HITBOX_RADIUS = 6     -- Baseline hitbox radius
+Constants.SKILL_BASE_AOE_RADIUS = 100       -- Baseline AOE radius
+Constants.SKILL_BASE_TICK_RATE = 1.0        -- Baseline tick rate (seconds)
+Constants.SKILL_BASE_ANIMATION_SPEED = 0.1  -- Baseline animation speed
+
+-- === SKILL TYPE MULTIPLIERS ===
+-- These modify base stats for different skill types
+Constants.SKILL_PROJECTILE_DAMAGE_MULT = 1.0    -- Projectile damage multiplier
+Constants.SKILL_PROJECTILE_COOLDOWN_MULT = 1.0  -- Projectile cooldown multiplier
+Constants.SKILL_AOE_DAMAGE_MULT = 1.5           -- AOE damage multiplier (higher for area)
+Constants.SKILL_AOE_COOLDOWN_MULT = 1.5         -- AOE cooldown multiplier (longer for area)
+Constants.SKILL_BUFF_COOLDOWN_MULT = 2.0        -- Buff cooldown multiplier (longer for utility)
+Constants.SKILL_SUMMON_COOLDOWN_MULT = 3.0      -- Summon cooldown multiplier (longest for allies)
+Constants.SKILL_AURA_DAMAGE_MULT = 0.3          -- Aura damage multiplier (lower for continuous)
+Constants.SKILL_AURA_COOLDOWN_MULT = 0.5        -- Aura cooldown multiplier (shorter for continuous)
+Constants.SKILL_LASER_DAMAGE_MULT = 0.6         -- Laser damage multiplier (lower for continuous)
+Constants.SKILL_LASER_COOLDOWN_MULT = 1.2       -- Laser cooldown multiplier
+
+-- === SUMMON BASE STATS ===
+Constants.SUMMON_BASE_HP = 50                   -- Baseline summon health
+Constants.SUMMON_BASE_SPEED = 100               -- Baseline summon movement speed
+Constants.SUMMON_BASE_ARMOR = 0                 -- Baseline summon armor
+
 -- === BOSS ===
 Constants.BOSS_SPAWN_INTERVAL = 600.0       -- Boss every 10 minutes
 
 -- === RENDERING ===
 Constants.SPRITE_BATCH_SIZE = 1000          -- Max sprites per batch
-Constants.DEBUG_DRAW_HITBOXES = false        -- Toggle hitbox rendering
+Constants.DEBUG_DRAW_HITBOXES = true        -- Toggle hitbox rendering
 Constants.DEBUG_DRAW_DIRECTION_ARROW = false -- Toggle direction arrow rendering
 
 -- === INPUT ===

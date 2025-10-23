@@ -1,35 +1,58 @@
 -- config/skills.lua
 -- Skill configurations for level-up choices
--- Format:
--- {
---   id = "unique_id",
---   name = "Skill Name",
---   description = "What it does",
---   type = "projectile" | "aoe" | "buff",
---   cooldown = number (seconds),
---   damage = number (optional),
---   range = number (distance),
---   radius = number (for aoe),
---   projectileSpeed = number (for projectile),
---   spritesheet = "filename" (spritesheet file from assets/, without .png),
---   spriteIndex = number (index in spritesheet, 1-based),
---   effect = table (status effect: {type, duration, params})
--- }
+-- 
+-- === SKILL TYPES AND PARAMETERS ===
+--
+-- COMMON PARAMETERS (all skill types):
+--   id = "unique_id"                    -- Unique identifier
+--   name = "Skill Name"                 -- Display name
+--   description = "What it does"        -- Tooltip description
+--   spritesheet = "filename"            -- Spritesheet file from assets/ (without .png)
+--   spriteIndex = number                -- Index in spritesheet (1-based)
+--   animationSpeed = number             -- Animation speed (default: 0.1)
+--   effect = table                      -- Status effect: {type, duration, params} (optional)
+--
+-- TYPE: "projectile" (ranged attack that travels to target)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 2.0)
+--   damage = number                     -- Damage dealt on hit (base: 25)
+--   range = number                      -- Maximum travel distance (base: 300)
+--   projectileSpeed = number            -- Travel speed of projectile (base: 250)
+--   hitboxRadius = number               -- Collision radius of projectile (base: 6)
+--
+-- TYPE: "aoe" (area of effect around caster by default)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 3.0, mult: 1.5x)
+--   damage = number                     -- Damage dealt to all targets in radius (base: 37.5, mult: 1.5x)
+--   radius = number                     -- Area of effect radius (base: 100)
+--   
+--   Optional for projectile-triggered AOE (explodes on impact):
+--   range = number                      -- Projectile travel distance (base: 300)
+--   projectileSpeed = number            -- Projectile travel speed (base: 250)
+--   hitboxRadius = number               -- Projectile collision radius (base: 6)
+--
+-- TYPE: "buff" (applies beneficial effect to caster)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 4.0, mult: 2.0x)
+--   buffEffect = table                  -- Buff effect: {type, duration, params}
+--
+-- TYPE: "summon" (spawns allied creature)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 6.0, mult: 3.0x)
+--   damage = number                     -- Summon's attack damage (base: 25)
+--   summonSpeed = number                -- Summon's movement speed (base: 100)
+--   summonHp = number                   -- Summon's health points (base: 50)
+--   summonArmor = number                -- Summon's armor value (base: 0)
+--
+-- TYPE: "aura" (continuous area effect around caster)
+--   cooldown = number                   -- Aura activation cooldown (base: 1.0, mult: 0.5x)
+--   damage = number                     -- Damage per tick (base: 7.5, mult: 0.3x)
+--   radius = number                     -- Aura radius (base: 100)
+--   tickRate = number                   -- Damage application frequency (base: 1.0)
+--
+-- TYPE: "laser" (continuous beam attack to single target)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 2.4, mult: 1.2x)
+--   range = number                      -- Maximum beam range (base: 300)
+--   damage = number                     -- Damage per tick (base: 15, mult: 0.6x)
+--   tickRate = number                   -- Damage application frequency (base: 1.0)
 
-local skills = {
-    -- === BASELINE SKILL (REFERENCE FOR BALANCE) ===
-    -- {
-    --     id = "baseline_skill",
-    --     name = "Baseline Skill",
-    --     description = "Standard projectile attack",
-    --     type = "projectile",
-    --     cooldown = 2.0,        -- 2 second cooldown
-    --     damage = 25,           -- Moderate damage
-    --     range = 300,           -- Good range
-    --     projectileSpeed = 250, -- Standard speed
-    --     effect = nil           -- No special effects
-    -- }
-}
+local skills = {}
 
 return skills
 

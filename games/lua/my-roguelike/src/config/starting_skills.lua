@@ -2,41 +2,67 @@
 -- Starting skill configurations (data-driven)
 -- After character selection, player chooses ONE starting skill from this pool
 -- These skills occupy the first active skill slot
--- Format:
--- {
---   id = "unique_id",
---   name = "Skill Name",
---   description = "What the skill does",
---   type = "projectile" | "aoe" | "buff" | "summon",
---   cooldown = number (seconds),
---   damage = number (base damage),
---   range = number (pixels),
---   projectileSpeed = number (pixels/sec, if type = projectile),
---   hitboxRadius = number (pixels, collision radius for projectile, default 6),
---   assetFolder = "foldername" (folder in assets/ containing sprite files),
---   -- Sprite files in folder:
---   --   i.png - icon for UI/menu (any size, auto-scaled)
---   --   h.png - hit effect (optional, any size, auto-scaled)
---   --   1.png, 2.png, 3.png... - flight animation frames (any size, auto-scaled)
---   --   NOTE: All sprites should be oriented FACING RIGHT
---   animationSpeed = number (seconds per frame, default 0.1),
---   effect = table (optional status effect)
--- }
+--
+-- === STARTING SKILL TYPES AND PARAMETERS ===
+--
+-- COMMON PARAMETERS (all skill types):
+--   id = "unique_id"                    -- Unique identifier
+--   name = "Skill Name"                 -- Display name
+--   description = "What it does"        -- Tooltip description
+--   assetFolder = "foldername"          -- Folder in assets/ containing sprite files
+--   animationSpeed = number             -- Animation speed (default: 0.1)
+--   effect = table                      -- Status effect: {type, duration, params} (optional)
+--
+-- SPRITE FILES IN FOLDER:
+--   i.png - icon for UI/menu (any size, auto-scaled)
+--   h.png - hit effect (optional, any size, auto-scaled)
+--   1.png, 2.png, 3.png... - flight animation frames (any size, auto-scaled)
+--   NOTE: All sprites should be oriented FACING RIGHT
+--
+-- TYPE: "projectile" (ranged attack that travels to target)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 2.0)
+--   damage = number                     -- Damage dealt on hit (base: 25)
+--   range = number                      -- Maximum travel distance (base: 300)
+--   projectileSpeed = number            -- Travel speed of projectile (base: 250)
+--   hitboxRadius = number               -- Collision radius of projectile (base: 6)
+--
+-- TYPE: "aoe" (area of effect around caster by default)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 3.0, mult: 1.5x)
+--   damage = number                     -- Damage dealt to all targets in radius (base: 37.5, mult: 1.5x)
+--   radius = number                     -- Area of effect radius (base: 100)
+--   
+--   Optional for projectile-triggered AOE (explodes on impact):
+--   range = number                      -- Projectile travel distance (base: 300)
+--   projectileSpeed = number            -- Projectile travel speed (base: 250)
+--   hitboxRadius = number               -- Projectile collision radius (base: 6)
+--
+-- TYPE: "buff" (applies beneficial effect to caster)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 4.0, mult: 2.0x)
+--   buffEffect = table                  -- Buff effect: {type, duration, params}
+--
+-- TYPE: "summon" (spawns allied creature)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 6.0, mult: 3.0x)
+--   damage = number                     -- Summon's attack damage (base: 25)
+--   summonSpeed = number                -- Summon's movement speed (base: 100)
+--   summonHp = number                   -- Summon's health points (base: 50)
+--   summonArmor = number                -- Summon's armor value (base: 0)
+--
+-- TYPE: "aura" (continuous area effect around caster)
+--   cooldown = number                   -- Aura activation cooldown (base: 1.0, mult: 0.5x)
+--   damage = number                     -- Damage per tick (base: 7.5, mult: 0.3x)
+--   radius = number                     -- Aura radius (base: 100)
+--   tickRate = number                   -- Damage application frequency (base: 1.0)
+--
+-- TYPE: "laser" (continuous beam attack to single target)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 2.4, mult: 1.2x)
+--   range = number                      -- Maximum beam range (base: 300)
+--   damage = number                     -- Damage per tick (base: 15, mult: 0.6x)
+--   tickRate = number                   -- Damage application frequency (base: 1.0)
 
 local startingSkills = {
-    -- === BASELINE SKILL (REFERENCE FOR BALANCE) ===
-    -- {
-    --     id = "basic_attack",
-    --     name = "Basic Attack",
-    --     description = "Standard projectile attack",
-    --     type = "projectile",
-    --     cooldown = 2.0,
-    --     damage = 25,
-    --     range = 300,
-    --     projectileSpeed = 250
-    -- },
-
-    -- === FIREBALL ===
+    -- === TEST STARTING SKILLS FOR ALL TYPES ===
+    
+    -- PROJECTILE SKILL
     {
         id = "fireball",
         name = "Fireball",
@@ -46,18 +72,22 @@ local startingSkills = {
         damage = 40,
         range = 400,
         projectileSpeed = 300,
-        hitboxRadius = 14,  -- Larger hitbox for bigger fireball sprite
-        assetFolder = "starting_skills/fireballl",  -- assets/starting_skills/fireballl/ folder
-        -- Contains: i.png (icon), h.png (hit), 1.png, 2.png (flight animation)
-        -- All sprites face RIGHT and are auto-scaled to fit hitbox
-        animationSpeed = 0.15,  -- 0.15 seconds per frame for smooth animation
+        hitboxRadius = 14,
+        assetFolder = "starting_skills/fireballl",
+        animationSpeed = 0.15,
         effect = {
-            type = "burning",  -- Fire damage over time
+            type = "burning",
             duration = 3,
             damage = 5,
             tickRate = 0.5
         }
-    }
+    },
+    
+    -- AOE SKILL
+    -- BUFF SKILL
+    -- SUMMON SKILL
+    -- AURA SKILL
+    -- LASER SKILL
 }
 
 return startingSkills

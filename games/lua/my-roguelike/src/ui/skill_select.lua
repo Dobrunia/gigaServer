@@ -117,15 +117,25 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         
         -- Damage (no specific icon yet, keep as text)
         local damageY = statsY + statsOffset
-        love.graphics.print("Damage: " .. skill.damage, statsX, damageY)
+        if skill.damage then
+            love.graphics.print("Damage: " .. skill.damage, statsX, damageY)
+        else
+            love.graphics.print("Damage: N/A", statsX, damageY)
+        end
         
         -- Cooldown (no specific icon yet, keep as text)
         local cooldownY = damageY + statsOffset
-        love.graphics.print("Cooldown: " .. skill.cooldown .. "s", statsX, cooldownY)
+        love.graphics.print("Cooldown: " .. (skill.cooldown or "N/A") .. "s", statsX, cooldownY)
         
-        -- Range (no specific icon yet, keep as text)
+        -- Range (only for skills that have range)
         local rangeY = cooldownY + statsOffset
-        love.graphics.print("Range: " .. skill.range, statsX, rangeY)
+        if skill.range then
+            love.graphics.print("Range: " .. skill.range, statsX, rangeY)
+        elseif skill.radius then
+            love.graphics.print("Radius: " .. skill.radius, statsX, rangeY)
+        else
+            love.graphics.print("Range: N/A", statsX, rangeY)
+        end
         
         -- Description background
         local descY = rangeY + UIConstants.CARD_ELEMENTS_OFFSET_Y - 60

@@ -139,6 +139,15 @@ function Skills:castSkill(caster, skill, targets, projectilePool, spatialHash, p
     elseif skill.type == "buff" then
         -- print("[SKILLS] Casting buff skill")
         self:castBuff(caster, skill)
+    elseif skill.type == "summon" then
+        -- print("[SKILLS] Casting summon skill")
+        self:castSummon(caster, skill, targets)
+    elseif skill.type == "aura" then
+        -- print("[SKILLS] Casting aura skill")
+        self:castAura(caster, skill, targets, spatialHash)
+    elseif skill.type == "laser" then
+        -- print("[SKILLS] Casting laser skill")
+        self:castLaser(caster, skill, targets, spatialHash, dirX, dirY)
     else
         -- print("[SKILLS] Unknown skill type:", skill.type)
     end
@@ -169,14 +178,14 @@ function Skills:castProjectile(caster, skill, dirX, dirY, projectilePool, projec
         caster.y,
         dirX,
         dirY,
-        skill.projectileSpeed or 300,
-        skill.damage or 10,
-        skill.range or 500,
+        skill.projectileSpeed or Constants.SKILL_BASE_PROJECTILE_SPEED,
+        skill.damage or Constants.SKILL_BASE_DAMAGE,
+        skill.range or Constants.SKILL_BASE_RANGE,
         caster.heroId and "player" or "mob",
         skill.loadedSprites and skill.loadedSprites.flight or {},  -- Flight animation sprites
         skill.loadedSprites and skill.loadedSprites.hit or nil,  -- Hit sprite
-        skill.animationSpeed or 0.1,  -- Animation speed
-        skill.hitboxRadius or nil  -- Hitbox radius (uses default if nil)
+        skill.animationSpeed or Constants.SKILL_BASE_ANIMATION_SPEED,  -- Animation speed
+        skill.hitboxRadius or Constants.SKILL_BASE_HITBOX_RADIUS  -- Hitbox radius (uses default if nil)
     )
     
     -- Store effect data on projectile
@@ -195,7 +204,7 @@ end
 
 -- AOE skill (damage/effect in radius)
 function Skills:castAOE(caster, skill, targets, spatialHash)
-    local radius = skill.radius or 100
+    local radius = skill.radius or Constants.SKILL_BASE_AOE_RADIUS
     local targetX = caster.x + (skill.range or 0) * (caster.aimDirection and caster.aimDirection.x or 1)
     local targetY = caster.y + (skill.range or 0) * (caster.aimDirection and caster.aimDirection.y or 0)
     
@@ -226,8 +235,100 @@ end
 
 -- Buff skill (self-buff)
 function Skills:castBuff(caster, skill)
-    if skill.effect then
-        self:applyEffect(caster, skill.effect)
+    if skill.buffEffect then
+        self:applyEffect(caster, skill.buffEffect)
+    end
+end
+
+-- Summon skill (spawn allied creature)
+function Skills:castSummon(caster, skill, targets)
+    -- Create summon entity (simplified - would need proper entity creation)
+    local summon = {
+        x = caster.x,
+        y = caster.y,
+        alive = true,
+        hp = skill.summonHp or Constants.SUMMON_BASE_HP,
+        maxHp = skill.summonHp or Constants.SUMMON_BASE_HP,
+        damage = skill.damage or Constants.SKILL_BASE_DAMAGE,
+        speed = skill.summonSpeed or Constants.SUMMON_BASE_SPEED,
+        armor = skill.summonArmor or Constants.SUMMON_BASE_ARMOR,
+        summonId = "summon_" .. skill.id,
+        isSummon = true,
+        owner = caster
+    }
+    
+    -- Add to targets array (summons are friendly)
+    table.insert(targets, summon)
+    -- print("[SKILLS] Summoned creature with", summon.hp, "HP")
+end
+
+-- Aura skill (continuous area effect)
+function Skills:castAura(caster, skill, targets, spatialHash)
+    local radius = skill.radius or Constants.SKILL_BASE_AOE_RADIUS
+    local damage = skill.damage or (Constants.SKILL_BASE_DAMAGE * Constants.SKILL_AURA_DAMAGE_MULT)
+    local tickRate = skill.tickRate or Constants.SKILL_BASE_TICK_RATE
+    
+    -- Find targets in aura radius
+    local affected = {}
+    if spatialHash then
+        affected = spatialHash:queryNearby(caster.x, caster.y, radius)
+    else
+        for _, target in ipairs(targets) do
+            if Utils.distance(caster.x, caster.y, target.x, target.y) <= radius then
+                table.insert(affected, target)
+            end
+        end
+    end
+    
+    -- Apply damage to enemies in aura
+    for _, target in ipairs(affected) do
+        if target.alive and target.mobId and not target.isSummon then  -- Only affect enemy mobs
+            target:takeDamage(damage, caster)
+            -- print("[SKILLS] Aura damage:", damage, "to target at distance:", Utils.distance(caster.x, caster.y, target.x, target.y))
+        end
+    end
+end
+
+-- Laser skill (continuous beam attack)
+function Skills:castLaser(caster, skill, targets, spatialHash, dirX, dirY)
+    local range = skill.range or Constants.SKILL_BASE_RANGE
+    local damage = skill.damage or (Constants.SKILL_BASE_DAMAGE * Constants.SKILL_LASER_DAMAGE_MULT)
+    local tickRate = skill.tickRate or Constants.SKILL_BASE_TICK_RATE
+    
+    -- Find target in laser direction
+    local targetX = caster.x + dirX * range
+    local targetY = caster.y + dirY * range
+    
+    -- Find nearest target in laser path
+    local nearest = nil
+    local nearestDist = range
+    
+    if spatialHash then
+        local nearby = spatialHash:queryNearby(caster.x, caster.y, range)
+        for _, target in ipairs(nearby) do
+            if target.alive and target.mobId then
+                -- Check if target is in laser direction
+                local dist = Utils.distance(caster.x, caster.y, target.x, target.y)
+                if dist <= range then
+                    -- Simple direction check (could be improved with proper line intersection)
+                    local targetDirX = (target.x - caster.x) / dist
+                    local targetDirY = (target.y - caster.y) / dist
+                    local dot = dirX * targetDirX + dirY * targetDirY
+                    if dot > 0.7 then  -- Roughly in same direction
+                        if dist < nearestDist then
+                            nearest = target
+                            nearestDist = dist
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Apply damage to target
+    if nearest then
+        nearest:takeDamage(damage, caster)
+        -- print("[SKILLS] Laser damage:", damage, "to target at distance:", nearestDist)
     end
 end
 
