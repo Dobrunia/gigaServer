@@ -36,7 +36,11 @@ function AOESkill:cast(caster, skill, targets, spatialHash)
     for _, target in ipairs(affected) do
         if target.alive and target.mobId then
             if skill.damage then
-                target:takeDamage(skill.damage, caster)
+                local damage = skill.damage
+                if caster.damageMultiplier then
+                    damage = damage * caster.damageMultiplier
+                end
+                target:takeDamage(damage, caster)
             end
             if skill.effect then
                 -- Apply effect - need to get access to base skills system

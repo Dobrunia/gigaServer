@@ -22,7 +22,7 @@ function SummonSkill:cast(caster, skill, targets)
         alive = true,
         hp = skill.summonHp or Constants.SUMMON_BASE_HP,
         maxHp = skill.summonHp or Constants.SUMMON_BASE_HP,
-        damage = skill.damage or Constants.SKILL_BASE_DAMAGE,
+        damage = (skill.damage or Constants.SKILL_BASE_DAMAGE) * (caster.damageMultiplier),
         speed = skill.summonSpeed or Constants.SUMMON_BASE_SPEED,
         armor = skill.summonArmor or Constants.SUMMON_BASE_ARMOR,
         summonId = "summon_" .. skill.id,

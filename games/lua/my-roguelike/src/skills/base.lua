@@ -18,7 +18,7 @@ function Skills.new()
     self.projectile = require("src.skills.projectile")
     self.aura = require("src.skills.aura")
     self.aoe = require("src.skills.aoe")
-    self.buff = require("src.skills.buff")
+    self.buff = require("src.skills.buff").new()
     self.summon = require("src.skills.summon")
     self.laser = require("src.skills.laser")
     self.orbital = require("src.skills.orbital").new()
@@ -45,6 +45,11 @@ function Skills:update(dt, player, targets, projectilePool, spatialHash, project
         -- Update active orbitals
         if skill.type == "orbital" then
             self.orbital:update(dt, player, targets, spatialHash)
+        end
+        
+        -- Update active buffs
+        if skill.type == "buff" then
+            self.buff:update(dt, player)
         end
         
         -- Update cooldown

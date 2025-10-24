@@ -275,10 +275,49 @@ function HUD:drawSkills(player, assets)
                 Colors.setColor(Colors.TEXT_ACCENT)
                 love.graphics.print(skill.level, x + skillSize - 8, y + 2)
             end
+            
+            -- Buff progress bar (if this skill is a buff and active)
+            if skill.type == "buff" then
+                self:drawBuffProgressBar(skill, player, x, y, skillSize)
+            end
         else
             -- Empty slot - draw black square
             Colors.setColor(Colors.OVERLAY_EMPTY)
             love.graphics.rectangle("fill", x + 4, y + 4, skillSize - 8, skillSize - 8)
+        end
+    end
+end
+
+function HUD:drawBuffProgressBar(skill, player, x, y, skillSize)
+    -- Check if player has active buffs
+    if not player.activeBuffs then
+        return
+    end
+    
+    for _, buff in ipairs(player.activeBuffs) do
+        if buff.skill and buff.skill.id == skill.id then
+            -- Draw buff progress bar above skill
+            local currentTime = love.timer.getTime()
+            local remainingTime = (buff.startTime + buff.duration) - currentTime
+            
+            if remainingTime > 0 then
+                local progress = remainingTime / buff.duration
+                
+                -- Progress bar above skill
+                local barWidth = skillSize - 4
+                local barHeight = 3
+                local barX = x + 2
+                local barY = y - 8
+                
+                -- Background
+                Colors.setColor(Colors.BAR_BACKGROUND)
+                love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
+                
+                -- Fill (decreasing) - red bar showing remaining duration
+                love.graphics.setColor(1, 0, 0, 1)
+                love.graphics.rectangle("fill", barX, barY, barWidth * progress, barHeight)
+            end
+            break
         end
     end
 end

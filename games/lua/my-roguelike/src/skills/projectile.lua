@@ -55,7 +55,7 @@ end
 -- === POOLING SUPPORT ===
 
 -- Initialize projectile when acquired from pool
-function Projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner, flightSprites, hitSprite, animSpeed, hitboxRadius)
+function Projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner, flightSprites, hitSprite, animSpeed, hitboxRadius, caster)
     self.x = x
     self.y = y
     self.prevX = x
@@ -79,6 +79,7 @@ function Projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner, flight
     self.damage = damage or 10
     self.maxDistance = maxDist or 500
     self.owner = owner or "player"
+    self.caster = caster
     
     -- Hitbox
     self.radius = hitboxRadius or Constants.PROJECTILE_HITBOX_RADIUS
@@ -188,7 +189,14 @@ end
 
 function Projectile:hit(target)
     if target and target.takeDamage then
-        target:takeDamage(self.damage, self.owner)
+        local damage = self.damage
+        
+        -- Apply damage multiplier from caster
+        if self.caster and self.caster.damageMultiplier then
+            damage = damage * self.caster.damageMultiplier
+        end
+        
+        target:takeDamage(damage, self.owner)
     end
     
     -- Apply status effect if projectile has one
@@ -274,7 +282,8 @@ function ProjectileSkill:cast(caster, skill, dirX, dirY, projectilePool, project
         skill.loadedSprites and skill.loadedSprites.flight or {},
         skill.loadedSprites and skill.loadedSprites.hit or nil,
         skill.animationSpeed or Constants.SKILL_BASE_ANIMATION_SPEED,
-        skill.hitboxRadius or Constants.SKILL_BASE_HITBOX_RADIUS
+        skill.hitboxRadius or Constants.SKILL_BASE_HITBOX_RADIUS,
+        caster
     )
     
     -- Store effect data on projectile

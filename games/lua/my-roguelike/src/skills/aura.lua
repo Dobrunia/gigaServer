@@ -60,8 +60,12 @@ function Aura.applyDamage(caster, skill, targets, spatialHash)
         if target.mobId and target.alive and target ~= caster then
             local dist = Utils.distance(caster.x, caster.y, target.x, target.y)
             if dist <= radius then
-                -- Apply damage
-                target:takeDamage(damage, caster)
+                -- Apply damage with multiplier
+                local finalDamage = damage
+                if caster.damageMultiplier then
+                    finalDamage = damage * caster.damageMultiplier
+                end
+                target:takeDamage(finalDamage, caster)
                 
                 -- Apply status effects if any
                 if skill.effect then

@@ -128,7 +128,14 @@ end
 
 function OrbitalProjectile:hit(target)
     if target and target.takeDamage then
-        target:takeDamage(self.damage, self.owner)
+        local damage = self.damage
+        
+        -- Apply damage multiplier from caster
+        if self.caster and self.caster.damageMultiplier then
+            damage = damage * self.caster.damageMultiplier
+        end
+        
+        target:takeDamage(damage, self.owner)
         self.lastHitTarget = target
     end
 end

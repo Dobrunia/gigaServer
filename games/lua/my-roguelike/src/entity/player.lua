@@ -25,6 +25,10 @@ function Player.new(x, y, heroData)
     self.armor = heroData.baseArmor
     self.speed = heroData.baseMoveSpeed
     self.castSpeed = heroData.baseCastSpeed  -- Affects skill cooldowns
+
+    -- Buffs
+    self.damageMultiplier = 1.0  -- Damage multiplier for buffs
+    self.activeBuffs = {}  -- Store active buffs for this player
     
     -- Stat growth per level
     self.hpGrowth = heroData.hpGrowth

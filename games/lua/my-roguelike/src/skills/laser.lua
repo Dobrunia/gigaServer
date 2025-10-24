@@ -45,7 +45,11 @@ function LaserSkill:cast(caster, skill, targets, spatialHash, dirX, dirY)
     
     -- Apply damage to target
     if nearest then
-        nearest:takeDamage(damage, caster)
+        local finalDamage = damage
+        if caster.damageMultiplier then
+            finalDamage = damage * caster.damageMultiplier
+        end
+        nearest:takeDamage(finalDamage, caster)
     end
 end
 
