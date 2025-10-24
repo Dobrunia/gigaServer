@@ -53,6 +53,7 @@
 --   damage = number                     -- Damage per tick (base: 7.5, mult: 0.3x)
 --   radius = number                     -- Aura radius (base: 100)
 --   tickRate = number                   -- Damage application frequency (base: 1.0)
+--   duration = number                    -- Aura duration in seconds (base: 10.0)
 --   REQUIRES: i.png (UI icon) + aura.png (visual effect around player)
 --
 -- TYPE: "laser" (continuous beam attack to single target)
@@ -98,7 +99,8 @@ local startingSkills = {
         cooldown = 14,
         damage = 5,
         radius = 400,
-        tickRate = 1,
+        tickRate = 0.3,
+        duration = 8,
     },
     -- LASER SKILL
 }

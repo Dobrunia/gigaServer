@@ -66,7 +66,9 @@ Constants.SKILL_BASE_PROJECTILE_SPEED = 250 -- Baseline projectile speed
 Constants.SKILL_BASE_HITBOX_RADIUS = 6     -- Baseline hitbox radius
 Constants.SKILL_BASE_AOE_RADIUS = 100       -- Baseline AOE radius
 Constants.SKILL_BASE_TICK_RATE = 1.0        -- Baseline tick rate (seconds)
+Constants.SKILL_BASE_DURATION = 10.0         -- Baseline aura duration (seconds)
 Constants.SKILL_BASE_ANIMATION_SPEED = 0.1  -- Baseline animation speed
+Constants.SKILL_DIRECTION_THRESHOLD = 0.7   -- Dot product threshold for direction matching
 
 -- === SKILL TYPE MULTIPLIERS ===
 -- These modify base stats for different skill types
@@ -104,8 +106,10 @@ Constants.STATUS_POISON = "poison"
 Constants.STATUS_ROOT = "root"
 Constants.STATUS_STUN = "stun"
 
--- Poison default tick rate
-Constants.POISON_TICK_RATE = 0.5
+-- Status effect defaults
+Constants.SLOW_DEFAULT_PERCENT = 50         -- Default slow percentage
+Constants.POISON_DEFAULT_DAMAGE = 5         -- Default poison damage per tick
+Constants.POISON_TICK_RATE = 0.5            -- Poison default tick rate
 
 -- === DAMAGE & COMBAT ===
 Constants.ARMOR_REDUCTION_FACTOR = 0.06     -- Each armor point reduces damage by 6%

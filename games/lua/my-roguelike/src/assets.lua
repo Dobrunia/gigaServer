@@ -363,12 +363,14 @@ end
 -- Load sprites from a folder with standard naming:
 -- i.png - icon for UI
 -- h.png - hit effect (optional)
+-- aura.png - aura visual effect (optional)
 -- 1.png, 2.png, 3.png... - flight animation frames
--- Returns table: { icon = Image, hit = Image or nil, flight = {Image, Image, ...} }
+-- Returns table: { icon = Image, hit = Image or nil, aura = Image or nil, flight = {Image, Image, ...} }
 function Assets.loadFolderSprites(folderPath)
     local sprites = {
         icon = nil,
         hit = nil,
+        aura = nil,
         flight = {}
     }
     
@@ -392,6 +394,15 @@ function Assets.loadFolderSprites(folderPath)
         setNearestFilter(hitImg)
         sprites.hit = hitImg
         Utils.log("Loaded hit sprite: " .. hitPath)
+    end
+    
+    -- Load aura effect (optional)
+    local auraPath = folderPath .. "/aura.png"
+    local auraSuccess, auraImg = pcall(love.graphics.newImage, auraPath)
+    if auraSuccess then
+        setNearestFilter(auraImg)
+        sprites.aura = auraImg
+        Utils.log("Loaded aura sprite: " .. auraPath)
     end
     
     -- Load flight animation frames (1.png, 2.png, 3.png, etc.)

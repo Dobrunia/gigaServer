@@ -114,13 +114,6 @@ end
 function Player:update(dt)
     BaseEntity.update(self, dt)
 
-    -- Update skill cooldowns
-    for _, skill in ipairs(self.skills) do
-        if skill.cooldownTimer > 0 then
-            skill.cooldownTimer = skill.cooldownTimer - dt
-        end
-    end
-
     -- Update hero animation
     if self.heroSprites then
         self:updateHeroAnimation(dt)
@@ -377,8 +370,23 @@ function Player:draw()
     -- Draw status effect icons (except burning - it's drawn under entity)
     self:drawStatusIcons()
 
+    -- Draw aura effects
+    self:drawAuraEffects()
+
     -- Draw direction arrow
     self:drawDirectionArrow()
+end
+
+function Player:drawAuraEffects()
+    if not self.skills then return end
+    
+    -- Draw aura effects for active aura skills
+    for _, skill in ipairs(self.skills) do
+        if skill.type == "aura" and skill.active then
+            local Aura = require("src.skills.aura")
+            Aura.draw(self, skill)
+        end
+    end
 end
 
 function Player:drawDirectionArrow()

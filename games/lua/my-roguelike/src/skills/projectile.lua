@@ -1,17 +1,24 @@
--- entity/projectile.lua
--- Projectile entity for ranged attacks
--- Uses object pooling for performance
--- Public API: Projectile.new(), projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner, spritesheet, spriteIndex), projectile:update(dt)
+-- skills/projectile.lua
+-- Projectile skill implementation with full entity logic
+-- Public API: projectile:cast(caster, skill, dirX, dirY, projectilePool, projectiles)
 -- Dependencies: base_entity.lua, constants.lua, utils.lua
 
 local BaseEntity = require("src.entity.base_entity")
 local Constants = require("src.constants")
 local Utils = require("src.utils")
 
+local ProjectileSkill = {}
+ProjectileSkill.__index = ProjectileSkill
+
+function ProjectileSkill.new()
+    local self = setmetatable({}, ProjectileSkill)
+    return self
+end
+
+-- === PROJECTILE ENTITY ===
+
 local Projectile = setmetatable({}, {__index = BaseEntity})
 Projectile.__index = Projectile
-
--- === CONSTRUCTOR ===
 
 function Projectile.new()
     local self = setmetatable(BaseEntity.new(0, 0), Projectile)
@@ -48,9 +55,6 @@ end
 -- === POOLING SUPPORT ===
 
 -- Initialize projectile when acquired from pool
--- flightSprites: array of Image objects for animation
--- hitSprite: single Image object for hit effect (optional)
--- hitboxRadius: collision radius in pixels
 function Projectile:init(x, y, dirX, dirY, speed, damage, maxDist, owner, flightSprites, hitSprite, animSpeed, hitboxRadius)
     self.x = x
     self.y = y
@@ -244,5 +248,45 @@ function Projectile:draw()
     end
 end
 
-return Projectile
+-- === SKILL IMPLEMENTATION ===
 
+function ProjectileSkill:cast(caster, skill, dirX, dirY, projectilePool, projectiles)
+    if not projectilePool then 
+        return 
+    end
+    
+    -- Load sprites from folder if needed
+    if skill.assetFolder and not skill.loadedSprites then
+        local Assets = require("src.assets")
+        skill.loadedSprites = Assets.loadFolderSprites("assets/" .. skill.assetFolder)
+    end
+    
+    local projectile = projectilePool:acquire()
+    projectile:init(
+        caster.x,
+        caster.y,
+        dirX,
+        dirY,
+        skill.projectileSpeed or Constants.SKILL_BASE_PROJECTILE_SPEED,
+        skill.damage or Constants.SKILL_BASE_DAMAGE,
+        skill.range or Constants.SKILL_BASE_RANGE,
+        caster.heroId and "player" or "mob",
+        skill.loadedSprites and skill.loadedSprites.flight or {},
+        skill.loadedSprites and skill.loadedSprites.hit or nil,
+        skill.animationSpeed or Constants.SKILL_BASE_ANIMATION_SPEED,
+        skill.hitboxRadius or Constants.SKILL_BASE_HITBOX_RADIUS
+    )
+    
+    -- Store effect data on projectile
+    projectile.effectData = skill.effect
+    
+    -- Add to projectiles array for rendering/updating
+    if projectiles then
+        table.insert(projectiles, projectile)
+    end
+end
+
+-- Export Projectile class for use in game.lua
+ProjectileSkill.Projectile = Projectile
+
+return ProjectileSkill
