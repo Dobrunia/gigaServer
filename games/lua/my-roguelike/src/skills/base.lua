@@ -116,7 +116,12 @@ function Skills:castSkill(caster, skill, targets, projectilePool, spatialHash, p
     
     -- Execute skill effect based on type
     if skill.type == "projectile" then
-        self.projectile:cast(caster, skill, dirX, dirY, projectilePool, projectiles)
+        -- Check if skill has direction field for multi-directional projectiles
+        if skill.direction then
+            self:castMultiDirectionalProjectile(caster, skill, projectilePool, projectiles)
+        else
+            self.projectile:cast(caster, skill, dirX, dirY, projectilePool, projectiles)
+        end
     elseif skill.type == "aoe" then
         self.aoe:cast(caster, skill, targets, spatialHash)
     elseif skill.type == "buff" then
@@ -150,6 +155,39 @@ function Skills:applyEffect(target, effect)
         target:addStatusEffect("root", effect.duration, {})
     elseif effect.type == "stun" then
         target:addStatusEffect("stun", effect.duration, {})
+    end
+end
+
+-- === MULTI-DIRECTIONAL PROJECTILE ===
+
+function Skills:castMultiDirectionalProjectile(caster, skill, projectilePool, projectiles)
+    local directions = {}
+    
+    if skill.direction == 4 then
+        -- 4 directions: up, down, left, right
+        directions = {
+            {0, -1},   -- up
+            {0, 1},    -- down
+            {-1, 0},   -- left
+            {1, 0}     -- right
+        }
+    elseif skill.direction == 8 then
+        -- 8 directions: all cardinal + diagonal
+        directions = {
+            {0, -1},   -- up
+            {0, 1},    -- down
+            {-1, 0},   -- left
+            {1, 0},    -- right
+            {-1, -1},  -- up-left
+            {1, -1},   -- up-right
+            {-1, 1},   -- down-left
+            {1, 1}     -- down-right
+        }
+    end
+    
+    -- Cast projectile in each direction
+    for _, dir in ipairs(directions) do
+        self.projectile:cast(caster, skill, dir[1], dir[2], projectilePool, projectiles)
     end
 end
 
