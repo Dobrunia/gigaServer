@@ -40,15 +40,15 @@ local startingSkills = {
         name = "Axe Whirlwind",
         description = "Flying axes orbit around you, dealing damage to enemies",
         type = "orbital",
-        cooldown = 8,
-        damage = 20,
+        cooldown = 4,
+        damage = 15,
         orbitalCount = 3,
         orbitalRadius = 100,
         orbitalSpeed = 1.5,
-        duration = 2,
+        duration = 5,
         hitboxRadius = 20,
         assetFolder = "skills/axe-whirlwind",
-        animationSpeed = 0.1
+        spinSpeed = 6.0
     },
     
     -- AOE SKILL

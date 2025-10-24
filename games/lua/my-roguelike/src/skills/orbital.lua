@@ -59,6 +59,8 @@ function OrbitalProjectile:init(caster, skill, orbitalIndex, totalOrbitals)
     self.orbitalSpeed = skill.orbitalSpeed or Constants.ORBITAL_BASE_SPEED
     self.damage = skill.damage or Constants.ORBITAL_BASE_DAMAGE
     self.radius = skill.hitboxRadius or Constants.ORBITAL_BASE_HITBOX_RADIUS
+    self.animationSpeed = skill.animationSpeed
+    self.spinSpeed = skill.spinSpeed or Constants.ORBITAL_SPIN_SPEED
     
     -- Load sprites if available
     if skill.loadedSprites and skill.loadedSprites.flight then

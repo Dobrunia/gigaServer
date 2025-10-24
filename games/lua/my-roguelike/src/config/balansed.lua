@@ -389,7 +389,8 @@ Balansed.BASELINE_ORBITAL_SKILL = {
     orbitalSpeed = 2.0,        -- Rotation speed (radians/sec)
     duration = 10.0,           -- How long orbitals last
     hitboxRadius = 6,          -- Collision radius
-    animationSpeed = 0.1        -- Standard animation speed
+    animationSpeed = 0.1,      -- Standard animation speed
+    spinSpeed = 10             -- Standard spin speed
 }
 
 -- === BASELINE INNATE SKILLS ===
