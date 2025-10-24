@@ -26,6 +26,7 @@
 --   range = number                      -- Maximum travel distance (base: 300)
 --   projectileSpeed = number            -- Travel speed of projectile (base: 250)
 --   hitboxRadius = number               -- Collision radius of projectile (base: 6)
+--   direction = number                  -- Direction of projectile (4 = right+left+up+down, 8 = left+right+up+down + diagonals)
 --
 -- TYPE: "aoe" (area of effect around caster by default)
 --   cooldown = number                   -- Skill cooldown in seconds (base: 3.0, mult: 1.5x)
