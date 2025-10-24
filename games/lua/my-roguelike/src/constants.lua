@@ -96,7 +96,7 @@ Constants.BOSS_SPAWN_INTERVAL = Balansed.CONSTANTS.BOSS_SPAWN_INTERVAL
 
 -- === RENDERING ===
 Constants.SPRITE_BATCH_SIZE = 1000          -- Max sprites per batch
-Constants.DEBUG_DRAW_HITBOXES = true        -- Toggle hitbox rendering
+Constants.DEBUG_DRAW_HITBOXES = false        -- Toggle hitbox rendering
 Constants.DEBUG_DRAW_DIRECTION_ARROW = false -- Toggle direction arrow rendering
 
 -- === INPUT ===
