@@ -98,6 +98,7 @@ Constants.BOSS_SPAWN_INTERVAL = Balansed.CONSTANTS.BOSS_SPAWN_INTERVAL
 Constants.SPRITE_BATCH_SIZE = 1000          -- Max sprites per batch
 Constants.DEBUG_DRAW_HITBOXES = false        -- Toggle hitbox rendering
 Constants.DEBUG_DRAW_DIRECTION_ARROW = false -- Toggle direction arrow rendering
+Constants.DEBUG_DRAW_DAMAGE_NUMBERS = true   -- Toggle damage numbers display above mobs
 
 -- === INPUT ===
 Constants.GAMEPAD_DEADZONE = 0.25           -- Joystick deadzone

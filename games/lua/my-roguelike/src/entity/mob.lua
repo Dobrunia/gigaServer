@@ -78,6 +78,10 @@ function Mob.new(x, y, mobData, level)
     self.walkFrameIndex = 1            -- Current walking frame (1 or 2)
     self.walkTimer = 0                 -- Walking animation timer
     self.walkSpeed = 0.3               -- Seconds per walking frame
+    
+    -- Damage display system
+    self.damageNumbers = {}            -- Array of damage numbers to display
+    self.lastDamageTime = 0            -- Time when last damage was taken
 
     return self
 end
@@ -151,6 +155,9 @@ function Mob:update(dt, player, spatialHash)
     if self.mobSprites then
         self:updateMobAnimation(dt)
     end
+    
+    -- Update damage numbers
+    self:updateDamageNumbers(dt)
 end
 
 -- === AI STATE MACHINE ===
@@ -259,6 +266,67 @@ function Mob:attackRanged()
     return true
 end
 
+-- === DAMAGE DISPLAY ===
+
+function Mob:addDamageNumber(damage)
+    if not Constants.DEBUG_DRAW_DAMAGE_NUMBERS then return end
+    
+    local damageNumber = {
+        value = damage,
+        x = self.x + (math.random() - 0.5) * 20,  -- Random offset
+        y = self.y - 20,
+        timer = 0,
+        duration = 1.0,  -- Display for 1 second
+        alpha = 1.0,
+        velocityY = -30  -- Float upward
+    }
+    
+    table.insert(self.damageNumbers, damageNumber)
+    self.lastDamageTime = love.timer.getTime()
+end
+
+function Mob:updateDamageNumbers(dt)
+    if not Constants.DEBUG_DRAW_DAMAGE_NUMBERS then return end
+    
+    for i = #self.damageNumbers, 1, -1 do
+        local damageNum = self.damageNumbers[i]
+        damageNum.timer = damageNum.timer + dt
+        damageNum.y = damageNum.y + damageNum.velocityY * dt
+        damageNum.velocityY = damageNum.velocityY + 50 * dt  -- Gravity effect
+        
+        -- Fade out over time
+        local progress = damageNum.timer / damageNum.duration
+        damageNum.alpha = 1.0 - progress
+        
+        -- Remove expired damage numbers
+        if damageNum.timer >= damageNum.duration then
+            table.remove(self.damageNumbers, i)
+        end
+    end
+end
+
+function Mob:drawDamageNumbers()
+    if not Constants.DEBUG_DRAW_DAMAGE_NUMBERS then return end
+    
+    love.graphics.setColor(1, 0, 0, 1)  -- Red color for damage
+    
+    for _, damageNum in ipairs(self.damageNumbers) do
+        love.graphics.setColor(1, 0, 0, damageNum.alpha)
+        love.graphics.print(
+            tostring(math.floor(damageNum.value)),
+            damageNum.x,
+            damageNum.y,
+            0,  -- No rotation
+            1,  -- Scale
+            1,  -- Scale
+            0,  -- Offset X
+            0   -- Offset Y
+        )
+    end
+    
+    love.graphics.setColor(1, 1, 1, 1)  -- Reset color
+end
+
 -- === DEATH ===
 
 function Mob:die()
@@ -268,6 +336,18 @@ end
 
 function Mob:getXPDrop()
     return self.xpDrop
+end
+
+-- Override takeDamage to show damage numbers
+function Mob:takeDamage(damage, source)
+    local result = BaseEntity.takeDamage(self, damage, source)
+    
+    -- Show damage number if damage was dealt
+    if result and damage > 0 then
+        self:addDamageNumber(damage)
+    end
+    
+    return result
 end
 
 -- === DRAW ===
@@ -351,6 +431,11 @@ function Mob:draw()
 
     -- Draw status effect icons (except burning - it's drawn under entity)
     self:drawStatusIcons()
+
+    -- Draw damage numbers
+    if Constants.DEBUG_DRAW_DAMAGE_NUMBERS then
+        self:drawDamageNumbers()
+    end
 
     -- Optional: draw aggro range or attack range for debug
     if Constants.DEBUG_DRAW_HITBOXES then
