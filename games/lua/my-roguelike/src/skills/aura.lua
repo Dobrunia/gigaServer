@@ -101,7 +101,8 @@ function Aura.draw(caster, skill)
         
         -- Scale sprite to match aura radius (2x radius for visual effect)
         local targetSize = radius * 2
-        local scale = targetSize / math.max(spriteW, spriteH)
+        local scaleMultiplier = 1.3 -- 30% bigger than radius опытным путем
+        local scale = targetSize * scaleMultiplier / math.max(spriteW, spriteH)
         
         love.graphics.setColor(1, 1, 1, alpha)
         love.graphics.draw(
@@ -118,6 +119,16 @@ function Aura.draw(caster, skill)
         
         love.graphics.setColor(1, 0.5, 0.5, alpha * 0.6)  -- Red border
         love.graphics.setLineWidth(2)
+        love.graphics.circle("line", caster.x, caster.y, radius)
+        love.graphics.setLineWidth(1)
+    end
+
+    -- Draw aura hitbox in debug mode
+    if Constants.DEBUG_DRAW_HITBOXES then
+        local radius = skill.radius or Constants.SKILL_BASE_AOE_RADIUS
+        -- Draw aura hitbox border
+        love.graphics.setColor(1, 0.5, 1, 0.8)  -- Bright purple border
+        love.graphics.setLineWidth(3)
         love.graphics.circle("line", caster.x, caster.y, radius)
         love.graphics.setLineWidth(1)
     end

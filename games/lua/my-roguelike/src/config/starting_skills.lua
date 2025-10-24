@@ -98,7 +98,7 @@ local startingSkills = {
         type = "aura",
         cooldown = 14,
         damage = 5,
-        radius = 400,
+        radius = 200,
         tickRate = 0.3,
         duration = 8,
     },
