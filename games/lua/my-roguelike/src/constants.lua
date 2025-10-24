@@ -1,6 +1,9 @@
 -- constants.lua
 -- All game constants and magic numbers in one place
 -- Public API: Constants table with all game parameters
+-- Imports balance values from balansed.lua for centralized balance control
+
+local Balansed = require("src.config.balansed")
 
 local Constants = {}
 
@@ -25,10 +28,10 @@ Constants.PLAYER_DEFAULT_PICKUP_RADIUS = 80
 Constants.PLAYER_DEFAULT_SPRITE_SIZE = 64    -- Default hero sprite size if not specified in config
 
 -- === MOBS ===
-Constants.MOB_SPAWN_INTERVAL = 2.0          -- Seconds between spawn attempts
-Constants.MOB_SPAWN_MIN_DISTANCE = 400      -- Min distance from player
-Constants.MOB_SPAWN_MAX_DISTANCE = 600      -- Max distance from player
-Constants.MOB_LEVEL_UP_INTERVAL = 60.0      -- Mobs level up every 60 seconds
+Constants.MOB_SPAWN_INTERVAL = Balansed.CONSTANTS.MOB_SPAWN_INTERVAL
+Constants.MOB_SPAWN_MIN_DISTANCE = Balansed.CONSTANTS.MOB_SPAWN_MIN_DISTANCE
+Constants.MOB_SPAWN_MAX_DISTANCE = Balansed.CONSTANTS.MOB_SPAWN_MAX_DISTANCE
+Constants.MOB_LEVEL_UP_INTERVAL = Balansed.CONSTANTS.MOB_LEVEL_UP_INTERVAL
 Constants.MOB_AI_UPDATE_RATE = 1/10         -- AI decisions 10Hz
 Constants.MOB_DEFAULT_SPRITE_SIZE = 32      -- Default mob sprite size if not specified in config
 
@@ -59,37 +62,37 @@ Constants.MAX_ACTIVE_SKILLS = 4             -- Default max skill slots (can be m
 
 -- === SKILL BASE STATS (BALANCE REFERENCE) ===
 -- These are baseline values for skill balance calculations
-Constants.SKILL_BASE_COOLDOWN = 2.0         -- Baseline cooldown (seconds)
-Constants.SKILL_BASE_DAMAGE = 25            -- Baseline damage
-Constants.SKILL_BASE_RANGE = 300           -- Baseline range (pixels)
+Constants.SKILL_BASE_COOLDOWN = Balansed.CONSTANTS.SKILL_BASE_COOLDOWN
+Constants.SKILL_BASE_DAMAGE = Balansed.CONSTANTS.SKILL_BASE_DAMAGE
+Constants.SKILL_BASE_RANGE = Balansed.CONSTANTS.SKILL_BASE_RANGE
 Constants.SKILL_BASE_PROJECTILE_SPEED = 250 -- Baseline projectile speed
 Constants.SKILL_BASE_HITBOX_RADIUS = 6     -- Baseline hitbox radius
-Constants.SKILL_BASE_AOE_RADIUS = 100       -- Baseline AOE radius
-Constants.SKILL_BASE_TICK_RATE = 1.0        -- Baseline tick rate (seconds)
-Constants.SKILL_BASE_DURATION = 10.0         -- Baseline aura duration (seconds)
+Constants.SKILL_BASE_AOE_RADIUS = Balansed.CONSTANTS.SKILL_BASE_AOE_RADIUS
+Constants.SKILL_BASE_TICK_RATE = Balansed.CONSTANTS.SKILL_BASE_TICK_RATE
+Constants.SKILL_BASE_DURATION = Balansed.CONSTANTS.SKILL_BASE_DURATION
 Constants.SKILL_BASE_ANIMATION_SPEED = 0.1  -- Baseline animation speed
 Constants.SKILL_DIRECTION_THRESHOLD = 0.7   -- Dot product threshold for direction matching
 
 -- === SKILL TYPE MULTIPLIERS ===
 -- These modify base stats for different skill types
-Constants.SKILL_PROJECTILE_DAMAGE_MULT = 1.0    -- Projectile damage multiplier
-Constants.SKILL_PROJECTILE_COOLDOWN_MULT = 1.0  -- Projectile cooldown multiplier
-Constants.SKILL_AOE_DAMAGE_MULT = 1.5           -- AOE damage multiplier (higher for area)
-Constants.SKILL_AOE_COOLDOWN_MULT = 1.5         -- AOE cooldown multiplier (longer for area)
-Constants.SKILL_BUFF_COOLDOWN_MULT = 2.0        -- Buff cooldown multiplier (longer for utility)
-Constants.SKILL_SUMMON_COOLDOWN_MULT = 3.0      -- Summon cooldown multiplier (longest for allies)
-Constants.SKILL_AURA_DAMAGE_MULT = 0.3          -- Aura damage multiplier (lower for continuous)
-Constants.SKILL_AURA_COOLDOWN_MULT = 0.5        -- Aura cooldown multiplier (shorter for continuous)
-Constants.SKILL_LASER_DAMAGE_MULT = 0.6         -- Laser damage multiplier (lower for continuous)
-Constants.SKILL_LASER_COOLDOWN_MULT = 1.2       -- Laser cooldown multiplier
+Constants.SKILL_PROJECTILE_DAMAGE_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.PROJECTILE_DAMAGE
+Constants.SKILL_PROJECTILE_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.PROJECTILE_COOLDOWN
+Constants.SKILL_AOE_DAMAGE_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.AOE_DAMAGE
+Constants.SKILL_AOE_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.AOE_COOLDOWN
+Constants.SKILL_BUFF_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.BUFF_COOLDOWN
+Constants.SKILL_SUMMON_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.SUMMON_COOLDOWN
+Constants.SKILL_AURA_DAMAGE_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.AURA_DAMAGE
+Constants.SKILL_AURA_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.AURA_COOLDOWN
+Constants.SKILL_LASER_DAMAGE_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.LASER_DAMAGE
+Constants.SKILL_LASER_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.LASER_COOLDOWN
 
 -- === SUMMON BASE STATS ===
-Constants.SUMMON_BASE_HP = 50                   -- Baseline summon health
-Constants.SUMMON_BASE_SPEED = 100               -- Baseline summon movement speed
-Constants.SUMMON_BASE_ARMOR = 0                 -- Baseline summon armor
+Constants.SUMMON_BASE_HP = Balansed.BASELINE_SUMMON_SKILL.summonHp
+Constants.SUMMON_BASE_SPEED = Balansed.BASELINE_SUMMON_SKILL.summonSpeed
+Constants.SUMMON_BASE_ARMOR = Balansed.BASELINE_SUMMON_SKILL.summonArmor
 
 -- === BOSS ===
-Constants.BOSS_SPAWN_INTERVAL = 600.0       -- Boss every 10 minutes
+Constants.BOSS_SPAWN_INTERVAL = Balansed.CONSTANTS.BOSS_SPAWN_INTERVAL
 
 -- === RENDERING ===
 Constants.SPRITE_BATCH_SIZE = 1000          -- Max sprites per batch
