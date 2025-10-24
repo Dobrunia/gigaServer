@@ -22,7 +22,7 @@ local startingSkills = {
     {
         id = "crimson-volley",
         name = "Crimson Volley",
-        description = "Стреляет кровавыми стрелами во всех направлениях",
+        description = "Shoots a volley of crimson arrows in all directions",
         type = "projectile",
         cooldown = 8,
         damage = 30,

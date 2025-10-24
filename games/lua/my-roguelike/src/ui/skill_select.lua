@@ -52,25 +52,28 @@ function SkillSelect:draw(assets, skills, selectedIndex)
         local row = math.floor((i - 1) / cardsPerRow)
         local col = ((i - 1) % cardsPerRow)
         
+        -- Use consistent card height for all cards to prevent overlapping
+        local actualCardHeight = cardHeight
+        
         local cardX = startX + col * (cardWidth + cardSpacing)
         local cardY = startY + row * (cardHeight + cardSpacing)
         
         -- Check if mouse is hovering over this card
         local mx, my = love.mouse.getPosition()
         local isHovered = mx >= cardX and mx <= cardX + cardWidth and
-                         my >= cardY and my <= cardY + cardHeight
+                         my >= cardY and my <= cardY + actualCardHeight
         -- Card background
         if isHovered then
             Colors.setColor(Colors.CARD_HOVER)
         else
             Colors.setColor(Colors.CARD_DEFAULT)
         end
-        love.graphics.rectangle("fill", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+        love.graphics.rectangle("fill", cardX, cardY, cardWidth, actualCardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         
         -- Card border
         Colors.setColor(Colors.BORDER_DEFAULT)
         love.graphics.setLineWidth(1)
-        love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+        love.graphics.rectangle("line", cardX, cardY, cardWidth, actualCardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         love.graphics.setLineWidth(1)
         
         -- Skill name
@@ -137,20 +140,37 @@ function SkillSelect:draw(assets, skills, selectedIndex)
             love.graphics.print("Range: N/A", statsX, rangeY)
         end
         
-        -- Description background
+        -- Description section (above dark blue card)
         local descY = rangeY + UIConstants.CARD_ELEMENTS_OFFSET_Y - 60
         local descX = cardX + UIConstants.CARD_PADDING
-        local descHeight = UIConstants.CARD_DESCRIPTION_HEIGHT
+        local textWidth = cardWidth - UIConstants.CARD_ELEMENTS_OFFSET_X - UIConstants.CARD_PADDING
+        love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
         
-        Colors.setColor(Colors.ZONE_PASSIVE)
-        love.graphics.rectangle("fill", descX, descY, cardWidth - UIConstants.CARD_PADDING * 2, descHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+        local currentY = descY
         
-        -- Effect display (if skill has effect)
+        -- Show skill description with normal color (above dark blue card)
+        if skill.description then
+            Colors.setColor(Colors.TEXT_SECONDARY)  -- Normal color for description
+            -- Limit description to fit in card height
+            local maxDescHeight = 30  -- Maximum height for description
+            love.graphics.printf(skill.description, descX, currentY, textWidth, "left")
+            currentY = currentY + maxDescHeight + 15  -- Increased spacing after description
+        end
+        
+        -- Dark blue card for effects (if skill has effect)
         if skill.effect then
-            local effectX = descX + UIConstants.CARD_PADDING
-            local effectY = descY + UIConstants.CARD_PADDING
+            local effectCardY = currentY + UIConstants.CARD_PADDING
+            local effectCardHeight = UIConstants.CARD_DESCRIPTION_HEIGHT
+            
+            -- Draw dark blue background for effects
+            Colors.setColor(Colors.ZONE_PASSIVE)
+            love.graphics.rectangle("fill", descX, effectCardY, cardWidth - UIConstants.CARD_PADDING * 2, effectCardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+            
+            -- Effect text inside dark blue card
+            local effectTextX = descX + UIConstants.CARD_PADDING
+            local effectTextY = effectCardY + UIConstants.CARD_PADDING
             love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
-            Colors.setColor(Colors.TEXT_ACCENT)
+            Colors.setColor(Colors.TEXT_ACCENT)  -- Accent color for effects
             
             local effectText = ""
             if skill.effect.type == "burning" then
@@ -167,7 +187,7 @@ function SkillSelect:draw(assets, skills, selectedIndex)
                 effectText = "Effect: " .. skill.effect.type .. " for " .. skill.effect.duration .. "s"
             end
             
-            love.graphics.printf(effectText, effectX, effectY, cardWidth - UIConstants.CARD_ELEMENTS_OFFSET_X - UIConstants.CARD_PADDING, "left")
+            love.graphics.printf(effectText, effectTextX, effectTextY, textWidth, "left")
         end
         
     end
