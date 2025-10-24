@@ -85,6 +85,19 @@ local startingSkills = {
             tickRate = 0.5
         }
     },
+    {
+        id = "crimson-volley",
+        name = "Crimson Volley",
+        description = "Стреляет кровавыми стрелами во всех направлениях",
+        type = "projectile",
+        cooldown = 8,
+        damage = 30,
+        range = 300,
+        projectileSpeed = 400,
+        hitboxRadius = 14,
+        assetFolder = "skills/crimson-volley",
+        animationSpeed = 0.05,
+    },
     
     -- AOE SKILL
     -- BUFF SKILL
