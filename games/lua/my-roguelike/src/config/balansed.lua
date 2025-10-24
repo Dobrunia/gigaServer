@@ -6,7 +6,33 @@
 local Balansed = {}
 
 -- === BASELINE HERO ===
--- Standard hero template - all heroes should be balanced around this
+-- config/heroes.lua
+-- Hero configurations (data-driven)
+-- Each hero has: base stats, stat growth, innate skill
+-- Starting skill is chosen separately from config/starting_skills.lua
+-- Format:
+-- {
+--   id = "unique_id",
+--   name = "Hero Name",
+--   assetFolder = "foldername" (folder in assets/heroes/ containing sprite files),
+--   -- Sprite files in folder:
+--   --   i.png - idle animation (standing)
+--   --   1.png, 2.png - idle animation frames (optional)
+--   --   a.png - attack animation (when attacking)
+--   --   NOTE: All sprites should be oriented FACING RIGHT
+--   baseHp = number,
+--   hpGrowth = number (per level),
+--   baseArmor = number,
+--   armorGrowth = number,
+--   baseMoveSpeed = number,
+--   speedGrowth = number,
+--   baseCastSpeed = number (multiplier, 1.0 = normal),
+--   castSpeedGrowth = number,
+--   spriteSize = number (optional, display size in pixels, default: 64)
+--   -- hitboxRadius calculated automatically: spriteSize * 0.4
+--   innateSkill = table (passive modifier)
+-- }
+
 Balansed.BASELINE_HERO = {
     id = "baseline_hero",
     name = "Baseline Hero",
@@ -35,7 +61,44 @@ Balansed.BASELINE_HERO = {
 }
 
 -- === BASELINE MOBS ===
-
+-- Format:
+-- {
+--   id = "unique_id",
+--   name = "Mob Name",
+--   type = "melee" | "ranged",
+--   assetFolder = "foldername" (folder in assets/mobs/ containing sprite files),
+--   -- Sprite files in folder:
+--   --   i.png - idle animation (standing)
+--   --   1.png, 2.png - idle animation frames (optional)
+--   --   a.png - attack animation (when attacking)
+--   --   NOTE: All sprites should be oriented FACING RIGHT
+--   baseHp = number,
+--   hpGrowth = number (per level),
+--   baseArmor = number,
+--   armorGrowth = number,
+--   baseMoveSpeed = number,
+--   speedGrowth = number,
+--   baseDamage = number,
+--   damageGrowth = number,
+--   attackSpeed = number (attacks per second),
+--   attackRange = number (ranged only),
+--   projectileSpeed = number (ranged only),
+--   projectileHitboxRadius = number (ranged only, collision radius for projectile),
+--   projectileAssetFolder = "foldername" (ranged only, folder in assets/),
+--   -- Or legacy spritesheet approach:
+--   projectileSpritesheet = "filename" (ranged only, spritesheet for projectiles),
+--   projectileSpriteIndex = number (ranged only, sprite index for projectiles),
+--   spriteSize = number (optional, display size in pixels, default: 32)
+--   -- hitboxRadius calculated automatically: spriteSize * 0.375
+--   xpDrop = number,
+--   xpDropGrowth = number (per level),
+--   xpDropSpritesheet = "filename" (spritesheet for XP drop, default "items"),
+--   xpDropSpriteIndex = number (sprite index for XP drop, default 324),
+--   spawnWeight = number (relative spawn probability, 1=common, 10=rare),
+--   spawnStartTime = number (seconds from game start when mob can spawn),
+--   spawnEndTime = number (seconds from game start when mob stops spawning, nil=forever),
+--   spawnGroupSize = number (mobs per spawn group, default 1)
+-- }
 -- Standard melee mob template
 Balansed.BASELINE_MELEE_MOB = {
     id = "baseline_melee_mob",
@@ -143,6 +206,63 @@ Balansed.BASELINE_BOSS = {
 }
 
 -- === BASELINE SKILLS ===
+-- COMMON PARAMETERS (all skill types):
+--   id = "unique_id"                    -- Unique identifier
+--   name = "Skill Name"                 -- Display name
+--   description = "What it does"        -- Tooltip description
+--   assetFolder = "foldername"          -- Folder in assets/ containing sprite files
+--   animationSpeed = number             -- Animation speed (default: 0.1)
+--   effect = table                      -- Status effect: {type, duration, params} (optional)
+--
+-- SPRITE FILES IN FOLDER:
+--   i.png - icon for UI/menu (any size, auto-scaled)
+--   h.png - hit effect (optional, any size, auto-scaled)
+--   1.png, 2.png, 3.png... - flight animation frames (any size, auto-scaled)
+--   aura.png - aura visual effect around player (for aura skills only)
+--   NOTE: All sprites should be oriented FACING RIGHT
+--
+-- TYPE: "projectile" (ranged attack that travels to target)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 2.0)
+--   damage = number                     -- Damage dealt on hit (base: 25)
+--   range = number                      -- Maximum travel distance (base: 300)
+--   projectileSpeed = number            -- Travel speed of projectile (base: 250)
+--   hitboxRadius = number               -- Collision radius of projectile (base: 6)
+--   direction = number                  -- Direction of projectile (4 = right+left+up+down, 8 = left+right+up+down + diagonals)
+--
+-- TYPE: "aoe" (area of effect around caster by default)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 3.0, mult: 1.5x)
+--   damage = number                     -- Damage dealt to all targets in radius (base: 37.5, mult: 1.5x)
+--   radius = number                     -- Area of effect radius (base: 100)
+--   
+--   Optional for projectile-triggered AOE (explodes on impact):
+--   range = number                      -- Projectile travel distance (base: 300)
+--   projectileSpeed = number            -- Projectile travel speed (base: 250)
+--   hitboxRadius = number               -- Projectile collision radius (base: 6)
+--
+-- TYPE: "buff" (applies beneficial effect to caster)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 4.0, mult: 2.0x)
+--   buffEffect = table                  -- Buff effect: {type, duration, params}
+--
+-- TYPE: "summon" (spawns allied creature)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 6.0, mult: 3.0x)
+--   damage = number                     -- Summon's attack damage (base: 25)
+--   summonSpeed = number                -- Summon's movement speed (base: 100)
+--   summonHp = number                   -- Summon's health points (base: 50)
+--   summonArmor = number                -- Summon's armor value (base: 0)
+--
+-- TYPE: "aura" (continuous area effect around caster)
+--   cooldown = number                   -- Aura activation cooldown (base: 1.0, mult: 0.5x)
+--   damage = number                     -- Damage per tick (base: 7.5, mult: 0.3x)
+--   radius = number                     -- Aura radius (base: 100)
+--   tickRate = number                   -- Damage application frequency (base: 1.0)
+--   duration = number                    -- Aura duration in seconds (base: 10.0)
+--   REQUIRES: i.png (UI icon) + aura.png (visual effect around player)
+--
+-- TYPE: "laser" (continuous beam attack to single target)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 2.4, mult: 1.2x)
+--   range = number                      -- Maximum beam range (base: 300)
+--   damage = number                     -- Damage per tick (base: 15, mult: 0.6x)
+--   tickRate = number                   -- Damage application frequency (base: 1.0)
 
 -- Standard projectile skill template
 Balansed.BASELINE_PROJECTILE_SKILL = {
