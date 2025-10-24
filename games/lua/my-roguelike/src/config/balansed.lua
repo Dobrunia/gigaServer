@@ -263,6 +263,15 @@ Balansed.BASELINE_BOSS = {
 --   range = number                      -- Maximum beam range (base: 300)
 --   damage = number                     -- Damage per tick (base: 15, mult: 0.6x)
 --   tickRate = number                   -- Damage application frequency (base: 1.0)
+--
+-- TYPE: "orbital" (projectiles that orbit around caster)
+--   cooldown = number                   -- Skill cooldown in seconds (base: 4.0, mult: 2.0x)
+--   damage = number                     -- Damage per hit (base: 15, mult: 0.6x)
+--   orbitalCount = number               -- Number of orbital projectiles (base: 3)
+--   orbitalRadius = number              -- Distance from caster (base: 80)
+--   orbitalSpeed = number               -- Rotation speed in radians/sec (base: 2.0)
+--   duration = number                   -- How long orbitals last (base: 10.0)
+--   hitboxRadius = number               -- Collision radius of orbitals (base: 6)
 
 -- Standard projectile skill template
 Balansed.BASELINE_PROJECTILE_SKILL = {
@@ -364,6 +373,25 @@ Balansed.BASELINE_LASER_SKILL = {
     animationSpeed = 0.1        -- Standard animation speed
 }
 
+-- Standard orbital skill template
+Balansed.BASELINE_ORBITAL_SKILL = {
+    id = "baseline_orbital",
+    name = "Baseline Orbital",
+    description = "Projectiles that orbit around caster",
+    type = "orbital",
+    assetFolder = "baseline_orbital",
+    
+    -- Core stats (2x cooldown, 0.6x damage for continuous)
+    cooldown = 4.0,           -- 2x projectile cooldown
+    damage = 15,               -- 0.6x projectile damage
+    orbitalCount = 3,          -- Number of orbital projectiles
+    orbitalRadius = 80,        -- Distance from caster
+    orbitalSpeed = 2.0,        -- Rotation speed (radians/sec)
+    duration = 10.0,           -- How long orbitals last
+    hitboxRadius = 6,          -- Collision radius
+    animationSpeed = 0.1        -- Standard animation speed
+}
+
 -- === BASELINE INNATE SKILLS ===
 
 -- Balanced innate (no modifiers)
@@ -426,12 +454,14 @@ Balansed.SKILL_TYPE_MULTIPLIERS = {
     SUMMON_COOLDOWN = 3.0,        -- 200% longer for allies
     AURA_COOLDOWN = 0.5,          -- 50% shorter for continuous
     LASER_COOLDOWN = 1.2,         -- 20% longer for continuous
+    ORBITAL_COOLDOWN = 2.0,       -- 100% longer for continuous orbitals
     
     -- Damage multipliers (higher = more damage)
     PROJECTILE_DAMAGE = 1.0,      -- Baseline
     AOE_DAMAGE = 1.5,             -- 50% more for area damage
     AURA_DAMAGE = 0.3,            -- 70% less for continuous
     LASER_DAMAGE = 0.6,           -- 40% less for continuous
+    ORBITAL_DAMAGE = 0.6,         -- 40% less for continuous orbitals
     BUFF_DAMAGE = 0.0,            -- No damage (utility)
     SUMMON_DAMAGE = 1.0           -- Same as projectile (summon's attack)
 }

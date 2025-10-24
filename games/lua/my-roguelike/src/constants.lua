@@ -75,16 +75,29 @@ Constants.SKILL_DIRECTION_THRESHOLD = 0.7   -- Dot product threshold for directi
 
 -- === SKILL TYPE MULTIPLIERS ===
 -- These modify base stats for different skill types
-Constants.SKILL_PROJECTILE_DAMAGE_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.PROJECTILE_DAMAGE
-Constants.SKILL_PROJECTILE_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.PROJECTILE_COOLDOWN
-Constants.SKILL_AOE_DAMAGE_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.AOE_DAMAGE
-Constants.SKILL_AOE_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.AOE_COOLDOWN
-Constants.SKILL_BUFF_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.BUFF_COOLDOWN
-Constants.SKILL_SUMMON_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.SUMMON_COOLDOWN
 Constants.SKILL_AURA_DAMAGE_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.AURA_DAMAGE
-Constants.SKILL_AURA_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.AURA_COOLDOWN
 Constants.SKILL_LASER_DAMAGE_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.LASER_DAMAGE
-Constants.SKILL_LASER_COOLDOWN_MULT = Balansed.SKILL_TYPE_MULTIPLIERS.LASER_COOLDOWN
+
+-- === ORBITAL SKILL CONSTANTS ===
+-- Baseline values from balansed.lua
+Constants.ORBITAL_BASE_COUNT = Balansed.BASELINE_ORBITAL_SKILL.orbitalCount
+Constants.ORBITAL_BASE_RADIUS = Balansed.BASELINE_ORBITAL_SKILL.orbitalRadius
+Constants.ORBITAL_BASE_SPEED = Balansed.BASELINE_ORBITAL_SKILL.orbitalSpeed
+Constants.ORBITAL_BASE_DAMAGE = Balansed.BASELINE_ORBITAL_SKILL.damage
+Constants.ORBITAL_BASE_DURATION = Balansed.BASELINE_ORBITAL_SKILL.duration
+Constants.ORBITAL_BASE_HITBOX_RADIUS = Balansed.BASELINE_ORBITAL_SKILL.hitboxRadius
+Constants.ORBITAL_BASE_ANIMATION_SPEED = Balansed.BASELINE_ORBITAL_SKILL.animationSpeed
+
+-- Technical constants (not in balansed.lua)
+Constants.ORBITAL_HIT_COOLDOWN = 0.1             -- Minimum time between hits on same target
+Constants.ORBITAL_COLLISION_QUERY_RADIUS = 50    -- Extra radius for spatial hash queries
+Constants.ORBITAL_SPIN_SPEED = 8.0               -- Orbital sprite spin speed (radians/sec)
+Constants.ORBITAL_PLAYER_COLOR_R = 0.8           -- Player orbital color (orange)
+Constants.ORBITAL_PLAYER_COLOR_G = 0.4
+Constants.ORBITAL_PLAYER_COLOR_B = 0.2
+Constants.ORBITAL_MOB_COLOR_R = 0.8              -- Mob orbital color (red)
+Constants.ORBITAL_MOB_COLOR_G = 0.2
+Constants.ORBITAL_MOB_COLOR_B = 0.2
 
 -- === SUMMON BASE STATS ===
 Constants.SUMMON_BASE_HP = Balansed.BASELINE_SUMMON_SKILL.summonHp
@@ -96,7 +109,7 @@ Constants.BOSS_SPAWN_INTERVAL = Balansed.CONSTANTS.BOSS_SPAWN_INTERVAL
 
 -- === RENDERING ===
 Constants.SPRITE_BATCH_SIZE = 1000          -- Max sprites per batch
-Constants.DEBUG_DRAW_HITBOXES = false        -- Toggle hitbox rendering
+Constants.DEBUG_DRAW_HITBOXES = true        -- Toggle hitbox rendering
 Constants.DEBUG_DRAW_DIRECTION_ARROW = false -- Toggle direction arrow rendering
 Constants.DEBUG_DRAW_DAMAGE_NUMBERS = true   -- Toggle damage numbers display above mobs
 

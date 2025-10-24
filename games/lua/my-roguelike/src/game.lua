@@ -642,6 +642,18 @@ function Game:drawPlaying()
         end
     end
     
+    -- Draw orbital skills
+    if self.skills and self.skills.orbital then
+        -- Check if orbital has draw method
+        if type(self.skills.orbital.draw) == "function" then
+            self.skills.orbital:draw(self.player)
+        else
+            -- Debug: orbital exists but no draw method
+            print("DEBUG: orbital type:", type(self.skills.orbital))
+            print("DEBUG: orbital draw type:", type(self.skills.orbital.draw))
+        end
+    end
+    
     -- Draw player
     if self.player then
         self.player:draw()
@@ -669,6 +681,16 @@ function Game:drawPlaying()
         love.graphics.setColor(Colors.ACCENT)
         for _, proj in ipairs(self.projectiles) do
             love.graphics.circle("line", proj.x, proj.y, proj.radius)
+        end
+        
+        -- Orbital hitboxes (cyan)
+        if self.skills and self.skills.orbital and self.skills.orbital.orbitals then
+            love.graphics.setColor(0, 1, 1, 0.8)  -- Cyan color for orbital hitboxes
+            for _, orbital in ipairs(self.skills.orbital.orbitals) do
+                if orbital.active then
+                    love.graphics.circle("line", orbital.x, orbital.y, orbital.radius)
+                end
+            end
         end
         
         -- XP drop hitboxes (cyan)

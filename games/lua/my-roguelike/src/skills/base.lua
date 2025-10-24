@@ -21,6 +21,7 @@ function Skills.new()
     self.buff = require("src.skills.buff")
     self.summon = require("src.skills.summon")
     self.laser = require("src.skills.laser")
+    self.orbital = require("src.skills.orbital").new()
     
     return self
 end
@@ -41,6 +42,11 @@ function Skills:update(dt, player, targets, projectilePool, spatialHash, project
             self.aura.update(player, skill, targets, spatialHash, dt)
         end
         
+        -- Update active orbitals
+        if skill.type == "orbital" then
+            self.orbital:update(dt, player, targets, spatialHash)
+        end
+        
         -- Update cooldown
         if skill.cooldownTimer and skill.cooldownTimer > 0 then
             skill.cooldownTimer = skill.cooldownTimer - dt
@@ -50,8 +56,10 @@ function Skills:update(dt, player, targets, projectilePool, spatialHash, project
 
         -- Auto-cast if ready
         if skill.cooldownTimer <= 0 and player:canAttack() then
-            -- Special handling for aura skills - always cast on cooldown
+            -- Special handling for aura and orbital skills - always cast on cooldown
             if skill.type == "aura" then
+                self:castSkill(player, skill, targets, projectilePool, spatialHash, projectiles, 1, 0)
+            elseif skill.type == "orbital" then
                 self:castSkill(player, skill, targets, projectilePool, spatialHash, projectiles, 1, 0)
             elseif player.manualAimMode then
                 self:castSkill(player, skill, targets, projectilePool, spatialHash, projectiles, player.aimDirection.x, player.aimDirection.y)
@@ -132,6 +140,8 @@ function Skills:castSkill(caster, skill, targets, projectilePool, spatialHash, p
         self.aura.cast(caster, skill, targets, spatialHash)
     elseif skill.type == "laser" then
         self.laser:cast(caster, skill, targets, spatialHash, dirX, dirY)
+    elseif skill.type == "orbital" then
+        self.orbital:cast(caster, skill, projectilePool, projectiles)
     end
     
     return true
