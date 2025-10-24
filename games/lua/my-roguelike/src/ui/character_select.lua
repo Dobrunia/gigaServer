@@ -81,7 +81,7 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
         love.graphics.print(hero.name, nameX, nameY)
         
         -- Hero sprite
-        local spriteX = nameX + UIConstants.CARD_PADDING + UIConstants.CARD_MAIN_SPRITE_SIZE / 2
+        local spriteX = nameX + UIConstants.CARD_MAIN_SPRITE_SIZE / 2
         local spriteY = nameY + UIConstants.CARD_ELEMENTS_OFFSET_Y 
         
         Colors.setColor(Colors.TEXT_PRIMARY)

@@ -53,6 +53,19 @@ local startingSkills = {
     
     -- AOE SKILL
     -- BUFF SKILL
+    {
+        id = "fist-of-fury",
+        name = "Fist of Fury",
+        description = "Increases the player's damage by 10%",
+        assetFolder = "skills/fist-of-fury",
+        type = "buff",
+        cooldown = 10,
+        buffEffect = {
+            type = "damageMultiplier",
+            duration = 10,
+            multiplier = 1.1,
+        }
+    },
     -- SUMMON SKILL
     -- AURA SKILL
     {
