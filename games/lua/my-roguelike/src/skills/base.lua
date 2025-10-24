@@ -50,7 +50,10 @@ function Skills:update(dt, player, targets, projectilePool, spatialHash, project
 
         -- Auto-cast if ready
         if skill.cooldownTimer <= 0 and player:canAttack() then
-            if player.manualAimMode then
+            -- Special handling for aura skills - always cast on cooldown
+            if skill.type == "aura" then
+                self:castSkill(player, skill, targets, projectilePool, spatialHash, projectiles, 1, 0)
+            elseif player.manualAimMode then
                 self:castSkill(player, skill, targets, projectilePool, spatialHash, projectiles, player.aimDirection.x, player.aimDirection.y)
             else
                 local nearest = self:findNearestTarget(player, targets, spatialHash, skill.range or Constants.SKILL_BASE_RANGE)
