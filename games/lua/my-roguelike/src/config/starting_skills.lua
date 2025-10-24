@@ -31,6 +31,7 @@ local startingSkills = {
         hitboxRadius = 14,
         assetFolder = "skills/crimson-volley",
         animationSpeed = 0.05,
+        direction = 8,
     },
     
     -- AOE SKILL
