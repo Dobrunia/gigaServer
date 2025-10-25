@@ -38,18 +38,22 @@ function LevelUpSkillSelect:draw(assets, choices, selectedIndex)
     love.graphics.printf("Select one of the following options:", 0, 140, screenW, "center")
     
     -- Skill choices (3 cards in a row)
-    local cardWidth = 280
-    local cardHeight = 200
-    local cardSpacing = 20
-    local startY = 200
+    local cardWidth = UIConstants.CARD_WIDTH
+    local cardHeight = UIConstants.CARD_HEIGHT
+    local cardSpacing = UIConstants.CARD_SPACING
+    local cardsPerRow = 3
+    local startY = UIConstants.CARDS_START_Y
     
-    -- Calculate total width for 3 cards
-    local totalWidth = (cardWidth * 3) + (cardSpacing * 2)
+    -- Calculate grid positioning
+    local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))
     local startX = (screenW - totalWidth) / 2
     
     for i, choice in ipairs(choices) do
-        local cardX = startX + (i - 1) * (cardWidth + cardSpacing)
-        local cardY = startY
+        local row = math.floor((i - 1) / cardsPerRow)
+        local col = ((i - 1) % cardsPerRow)
+        
+        local cardX = startX + col * (cardWidth + cardSpacing)
+        local cardY = startY + row * (cardHeight + cardSpacing)
         
         -- Check if mouse is hovering over this card
         local mx, my = love.mouse.getPosition()
@@ -66,37 +70,37 @@ function LevelUpSkillSelect:draw(assets, choices, selectedIndex)
         
         -- Card border
         Colors.setColor(Colors.BORDER_DEFAULT)
-        love.graphics.setLineWidth(2)
+        love.graphics.setLineWidth(1)
         love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         love.graphics.setLineWidth(1)
         
         -- Choice type indicator
-        local typeY = cardY + 10
+        local typeY = cardY + UIConstants.CARD_PADDING
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
         if choice.isUpgrade then
             Colors.setColor(Colors.ACCENT)  -- Gold for upgrades
-            love.graphics.printf("UPGRADE", cardX + 10, typeY, cardWidth - 20, "left")
+            love.graphics.printf("UPGRADE", cardX + UIConstants.CARD_PADDING, typeY, cardWidth - UIConstants.CARD_PADDING * 2, "left")
         else
             Colors.setColor(Colors.PRIMARY)  -- Blue for new skills
-            love.graphics.printf("NEW SKILL", cardX + 10, typeY, cardWidth - 20, "left")
+            love.graphics.printf("NEW SKILL", cardX + UIConstants.CARD_PADDING, typeY, cardWidth - UIConstants.CARD_PADDING * 2, "left")
         end
         
         -- Skill name
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
         Colors.setColor(Colors.TEXT_PRIMARY)
         local nameY = typeY + 25
-        love.graphics.printf(choice.skill.name, cardX + 10, nameY, cardWidth - 20, "left")
+        love.graphics.printf(choice.skill.name, cardX + UIConstants.CARD_PADDING, nameY, cardWidth - UIConstants.CARD_PADDING * 2, "left")
         
         -- Skill level (for upgrades)
         if choice.isUpgrade then
             love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
             Colors.setColor(Colors.TEXT_SECONDARY)
-            love.graphics.printf("Level " .. (choice.skill.level + 1), cardX + 10, nameY + 25, cardWidth - 20, "left")
+            love.graphics.printf("Level " .. (choice.skill.level + 1), cardX + UIConstants.CARD_PADDING, nameY + 25, cardWidth - UIConstants.CARD_PADDING * 2, "left")
         end
         
         -- Skill sprite
-        local spriteX = cardX + 20
-        local spriteY = nameY + 40
+        local spriteX = cardX + UIConstants.CARD_PADDING + UIConstants.CARD_MAIN_SPRITE_SIZE / 2
+        local spriteY = nameY + UIConstants.CARD_ELEMENTS_OFFSET_Y
         
         Colors.setColor(Colors.TEXT_PRIMARY)
         
@@ -108,7 +112,7 @@ function LevelUpSkillSelect:draw(assets, choices, selectedIndex)
         if choice.skill.loadedSprites and choice.skill.loadedSprites.icon then
             local icon = choice.skill.loadedSprites.icon
             local iconW, iconH = icon:getDimensions()
-            local scale = 40 / math.max(iconW, iconH)
+            local scale = UIConstants.CARD_MAIN_SPRITE_SIZE / math.max(iconW, iconH)
             love.graphics.draw(icon, spriteX, spriteY, 0, scale, scale, iconW / 2, iconH / 2)
         end
         
@@ -116,9 +120,9 @@ function LevelUpSkillSelect:draw(assets, choices, selectedIndex)
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
         Colors.setColor(Colors.TEXT_SECONDARY)
         
-        local statsX = spriteX + 60
-        local statsY = spriteY - 20
-        local statsOffset = 15
+        local statsX = spriteX + UIConstants.CARD_ELEMENTS_OFFSET_X
+        local statsY = spriteY - UIConstants.CARD_MAIN_SPRITE_SIZE / 2
+        local statsOffset = UIConstants.ICON_STAT_SIZE + 10
         
         -- Show current vs new stats for upgrades
         if choice.isUpgrade then
@@ -165,7 +169,7 @@ function LevelUpSkillSelect:draw(assets, choices, selectedIndex)
         -- Description
         if choice.skill.description then
             local descY = cardY + cardHeight - 40
-            love.graphics.printf(choice.skill.description, cardX + 10, descY, cardWidth - 20, "left")
+            love.graphics.printf(choice.skill.description, cardX + UIConstants.CARD_PADDING, descY, cardWidth - UIConstants.CARD_PADDING * 2, "left")
         end
     end
     
@@ -179,18 +183,22 @@ end
 
 function LevelUpSkillSelect:handleClick(x, y, choices)
     local screenW = love.graphics.getWidth()
-    local cardWidth = 280
-    local cardHeight = 200
-    local cardSpacing = 20
-    local startY = 200
+    local cardWidth = UIConstants.CARD_WIDTH
+    local cardHeight = UIConstants.CARD_HEIGHT
+    local cardSpacing = UIConstants.CARD_SPACING
+    local cardsPerRow = 3
+    local startY = UIConstants.CARDS_START_Y
     
-    -- Calculate total width for 3 cards
-    local totalWidth = (cardWidth * 3) + (cardSpacing * 2)
+    -- Calculate grid positioning
+    local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))
     local startX = (screenW - totalWidth) / 2
     
     for i, choice in ipairs(choices) do
-        local cardX = startX + (i - 1) * (cardWidth + cardSpacing)
-        local cardY = startY
+        local row = math.floor((i - 1) / cardsPerRow)
+        local col = ((i - 1) % cardsPerRow)
+        
+        local cardX = startX + col * (cardWidth + cardSpacing)
+        local cardY = startY + row * (cardHeight + cardSpacing)
         
         -- Check if click is within this card
         if x >= cardX and x <= cardX + cardWidth and
