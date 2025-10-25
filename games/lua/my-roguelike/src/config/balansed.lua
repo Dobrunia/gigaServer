@@ -274,6 +274,19 @@ Balansed.BASELINE_BOSS = {
 --   duration = number                   -- How long orbitals last (base: 10.0)
 --   hitboxRadius = number               -- Collision radius of orbitals (base: 6)
 
+-- Обновления будут работать по принципу:
+-- upgrades = {
+--     {
+--         damage = 60,
+--     },
+--     {
+--         damage = 80,
+--     }
+-- }
+-- Будет массив upgrades, улучшения уровня 2 это 1 элемент массива
+-- те значния что там, будут заменять старые значения скилла
+-- если появляется новое, эффект например то добавляем эффект
+
 -- Standard projectile skill template
 Balansed.BASELINE_PROJECTILE_SKILL = {
     id = "baseline_projectile",

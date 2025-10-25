@@ -19,6 +19,14 @@ local skills = {
             tickRate = 0.5
         },
         isStartingSkill = true,
+        upgrades = {
+            {
+                damage = 60,
+            },
+            {
+                damage = 80,
+            }
+        }
     },
     {
         id = "crimson-volley",
@@ -33,6 +41,16 @@ local skills = {
         assetFolder = "skills/crimson-volley",
         animationSpeed = 0.05,
         direction = 8,
+        upgrades = {
+            {
+                damage = 40,
+                range = 350,
+            },
+            {
+                damage = 50,
+                range = 400,
+            }
+        }
     },
     
     -- ORBITAL SKILL
@@ -49,7 +67,15 @@ local skills = {
         duration = 5,
         hitboxRadius = 20,
         assetFolder = "skills/axe-whirlwind",
-        spinSpeed = 6.0
+        spinSpeed = 6.0,
+        upgrades = {
+            {
+                orbitalSpeed = 2,
+            },
+            {
+                orbitalSpeed = 2.5,
+            }
+        }
     },
     
     -- AOE SKILL
@@ -65,6 +91,14 @@ local skills = {
             type = "damageMultiplier",
             duration = 10,
             multiplier = 1.1,
+        },
+        upgrades = {
+            {
+                cooldown = 16,
+            },
+            {
+                cooldown = 14,
+            }
         }
     },
     -- SUMMON SKILL
@@ -80,6 +114,14 @@ local skills = {
         radius = 200,
         tickRate = 0.3,
         duration = 8,
+        upgrades = {
+            {
+                radius = 300,
+            },
+            {
+                radius = 400,
+            }
+        }
     },
     -- LASER SKILL
 }
