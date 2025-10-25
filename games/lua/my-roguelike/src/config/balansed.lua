@@ -213,6 +213,7 @@ Balansed.BASELINE_BOSS = {
 --   assetFolder = "foldername"          -- Folder in assets/ containing sprite files
 --   animationSpeed = number             -- Animation speed (default: 0.1)
 --   effect = table                      -- Status effect: {type, duration, params} (optional)
+--   isStartingSkill = boolean           -- Whether the skill is a starting skill (default: false)
 --
 -- SPRITE FILES IN FOLDER:
 --   i.png - icon for UI/menu (any size, auto-scaled)

@@ -138,7 +138,14 @@ function Game:loadConfigs()
     self.bossConfigs = {}              -- No bosses for now
     
     self.skillConfigs = require("src.config.skills")
-    self.startingSkillConfigs = require("src.config.starting_skills")
+    
+    -- Filter starting skills from main skills config
+    self.startingSkillConfigs = {}
+    for _, skill in pairs(self.skillConfigs) do
+        if skill.isStartingSkill then
+            table.insert(self.startingSkillConfigs, skill)
+        end
+    end
 end
 
 -- === UPDATE ===
