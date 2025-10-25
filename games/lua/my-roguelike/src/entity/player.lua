@@ -39,7 +39,8 @@ function Player.new(x, y, heroData)
     -- Level & XP
     self.level = 1
     self.xp = 0
-    self.xpToNextLevel = Utils.xpForLevel(2)
+    self.xpToNextLevel = 10--Utils.xpForLevel(2)
+    self.justLeveledUp = false  -- Flag for level up detection
     
     -- Skills
     self.skills = {}  -- Active skills
@@ -242,7 +243,10 @@ function Player:levelUp()
     self.castSpeed = self.castSpeed + self.castSpeedGrowth
     
     -- Update XP requirement for next level
-    self.xpToNextLevel = Utils.xpForLevel(self.level + 1)
+    self.xpToNextLevel = 10--Utils.xpForLevel(self.level + 1)
+    
+    -- Set flag for level up detection
+    self.justLeveledUp = true
     
     Utils.log("Player leveled up to " .. self.level)
     

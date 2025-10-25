@@ -21,6 +21,7 @@ local Projectile = ProjectileSkill.Projectile
 local MainMenu = require("src.ui.main_menu")
 local CharacterSelect = require("src.ui.character_select")
 local SkillSelect = require("src.ui.skill_select")
+local LevelUpSkillSelect = require("src.ui.level_up_skill_select")
 local HUD = require("src.ui.hud")
 local Minimap = require("src.ui.minimap")
 
@@ -33,7 +34,7 @@ function Game.new()
     local self = setmetatable({}, Game)
     
     -- Game state
-    self.mode = "menu"  -- menu, char_select, skill_select, playing, game_over
+    self.mode = "menu"  -- menu, char_select, skill_select, playing, level_up_skill_select, game_over
     self.paused = false
     
     -- Game over stats
@@ -58,6 +59,7 @@ function Game.new()
     self.mainMenu = nil
     self.characterSelect = nil
     self.skillSelect = nil
+    self.levelUpSkillSelect = nil
     self.hud = nil
     self.minimap = nil
     
@@ -78,6 +80,8 @@ function Game.new()
     self.selectedHeroIndex = 1
     self.selectedSkillIndex = 1
     self.pendingSkillChoice = nil  -- Table of skills to choose from
+    self.levelUpChoices = {}  -- Available skill choices for level up
+    self.selectedLevelUpChoice = 1
     
     -- Timer
     self.gameTime = 0
@@ -113,6 +117,7 @@ function Game:load()
     self.mainMenu = MainMenu.new()
     self.characterSelect = CharacterSelect.new()
     self.skillSelect = SkillSelect.new()
+    self.levelUpSkillSelect = LevelUpSkillSelect.new()
     self.hud = HUD.new()
     self.minimap = Minimap.new()
     
@@ -161,6 +166,8 @@ function Game:update(dt)
         self:updateSkillSelect(dt)
     elseif self.mode == "playing" then
         self:updatePlaying(dt)
+    elseif self.mode == "level_up_skill_select" then
+        self:updateLevelUpSkillSelect(dt)
     elseif self.mode == "game_over" then
         self:updateGameOver(dt)
     end
@@ -358,10 +365,10 @@ function Game:fixedUpdate(dt)
     self.spawnManager:update(dt, self.player, self.mobs, self.xpDrops, self.mobConfigs, self.bossConfigs)
     
     -- Check for level up (show skill choice)
-    -- This would trigger UI for skill selection
-    -- For now, auto-select first available skill
-    if self.player.xp >= self.player.xpToNextLevel then
-        -- Will be handled in draw/UI layer
+    if self.player.justLeveledUp then
+        Utils.log("Level up detected - triggering skill selection")
+        self.player.justLeveledUp = false  -- Reset flag
+        self:triggerLevelUp()
     end
 end
 
@@ -482,6 +489,119 @@ function Game:spawnMobProjectile(projData)
     table.insert(self.projectiles, proj)
 end
 
+-- === LEVEL UP SYSTEM ===
+
+function Game:triggerLevelUp()
+    -- Generate skill choices
+    self.levelUpChoices = self:generateSkillChoices()
+    self.selectedLevelUpChoice = 1
+    self.mode = "level_up_skill_select"
+    self.paused = true
+    Utils.log("Level up triggered - showing skill choices")
+end
+
+function Game:generateSkillChoices()
+    local choices = {}
+    local availableSkills = {}
+    local upgradeSkills = {}
+    
+    -- Get all available skills (not starting skills)
+    for _, skill in ipairs(self.skillConfigs) do
+        if not skill.isStartingSkill then
+            table.insert(availableSkills, skill)
+        end
+    end
+    
+    -- Get skills that can be upgraded
+    for _, playerSkill in ipairs(self.player.skills) do
+        if playerSkill.upgrades and playerSkill.level < #playerSkill.upgrades then
+            table.insert(upgradeSkills, playerSkill)
+        end
+    end
+    
+    -- Generate 3 choices
+    local choiceCount = 0
+    local maxChoices = 3
+    
+    -- First, add upgrade choices if available
+    for _, skill in ipairs(upgradeSkills) do
+        if choiceCount >= maxChoices then break end
+        
+        table.insert(choices, {
+            skill = skill,
+            isUpgrade = true
+        })
+        choiceCount = choiceCount + 1
+    end
+    
+    -- Then add new skill choices if slots are available
+    if #self.player.skills < self.player.maxSkillSlots then
+        local newSkillCount = maxChoices - choiceCount
+        local shuffledSkills = Utils.shuffle(availableSkills)
+        
+        for i = 1, math.min(newSkillCount, #shuffledSkills) do
+            table.insert(choices, {
+                skill = shuffledSkills[i],
+                isUpgrade = false
+            })
+        end
+    end
+    
+    return choices
+end
+
+function Game:updateLevelUpSkillSelect(dt)
+    -- Handle mouse clicks on skill choices
+    if Input.mouse.leftPressed then
+        local mx, my = Input.mouse.x, Input.mouse.y
+        local clickedChoiceIndex = self.levelUpSkillSelect:handleClick(mx, my, self.levelUpChoices)
+        if clickedChoiceIndex then
+            self.selectedLevelUpChoice = clickedChoiceIndex
+            self:selectLevelUpSkill(clickedChoiceIndex)
+        end
+    end
+    
+    -- Navigate with arrow keys
+    if Input.isKeyPressed("left") then
+        self.selectedLevelUpChoice = math.max(1, self.selectedLevelUpChoice - 1)
+    elseif Input.isKeyPressed("right") then
+        self.selectedLevelUpChoice = math.min(#self.levelUpChoices, self.selectedLevelUpChoice + 1)
+    end
+end
+
+function Game:selectLevelUpSkill(choiceIndex)
+    local choice = self.levelUpChoices[choiceIndex]
+    if not choice then return end
+    
+    if choice.isUpgrade then
+        -- Upgrade existing skill
+        local skill = choice.skill
+        local upgradeData = skill.upgrades[skill.level]
+        if upgradeData then
+            -- Apply upgrade
+            for key, value in pairs(upgradeData) do
+                skill[key] = value
+            end
+            skill.level = skill.level + 1
+            Utils.log("Upgraded skill: " .. skill.name .. " to level " .. skill.level)
+        end
+    else
+        -- Add new skill
+        if self.player:addSkill(choice.skill) then
+            Utils.log("Added new skill: " .. choice.skill.name)
+        end
+    end
+    
+    -- Return to playing
+    self.mode = "playing"
+    self.paused = false
+    self.levelUpChoices = {}
+end
+
+function Game:drawLevelUpSkillSelect()
+    self.levelUpSkillSelect:draw(Assets, self.levelUpChoices, self.selectedLevelUpChoice)
+end
+
 -- === DRAW ===
 
 function Game:draw()
@@ -493,6 +613,8 @@ function Game:draw()
         self:drawSkillSelect()
     elseif self.mode == "playing" then
         self:drawPlaying()
+    elseif self.mode == "level_up_skill_select" then
+        self:drawLevelUpSkillSelect()
     elseif self.mode == "game_over" then
         self:drawGameOver()
     end
