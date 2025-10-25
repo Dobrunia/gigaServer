@@ -1,5 +1,4 @@
 local Creature = require("src.entity.creature")
-local Constants = require("src.entity.constants")
 
 local Hero = {}
 Hero.__index = Hero
@@ -26,7 +25,7 @@ function Hero.new(x, y, heroId, level = 1)
     self.innateSkill = config.innateSkill
 
     self.experience = 0
-    self.experienceToNext = Constants.EXPERIENCE_TO_NEXT_LEVEL
+    self.experienceToNext = 100
 
     return self
 end
@@ -48,7 +47,7 @@ end
 
 function Hero:levelUp()
     self.level = self.level + 1
-    self.experienceToNext = self.experienceToNext * Constants.EXPERIENCE_TO_NEXT_LEVEL_MULTIPLIER
+    self.experienceToNext = self.experienceToNext * 1.3
 
     -- Улучшаем параметры
     self.baseHp = self.baseHp + self.hpGrowth

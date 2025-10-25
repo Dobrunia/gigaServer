@@ -24,7 +24,7 @@ function Creature.new(spriteSheet, x, y, config, level)
     self.moveSpeed = self.baseMoveSpeed
 
     self.skills = {}
-    self.cooldownReduction = Constants.COOLDOWN_REDUCTION - (config.innateSkill.modifiers.cooldownReduction or 0)
+    self.cooldownReduction = 1 - (config.innateSkill.modifiers.cooldownReduction or 0)
 
     self.usedSkills = {}
     return self
