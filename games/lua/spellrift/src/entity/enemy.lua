@@ -40,14 +40,5 @@ end
 
 function Enemy:createDrop()
     -- Создаем XP дроп
-    local xpDrop = {
-        x = self.x,
-        y = self.y,
-        value = self.xpDrop,
-        sprite = SpriteManager.loadDropSprite(self.xpDropSpritesheet),
-        type = "xp",
-        collected = false
-    }
-    
     -- Добавляем в список дропа
 end
