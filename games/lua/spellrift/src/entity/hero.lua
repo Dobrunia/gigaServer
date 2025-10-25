@@ -1,15 +1,14 @@
 local Creature = require("src.entity.creature")
+local SpriteManager = require("src.utils.sprite_manager")
 
 local Hero = {}
 Hero.__index = Hero
-
-local spriteCache = {}
 
 function Hero.new(x, y, heroId, level = 1)
     local self = setmetatable({}, Hero)
 
     -- Загружаем спрайт только один раз на весь тип героя
-    local spriteSheet = Hero.loadSprite(heroId)
+    local spriteSheet = SpriteManager.loadHeroSprite(heroId)
     local config = require("src.config.heroes")[heroId]
 
     if not config then
@@ -28,14 +27,6 @@ function Hero.new(x, y, heroId, level = 1)
     self.experienceToNext = 100
 
     return self
-end
-
-function Hero.loadSprite(heroId)
-    -- Проверяем глобальный кэш
-    if not spriteCache[heroId] then
-        spriteCache[heroId] = love.graphics.newImage("assets/heroes/" .. heroId .. "/spritesheet.png")
-    end
-    return spriteCache[heroId]
 end
 
 function Hero:gainExperience(amount)
@@ -60,14 +51,6 @@ function Hero:levelUp()
     self.castSpeed = self.castSpeed + self.castSpeedGrowth
     
     -- Показываем выбор навыка
-end
-
-function Hero:draw()
-    Creature.draw(self)
-end
-
-function Hero:update(dt)
-    Creature.update(self, dt)
 end
 
 return Hero
