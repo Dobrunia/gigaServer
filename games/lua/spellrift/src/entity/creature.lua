@@ -1,5 +1,6 @@
 local Object = require("src.entity.object")
 local Constants = require("src.entity.constants")
+local Debuff = require("src.entity.debuff")
 
 local Creature = {}
 Creature.__index = Creature
@@ -25,6 +26,8 @@ function Creature.new(spriteSheet, x, y, config, level)
 
     self.skills = {}
     self.maxSkillSlots = config.maxSkillSlots or 4
+
+    self.debuffs = {}
 
     self.cooldownReduction = 0
     if config.innateSkill and config.innateSkill.modifiers and config.innateSkill.modifiers.cooldownReduction then
@@ -60,6 +63,16 @@ function Creature:castSkill(skill)
     skill:cast()
 end
 
+-- Добавляем дебафф
+function Creature:addDebuff(debuffType, duration, params, caster)
+    local debuff = Debuff.new(debuffType, duration, params, caster)
+    table.insert(self.debuffs, debuff)
+end
+
+function Creature:cleanse()
+    self.debuffs = {}
+end
+
 function Creature:update(dt)
     -- Если мертв, не обновляем логику
     if self.isDead then
@@ -69,6 +82,16 @@ function Creature:update(dt)
     -- Обновляем кулдауны всех использованных навыков
     for _, skill in ipairs(self.skills) do
         skill:update(dt)
+    end
+
+    -- Обновляем дебаффы
+    for i = #self.debuffs, 1, -1 do
+        local debuff = self.debuffs[i]
+        debuff:update(dt, self)
+        
+        if not debuff:isActive() then
+            table.remove(self.debuffs, i)
+        end
     end
 
     Object.update(self, dt)
