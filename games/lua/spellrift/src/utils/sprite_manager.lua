@@ -27,28 +27,28 @@ end
 
 function SpriteManager.loadDropSprite(dropId)
     if not spriteCaches.drops[dropId] then
-        spriteCaches.drops[dropId] = love.graphics.newImage("assets/drops/" .. dropId .. ".png")
+        spriteCaches.drops[dropId] = love.graphics.newImage("assets/drops/" .. dropId .. "/spritesheet.png")
     end
     return spriteCaches.drops[dropId]
 end
 
 function SpriteManager.loadSkillSprite(skillId)
     if not spriteCaches.skills[skillId] then
-        spriteCaches.skills[skillId] = love.graphics.newImage("assets/skills/" .. skillId .. "/icon.png")
+        spriteCaches.skills[skillId] = love.graphics.newImage("assets/skills/" .. skillId .. "/spritesheet.png")
     end
     return spriteCaches.skills[skillId]
 end
 
 function SpriteManager.loadItemSprite(itemId)
     if not spriteCaches.items[itemId] then
-        spriteCaches.items[itemId] = love.graphics.newImage("assets/items/" .. itemId .. ".png")
+        spriteCaches.items[itemId] = love.graphics.newImage("assets/items/" .. itemId .. "/spritesheet.png")
     end
     return spriteCaches.items[itemId]
 end
 
 function SpriteManager.loadDebuffSprite(debuffType)
     if not spriteCaches.debuffs[debuffType] then
-        spriteCaches.debuffs[debuffType] = love.graphics.newImage("assets/debuffs/" .. debuffType .. ".png")
+        spriteCaches.debuffs[debuffType] = love.graphics.newImage("assets/debuffs/" .. debuffType .. "/spritesheet.png")
     end
     return spriteCaches.debuffs[debuffType]
 end
