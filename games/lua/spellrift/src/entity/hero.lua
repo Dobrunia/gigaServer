@@ -1,5 +1,6 @@
 local Creature = require("src.entity.creature")
 local SpriteManager = require("src.utils.sprite_manager")
+local MathUtils = require("src.utils.math_utils")
 
 local Hero = {}
 Hero.__index = Hero
@@ -21,7 +22,7 @@ function Hero.new(x, y, heroId, level = 1)
     -- Свойства героя
     self.heroId = config.id
     self.heroName = config.name
-    self.innateSkill = config.innateSkill
+    self.innateSkill = MathUtils.deepCopy(config.innateSkill)
 
     self.experience = 0
     self.experienceToNext = 100

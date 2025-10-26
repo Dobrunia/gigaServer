@@ -1,7 +1,9 @@
+local MathUtils = require("src.utils.math_utils")
+
 local Skill = {}
 Skill.__index = Skill
 
-function Skill.new(skillId, level = 1)
+function Skill.new(skillId, level = 1, caster = nil)
     local self = setmetatable({}, Skill)
 
     local config = require("src.config.skills")[skillId]
@@ -16,18 +18,27 @@ function Skill.new(skillId, level = 1)
     self.level = level
     self.maxLevel = #config.upgrades + 1
     self.isStartingSkill = config.isStartingSkill
-    self.upgrades = config.upgrades
-    
-    self.stats = config.stats
-    for key, value in pairs(config.stats) do
-        self.stats[key] = value
-    end
+
+    -- Копируем (не ссылку!)
+    -- Таблицы - нужно копировать глубоко
+    self.upgrades = MathUtils.deepCopy(config.upgrades)
+    self.stats = MathUtils.deepCopy(config.stats)
+
+    self.caster = caster
 
     self.cooldownTimer = 0
     self.isOnCooldown = false
 
-    self:applyUpgrades(self.level)
+    self:applyCasterModifiers()
+
     return self
+end
+
+-- Применяем модификаторы кастера
+function Skill:applyCasterModifiers()
+    if self.caster.cooldownReduction then
+        self.stats.cooldown = self.stats.cooldown * (1 - self.caster.cooldownReduction)
+    end
 end
 
 -- Проверка на возможность каста

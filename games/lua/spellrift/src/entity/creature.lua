@@ -24,10 +24,24 @@ function Creature.new(spriteSheet, x, y, config, level)
     self.moveSpeed = self.baseMoveSpeed
 
     self.skills = {}
-    self.cooldownReduction = 1 - (config.innateSkill.modifiers.cooldownReduction or 0)
+    self.maxSkillSlots = config.maxSkillSlots or 4
 
-    self.usedSkills = {}
+    self.cooldownReduction = 0
+    if config.innateSkill and config.innateSkill.modifiers and config.innateSkill.modifiers.cooldownReduction then
+        self.cooldownReduction = config.innateSkill.modifiers.cooldownReduction
+    end
+
     return self
+end
+
+function Creature:addSkill(skillId, level)
+    if #self.skills >= self.maxSkillSlots then
+        error("Cannot add skill: all slots full")
+    end
+    
+    -- Создаем экземпляр навыка с модификаторами кастера
+    local skill = Skill.new(skillId, level or 1, self)
+    table.insert(self.skills, skill)
 end
 
 function Creature:takeDamage(damage)
@@ -43,7 +57,7 @@ function Creature:die()
 end
 
 function Creature:castSkill(skill)
-    self.usedSkills[skill.id] = skill.cooldown * self.cooldownReduction
+    skill:cast()
 end
 
 function Creature:update(dt)
@@ -53,13 +67,8 @@ function Creature:update(dt)
     end
 
     -- Обновляем кулдауны всех использованных навыков
-    for skillId, cooldown in pairs(self.usedSkills) do
-        cooldown = cooldown - dt
-        if cooldown <= 0 then
-            self.usedSkills[skillId] = nil
-        else
-            self.usedSkills[skillId] = cooldown
-        end
+    for _, skill in ipairs(self.skills) do
+        skill:update(dt)
     end
 
     Object.update(self, dt)

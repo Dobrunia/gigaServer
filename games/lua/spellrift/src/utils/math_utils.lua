@@ -1,6 +1,18 @@
 local MathUtils = {}
 MathUtils.__index = MathUtils
 
+function MathUtils.deepCopy(original)
+    if type(original) ~= "table" then
+        return original
+    end
+    
+    local copy = {}
+    for key, value in pairs(original) do
+        copy[key] = MathUtils.deepCopy(value)
+    end
+    return copy
+end
+
 -- Вычисление расстояния между двумя точками
 function MathUtils.distance(x1, y1, x2, y2)
     local dx = x2 - x1
