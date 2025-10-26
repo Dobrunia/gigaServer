@@ -1,10 +1,10 @@
 local Debuff = {}
 Debuff.__index = Debuff
 
-function Debuff.new(effectType, duration, params, caster)
+function Debuff.new(debuffType, duration, params, caster)
     local self = setmetatable({}, Debuff)
     
-    self.type = effectType
+    self.type = debuffType
     self.duration = duration
     self.timeLeft = duration
     self.params = params or {}
@@ -16,7 +16,7 @@ function Debuff.new(effectType, duration, params, caster)
     self.animation = nil
     self.color = {1, 1, 1, 1}
     
-    -- Настраиваем эффект по типу
+    -- Настраиваем дебафф по типу
     self:setupDebuff()
     
     return self
