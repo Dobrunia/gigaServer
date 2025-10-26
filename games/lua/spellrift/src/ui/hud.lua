@@ -1,0 +1,334 @@
+-- ui/hud.lua
+-- In-game HUD (HP, XP, skills, timer)
+-- Public API: HUD.new(), hud:draw(player, gameTime)
+-- Dependencies: constants.lua, assets.lua, utils.lua, colors.lua
+
+local Constants = require("src.constants")
+local Utils = require("src.utils")
+local Colors = require("src.ui.colors")
+local Icons = require("src.ui.icons")
+local UIConstants = require("src.ui.constants")
+
+local HUD = {}
+HUD.__index = HUD
+
+-- === CONSTRUCTOR ===
+
+function HUD.new()
+    local self = setmetatable({}, HUD)
+    
+    -- Cache for optimization
+    self.lastLevel = 0
+    self.lastHP = 0
+    self.lastMaxHP = 0
+    self.lastXP = 0
+    self.lastXPToNext = 0
+    
+    -- Canvas for static elements
+    self.playerCardCanvas = nil
+    self.levelUp = true
+    
+    return self
+end
+
+-- === DRAW ===
+
+function HUD:draw(player, gameTime, assets)
+    if not player then return end
+    
+    local screenW = love.graphics.getWidth()
+    local screenH = love.graphics.getHeight()
+    
+    
+    local stats = player:getStats()
+    
+    -- Check for changes and update canvas if needed
+    if self.lastLevel ~= stats.level then
+        self.levelUp = true
+        self.lastLevel = stats.level
+    end
+    
+    if self.lastHP ~= stats.hp or self.lastMaxHP ~= stats.maxHp then
+        self.levelUp = true
+        self.lastHP = stats.hp
+        self.lastMaxHP = stats.maxHp
+    end
+    
+    if self.lastXP ~= stats.xp or self.lastXPToNext ~= stats.xpToNext then
+        self.levelUp = true
+        self.lastXP = stats.xp
+        self.lastXPToNext = stats.xpToNext
+    end
+    
+    -- Draw player card from canvas or redraw if needed
+    if self.levelUp then
+        self:updatePlayerCardCanvas(player, assets)
+        self.levelUp = false
+    end
+    
+    -- Draw canvas to screen
+    if self.playerCardCanvas then
+        local screenH = love.graphics.getHeight()
+        local cardHeight = UIConstants.HUD_HEIGHT
+        local cardY = screenH - UIConstants.HUD_HEIGHT
+        love.graphics.draw(self.playerCardCanvas, self.cardX, cardY)
+    end
+    
+    -- Draw skills (always redraw for cooldowns)
+    self:drawSkills(player, assets)
+    
+    -- Draw timer (always redraw)
+    self:drawTimer(gameTime, assets)
+end
+
+function HUD:updatePlayerCardCanvas(player, assets)
+    local stats = player:getStats()
+    local screenW = love.graphics.getWidth()
+    local screenH = love.graphics.getHeight()
+    
+    -- Card dimensions (full size now)
+    local cardWidth = UIConstants.CARD_WIDTH / 2
+    local cardHeight = UIConstants.HUD_HEIGHT
+    local cardX = 0
+    local cardY = screenH - UIConstants.HUD_HEIGHT
+    
+    -- Store positions for optimization
+    self.cardX = cardX
+    self.cardWidth = cardWidth
+    
+    -- Create or clear canvas
+    if not self.playerCardCanvas then
+        self.playerCardCanvas = love.graphics.newCanvas(cardWidth, cardHeight)
+    end
+    
+    -- Draw to canvas
+    love.graphics.setCanvas(self.playerCardCanvas)
+    love.graphics.clear()
+    
+    -- Card background
+    Colors.setColor(Colors.CARD_DEFAULT)
+    love.graphics.rectangle("fill", 0, 0, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+    
+    -- Card border
+    Colors.setColor(Colors.BORDER_DEFAULT)
+    love.graphics.setLineWidth(1)
+    love.graphics.rectangle("line", 0, 0, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+    love.graphics.setLineWidth(1)
+    
+    -- Level (top of card)
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_MEDIUM))
+    Colors.setColor(Colors.TEXT_ACCENT)
+    local levelX = UIConstants.CARD_PADDING
+    local levelY = UIConstants.CARD_PADDING
+    love.graphics.print("Level: " .. stats.level, levelX, levelY)
+    
+    -- HP bar
+    local hpY = levelY + UIConstants.FONT_MEDIUM + UIConstants.HUD_ELEMENTS_OFFSET_Y
+    self.hpY = hpY
+    self:drawHPBar(stats, levelX, hpY, cardWidth)
+    
+    -- XP bar
+    local xpY = hpY + UIConstants.FONT_MEDIUM
+    self.xpY = xpY
+    self:drawXPBar(stats, levelX, xpY, cardWidth)
+    
+    -- Stats with icons (bottom part of card)
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
+    local statsX = levelX + 6
+    local statsY = xpY + UIConstants.FONT_MEDIUM + UIConstants.HUD_ELEMENTS_OFFSET_Y
+    local statsOffset = UIConstants.HUD_ELEMENTS_OFFSET_Y
+    
+    -- Armor
+    local armorIcon = Icons.getArmor()
+    Icons.drawWithText(armorIcon, Utils.round(stats.armor, 1) .. " + " .. Utils.round(stats.armorGrowth, 1), statsX, statsY, UIConstants.ICON_STAT_SIZE)
+    
+    -- Speed
+    local speedY = statsY + statsOffset
+    local speedIcon = Icons.getSpeed()
+    Icons.drawWithText(speedIcon, Utils.round(stats.speed, 0) .. " + " .. Utils.round(stats.speedGrowth, 0), statsX, speedY, UIConstants.ICON_STAT_SIZE)
+    
+    -- Cast Speed
+    local castSpeedY = speedY + statsOffset
+    local castIcon = Icons.getCastSpeed()
+    Icons.drawWithText(castIcon, Utils.round(stats.castSpeed, 2) .. "x + " .. Utils.round(stats.castSpeedGrowth, 2) .. "x", statsX, castSpeedY, UIConstants.ICON_STAT_SIZE)
+    
+    -- Reset canvas
+    love.graphics.setCanvas()
+end
+
+function HUD:drawHPBar(stats, x, y, cardWidth)
+    local barX = x
+    local barY = y
+    local barWidth = cardWidth - UIConstants.CARD_PADDING * 2
+    local barHeight = UIConstants.HUD_ELEMENTS_OFFSET_Y
+    
+    -- HP bar background
+    Colors.setColor(Colors.BAR_BACKGROUND)
+    love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
+    
+    -- HP bar fill
+    local hpPercent = stats.hp / stats.maxHp
+    Colors.setColor(Colors.BAR_HP)
+    love.graphics.rectangle("fill", barX, barY, barWidth * hpPercent, barHeight)
+    
+    -- HP text centered in bar
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
+    Colors.setColor(Colors.TEXT_PRIMARY)
+    local hpText = math.floor(stats.hp) .. "/" .. math.floor(stats.maxHp)
+    love.graphics.printf(hpText, barX, barY + barHeight/2 - UIConstants.FONT_SMALL/2, barWidth, "center")
+end
+
+function HUD:drawXPBar(stats, x, y, cardWidth)
+    local barX = x
+    local barY = y
+    local barWidth = cardWidth - UIConstants.CARD_PADDING * 2
+    local barHeight = UIConstants.HUD_ELEMENTS_OFFSET_Y
+    
+    -- XP bar background
+    Colors.setColor(Colors.BAR_BACKGROUND)
+    love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
+    
+    -- XP bar fill
+    local xpPercent = stats.xp / stats.xpToNext
+    Colors.setColor(Colors.BAR_XP)
+    love.graphics.rectangle("fill", barX, barY, barWidth * xpPercent, barHeight)
+    
+    -- XP text centered in bar
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
+    Colors.setColor(Colors.TEXT_PRIMARY)
+    local xpText = math.floor(stats.xp) .. "/" .. math.floor(stats.xpToNext)
+    love.graphics.printf(xpText, barX, barY + barHeight/2 - UIConstants.FONT_SMALL/2, barWidth, "center")
+end
+
+function HUD:drawSkills(player, assets)
+    local screenW = love.graphics.getWidth()
+    local screenH = love.graphics.getHeight()
+    
+    -- Skills display (center-bottom, Dota-style)
+    local skillSize = UIConstants.SKILL_ICON_SIZE  -- Square skill slots
+    local skillSpacing = UIConstants.SKILL_SPACING
+    local totalWidth = (skillSize + skillSpacing) * Constants.MAX_ACTIVE_SKILLS - skillSpacing
+    local startX = screenW / 2 - totalWidth / 2
+    local startY = screenH - UIConstants.HUD_HEIGHT / 2 - skillSize / 2
+    
+    for i = 1, Constants.MAX_ACTIVE_SKILLS do
+        local x = startX + (i - 1) * (skillSize + skillSpacing)
+        local y = startY
+        
+        local skill = player.skills[i]
+        
+        -- Draw skill slot background (always visible)
+        Colors.setColor(Colors.HUD_CARD_BG)
+        love.graphics.rectangle("fill", x, y, skillSize, skillSize)
+        
+        -- Draw skill slot border
+        Colors.setColor(Colors.HUD_CARD_BORDER)
+        love.graphics.setLineWidth(2)
+        love.graphics.rectangle("line", x, y, skillSize, skillSize)
+        love.graphics.setLineWidth(1)
+        
+        if skill then
+            -- Draw skill icon
+            local icon = nil
+            if skill.assetFolder and skill.loadedSprites and skill.loadedSprites.icon then
+                icon = skill.loadedSprites.icon
+            else
+                icon = assets.getImage("skillDefault")
+            end
+            
+            if icon then
+                love.graphics.setColor(1, 1, 1, 1)  -- White for sprites
+                local iconW, iconH = icon:getDimensions()
+                local scale = skillSize / math.max(iconW, iconH)
+                local centerX = skillSize / 2
+                local centerY = skillSize / 2
+                love.graphics.draw(icon, x + centerX, y + centerY, 0, scale, scale, iconW/2, iconH/2)
+            end
+            
+            -- Cooldown overlay and circular progress
+            if skill.cooldownTimer and skill.cooldownTimer > 0 then
+                local cooldownPercent = skill.cooldownTimer / skill.cooldown
+                
+                -- Dark overlay
+                Colors.setColor(Colors.OVERLAY_COOLDOWN)
+                love.graphics.rectangle("fill", x, y, skillSize, skillSize)
+                
+                -- -- Circular cooldown indicator
+                -- local centerX = x + skillSize / 2
+                -- local centerY = y + skillSize / 2
+                -- local radius = skillSize / 2 - UIConstants.SKILL_COOLDOWN_RADIUS_OFFSET
+                
+                -- -- Draw cooldown circle (only darkening, no progress arc)
+                -- love.graphics.setColor(0.2, 0.2, 0.2, 0.8)  -- Dark circle
+                -- love.graphics.circle("fill", centerX, centerY, radius)
+                
+                -- Cooldown text
+                love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
+                love.graphics.setColor(1, 1, 1, 1)  -- White text, no background
+                local timeText = string.format("%.1f", skill.cooldownTimer)
+                love.graphics.printf(timeText, x, y + skillSize/2 - 8, skillSize, "center")
+            end
+            
+            -- Skill level indicator (small number in corner)
+            if skill.level and skill.level > 1 then
+                love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
+                Colors.setColor(Colors.TEXT_ACCENT)
+                love.graphics.print(skill.level, x + skillSize - 8, y + 2)
+            end
+            
+            -- Buff progress bar (if this skill is a buff and active)
+            if skill.type == "buff" then
+                self:drawBuffProgressBar(skill, player, x, y, skillSize)
+            end
+        else
+            -- Empty slot - draw black square
+            Colors.setColor(Colors.OVERLAY_EMPTY)
+            love.graphics.rectangle("fill", x + 4, y + 4, skillSize - 8, skillSize - 8)
+        end
+    end
+end
+
+function HUD:drawBuffProgressBar(skill, player, x, y, skillSize)
+    -- Check if player has active buffs
+    if not player.activeBuffs then
+        return
+    end
+    
+    for _, buff in ipairs(player.activeBuffs) do
+        if buff.skill and buff.skill.id == skill.id then
+            -- Draw buff progress bar above skill
+            local currentTime = love.timer.getTime()
+            local remainingTime = (buff.startTime + buff.duration) - currentTime
+            
+            if remainingTime > 0 then
+                local progress = remainingTime / buff.duration
+                
+                -- Progress bar above skill
+                local barWidth = skillSize - 4
+                local barHeight = 3
+                local barX = x + 2
+                local barY = y - 8
+                
+                -- Background
+                Colors.setColor(Colors.BAR_BACKGROUND)
+                love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
+                
+                -- Fill (decreasing) - red bar showing remaining duration
+                love.graphics.setColor(1, 0, 0, 1)
+                love.graphics.rectangle("fill", barX, barY, barWidth * progress, barHeight)
+            end
+            break
+        end
+    end
+end
+
+function HUD:drawTimer(gameTime, assets)
+    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
+    Colors.setColor(Colors.TEXT_PRIMARY)
+    
+    local timeStr = Utils.formatTime(gameTime)
+    love.graphics.printf(timeStr, 0, UIConstants.START_Y, love.graphics.getWidth(), "center")
+end
+
+return HUD
+
