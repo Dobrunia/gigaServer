@@ -1,5 +1,14 @@
+local StateManager = require("src.states.state-manager")
+local Game = require("src.states.game")
+
 function love.load(args)
     love.graphics.setDefaultFilter("nearest", "nearest")
+
+    -- Инициализируем менеджер состояний
+    StateManager:init()
+
+    -- Переходим в игровое состояние
+    StateManager:switch(Game)
 end
 
 function love.update(dt)
