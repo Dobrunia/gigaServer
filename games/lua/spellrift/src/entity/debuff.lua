@@ -12,9 +12,7 @@ function Debuff.new(debuffType, duration, params, caster)
     self.active = true
     
     -- Визуальные параметры
-    self.sprite = nil
-    self.animation = nil
-    self.color = {1, 1, 1, 1}
+    self.sprite = SpriteManager.loadDebuffSprite(debuffType)
     
     -- Настраиваем дебафф по типу
     self:setupDebuff()
@@ -105,20 +103,7 @@ function Debuff:draw(target)
         return
     end
     
-    -- Рисуем цветовой эффект поверх существа
-    love.graphics.setColor(self.color)
-    love.graphics.rectangle("fill", target.x, target.y, target.width, target.height)
-    love.graphics.setColor(1, 1, 1, 1)
-    
-    -- Рисуем индикатор времени эффекта
-    local barWidth = target.width
-    local barHeight = 2
-    local barX = target.x
-    local barY = target.y - 15
-    
-    -- Фон индикатора
-    love.graphics.setColor(0, 0, 0, 0.5)
-    love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
+    -- SpriteManager.drawSprite(self.sprite, target.x, target.y)
     
     -- Прогресс эффекта
     local progress = self.timeLeft / self.duration
