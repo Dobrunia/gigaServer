@@ -8,7 +8,6 @@ local spriteCaches = {
     drops = {},
     skills = {},
     items = {},
-    projectiles = {},
     debuffs = {},
 }
 
@@ -45,13 +44,6 @@ function SpriteManager.loadItemSprite(itemId)
         spriteCaches.items[itemId] = love.graphics.newImage("assets/items/" .. itemId .. ".png")
     end
     return spriteCaches.items[itemId]
-end
-
-function SpriteManager.loadProjectileSprite(projectileId)
-    if not spriteCaches.projectiles[projectileId] then
-        spriteCaches.projectiles[projectileId] = love.graphics.newImage("assets/projectiles/" .. projectileId .. ".png")
-    end
-    return spriteCaches.projectiles[projectileId]
 end
 
 function SpriteManager.loadDebuffSprite(debuffType)

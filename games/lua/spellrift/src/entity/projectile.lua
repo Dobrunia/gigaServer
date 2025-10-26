@@ -9,11 +9,9 @@ Projectile.__index = Projectile
 local projectilePool = {}
 local activeProjectiles = {}
 
-function Projectile.new(x, y, targetX, targetY, projectileId)
+function Projectile.new(x, y, targetX, targetY, spriteSheet)
     local self = table.remove(projectilePool) or setmetatable({}, Projectile)
     
-    -- Загружаем спрайт только один раз
-    local spriteSheet = SpriteManager.loadProjectileSprite(projectileId)
     local config = require("src.config.projectiles")[projectileId]
 
     if not config then
