@@ -23,8 +23,38 @@ function Skill.new(skillId, level = 1)
         self.stats[key] = value
     end
 
+    self.cooldownTimer = 0
+    self.isOnCooldown = false
+
     self:applyUpgrades(self.level)
     return self
+end
+
+-- Проверка на возможность каста
+function Skill:canCast()
+    return not self.isOnCooldown
+end
+
+-- Активация способности
+function Skill:cast()
+    if not self:canCast() then
+        return false
+    end
+
+    -- Запускаем кулдаун
+    self.isOnCooldown = true
+    self.cooldownTimer = self.stats.cooldown
+end
+
+-- Обновление таймера кулдауна
+function Skill:update(dt)
+    if self.isOnCooldown then
+        self.cooldownTimer = self.cooldownTimer - dt
+        if self.cooldownTimer <= 0 then
+            self.isOnCooldown = false
+            self.cooldownTimer = 0
+        end
+    end
 end
 
 function Skill:applyUpgrades(level)
