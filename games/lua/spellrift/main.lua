@@ -1,12 +1,18 @@
 local StateManager = require("src.states.state_manager")
-local MainMenu = require("src.states.main_menu")
-local HeroSelect = require("src.states.hero_select")
+local MainMenu    = require("src.states.main_menu")
+local HeroSelect  = require("src.states.hero_select")
+local SkillSelect = require("src.states.skill_select")
+local Game = require("src.states.game")
+
+local stateManager -- локальная ссылка на инстанс
 
 function love.load()
     stateManager = StateManager.new()
 
     stateManager:register("main_menu", MainMenu)
     stateManager:register("hero_select", HeroSelect)
+    stateManager:register("skill_select", SkillSelect)
+    stateManager:register("game", Game)
 
     stateManager:switch("main_menu")
 end
@@ -20,8 +26,7 @@ function love.draw()
 end
 
 function love.resize(w, h)
-    -- Передаем изменение размера в текущее состояние
-    if StateManager.currentState and StateManager.currentState.resize then
-        StateManager.currentState:resize(w, h)
+    if stateManager.currentState and stateManager.currentState.resize then
+        stateManager.currentState:resize(w, h)
     end
 end

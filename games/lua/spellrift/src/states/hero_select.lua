@@ -2,36 +2,32 @@ local HeroSelect = {}
 HeroSelect.__index = HeroSelect
 
 local UIHeroSelect = require("src.ui.ui_hero_select")
-local StateManager = require("src.states.state_manager") -- поправлено имя файла (в Lua обычно без дефиса)
 local Input = require("src.system.input")
 
 function HeroSelect:enter()
-    -- Создаем UI для выбора персонажа
+    -- UI выбора героя
     self.uiHeroSelect = UIHeroSelect.new()
-    
-    -- Создаем систему ввода
+    -- Ввод
     self.input = Input.new()
-    
     -- Текущий выбор
     self.selectedHero = nil
 end
 
 function HeroSelect:update(dt)
-    -- Обновляем ввод
     self.input:update(dt)
-    
-    -- ESC → возврат в главное меню
+
+    -- ESC → назад в главное меню
     if self.input:isEscapePressed() then
-        if StateManager and StateManager.switch then
-            StateManager:switch("main_menu")
+        if self.manager and self.manager.switch then
+            self.manager:switch("main_menu")
         end
         return
     end
-    
-    -- ЛКМ → выбор персонажа
+
+    -- ЛКМ → выбор героя
     if self.input:isLeftMousePressed() then
-        local mouseX, mouseY = self.input:getMousePosition()
-        self:handleMouseClick(mouseX, mouseY)
+        local mx, my = self.input:getMousePosition()
+        self:handleMouseClick(mx, my)
     end
 end
 
@@ -40,9 +36,7 @@ function HeroSelect:draw()
 end
 
 function HeroSelect:handleMouseClick(x, y)
-    -- Получаем индекс выбранного героя
     local selectedIndex = self.uiHeroSelect:handleClick(x, y)
-    
     if selectedIndex then
         self.uiHeroSelect:selectByIndex(selectedIndex)
         self.selectedHero = self.uiHeroSelect:getSelectedHero()
@@ -51,13 +45,17 @@ function HeroSelect:handleMouseClick(x, y)
 end
 
 function HeroSelect:confirmSelection()
-    if self.selectedHero then
-        -- TODO: переход в игру, передача выбранного героя
-        print("Selected hero:", self.selectedHero.config.name)
-        -- if StateManager and StateManager.switch then
-        --     StateManager:switch("game", self.selectedHero)
-        -- end
+    if self.selectedHero and self.manager and self.manager.switch then
+        self.manager:switch("skill_select", self.selectedHero)
     end
+end
+
+function HeroSelect:exit()
+    -- подчистка ссылок при выходе из состояния (по желанию)
+    -- (ресурсы шрифтов/картинок UI обычно кэшируются менеджерами и не требуют явной выгрузки)
+    self.uiHeroSelect = nil
+    self.input = nil
+    self.selectedHero = nil
 end
 
 return HeroSelect
