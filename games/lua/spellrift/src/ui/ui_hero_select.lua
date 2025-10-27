@@ -1,8 +1,8 @@
 local UIConstants = require("src.ui.ui_constants")
 local heroes = require("src.config.heroes")
 
-local HeroSelect = {}
-HeroSelect.__index = HeroSelect
+local UIHeroSelect = {}
+UIHeroSelect.__index = UIHeroSelect
 
 local CARD_WIDTH = 500
 local CARD_HEIGHT = 390
@@ -24,30 +24,30 @@ local CARD_DESCRIPTION_HEIGHT= CARD_INNATE_SPRITE_SIZE + CARD_PADDING * 2
 
 local ICON_STAT_SIZE = UIConstants.FONT_MEDIUM
 
-function HeroSelect.new()
-    local self = setmetatable({}, HeroSelect)
+function UIHeroSelect.new()
+    local self = setmetatable({}, UIHeroSelect)
 
     -- Получаем список всех персонажей
-    self.characters = {}
-    self:loadCharacters()
+    self.heroes = {}
+    self:loadHeroes()
     return self
 end
 
-function HeroSelect:loadCharacters()
+function UIHeroSelect:loadHeroes()
     -- Проходим по всем персонажам из конфига
     for heroId, heroConfig in pairs(heroes) do
-        local character = {
+        local hero = {
             sprite = SpriteManager.loadHeroSprite(heroId), -- TODO: мб без кэша надо
             config = heroConfig
         }
         
-        table.insert(self.characters, character)
+        table.insert(self.heroes, hero)
     end
 end
 
 -- === DRAW ===
 
-function HeroSelect:draw()
+function UIHeroSelect:draw()
     Colors.setColor(MAIN_CARD_BACKGROUND)
     love.graphics.clear()
     
@@ -64,10 +64,7 @@ function HeroSelect:draw()
     local totalWidth = (CARD_WIDTH * CARDS_PER_ROW) + (CARD_SPACING * (CARDS_PER_ROW - 1))
     local startX = (screenW - totalWidth) / 2
     
-    for i, character in ipairs(self.characters) do
-        local hero = character.config
-        local sprite = character.sprite
-
+    for i, hero in ipairs(self.heroes) do
         local row = math.floor((i - 1) / CARDS_PER_ROW)
         local col = ((i - 1) % CARDS_PER_ROW)
         
@@ -87,14 +84,14 @@ function HeroSelect:draw()
         Colors.setColor(UIConstants.COLOR_TEXT_PRIMARY)
         local nameX = cardX + CARD_PADDING
         local nameY = cardY + CARD_PADDING
-        love.graphics.print(hero.name, nameX, nameY)
+        love.graphics.print(hero.config.name, nameX, nameY)
         
         -- Hero sprite
         local spriteX = nameX + CARD_MAIN_SPRITE_SIZE / 2
         local spriteY = nameY + CARD_ELEMENTS_OFFSET_Y
 
         -- Используем SpriteManager.getQuad для создания quad
-        local spriteIdleQuad = SpriteManager.getQuad(spriteSheet, 1, 1, 64, 64)   
+        local spriteIdleQuad = SpriteManager.getQuad(hero.sprite, 1, 1, 64, 64)   
         -- Scale sprite to fit configured size in card
         local targetSize = CARD_MAIN_SPRITE_SIZE
         local scale = targetSize / 64
@@ -109,22 +106,22 @@ function HeroSelect:draw()
 
         -- HP with heart icon
         local hpIcon = Icons.getHP()
-        Icons.drawWithText(hpIcon, hero.baseHp .. " (+" .. hero.hpGrowth .. ")", statsX, statsY, ICON_STAT_SIZE)
+        Icons.drawWithText(hpIcon, hero.config.baseHp .. " (+" .. hero.config.hpGrowth .. ")", statsX, statsY, ICON_STAT_SIZE)
         
         -- Armor with shield icon
         local armorY = statsY + statsOffset
         local armorIcon = Icons.getArmor()
-        Icons.drawWithText(armorIcon, hero.baseArmor .. " (+" .. hero.armorGrowth .. ")", statsX, armorY, ICON_STAT_SIZE)
+        Icons.drawWithText(armorIcon, hero.config.baseArmor .. " (+" .. hero.config.armorGrowth .. ")", statsX, armorY, ICON_STAT_SIZE)
         
         -- Speed with shoe icon
         local speedY = armorY + statsOffset
         local speedIcon = Icons.getSpeed()
-        Icons.drawWithText(speedIcon, hero.baseMoveSpeed .. " (+" .. hero.speedGrowth .. ")", statsX, speedY, ICON_STAT_SIZE)
+        Icons.drawWithText(speedIcon, hero.config.baseMoveSpeed .. " (+" .. hero.config.speedGrowth .. ")", statsX, speedY, ICON_STAT_SIZE)
         
         -- Cast Speed with hourglass icon
         local castSpeedY = speedY + statsOffset
         local castIcon = Icons.getCastSpeed()
-        Icons.drawWithText(castIcon, hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. ")", statsX, castSpeedY, ICON_STAT_SIZE)
+        Icons.drawWithText(castIcon, hero.config.baseCastSpeed .. "x (+" .. hero.config.castSpeedGrowth .. ")", statsX, castSpeedY, ICON_STAT_SIZE)
         
         -- Passive ability description with icon (description section)
         local innateY = castSpeedY + CARD_ELEMENTS_OFFSET_Y - 60
@@ -139,7 +136,7 @@ function HeroSelect:draw()
         local iconSize = CARD_INNATE_SPRITE_SIZE
 
         -- Используем SpriteManager.getQuad для innate skill
-        local spriteInnateQuad = SpriteManager.getQuad(spriteSheet, 2, 1, 64, 64)
+        local spriteInnateQuad = SpriteManager.getQuad(hero.sprite, 2, 1, 64, 64)
         love.graphics.setColor(1, 1, 1, 1)  -- White for sprites
         local scale = iconSize / 64
         love.graphics.draw(spriteSheet, spriteInnateQuad, iconX, iconY, 0, scale, scale, 32, 32)
@@ -148,20 +145,20 @@ function HeroSelect:draw()
         Colors.setColor(UIConstants.COLOR_TEXT_PRIMARY)
         local descriptionX = iconX + CARD_PADDING + iconSize / 2
         local descriptionY = iconY - 10
-        love.graphics.printf(hero.innateSkill.description, descriptionX, descriptionY, CARD_WIDTH - CARD_ELEMENTS_OFFSET_X - CARD_PADDING, "left")
+        love.graphics.printf(hero.config.innateSkill.description, descriptionX, descriptionY, CARD_WIDTH - CARD_ELEMENTS_OFFSET_X - CARD_PADDING, "left")
     end
 end
 
 -- === INPUT ===
 
-function HeroSelect:handleClick(x, y, heroes)
+function UIHeroSelect:handleClick(x, y)
     local screenW = love.graphics.getWidth()
     
     -- Calculate grid positioning
     local totalWidth = (CARD_WIDTH * CARDS_PER_ROW) + (CARD_SPACING * (CARDS_PER_ROW - 1))
     local startX = (screenW - totalWidth) / 2
     
-    for i, hero in ipairs(heroes) do
+    for i, hero in ipairs(self.heroes) do
         local row = math.floor((i - 1) / CARDS_PER_ROW)
         local col = ((i - 1) % CARDS_PER_ROW)
         
@@ -178,5 +175,15 @@ function HeroSelect:handleClick(x, y, heroes)
     return nil
 end
 
-return HeroSelect
+function UIHeroSelect:selectByIndex(index)
+    if index >= 1 and index <= #self.heroes then
+        self.selectedIndex = index
+    end
+end
+
+function UIHeroSelect:getSelectedHero()
+    return self.heroes[self.selectedIndex]
+end
+
+return UIHeroSelect
 
