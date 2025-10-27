@@ -151,11 +151,6 @@ function CharacterSelect:draw()
         local descriptionY = iconY - 10
         love.graphics.printf(hero.innateSkill.description, descriptionX, descriptionY, CARD_WIDTH - CARD_ELEMENTS_OFFSET_X - CARD_PADDING, "left")
     end
-    
-    -- Instructions
-    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
-    Colors.setColor(Colors.TEXT_DIM)
-    -- love.graphics.printf("Click on a hero to select, then press SPACE/ENTER to continue", 0, screenH - 40, screenW, "center")
 end
 
 -- === INPUT ===
