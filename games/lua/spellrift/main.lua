@@ -1,21 +1,20 @@
-local StateManager = require("src.states.state-manager")
+local StateManager = require("src.states.state_manager")
+local MainMenu = require("src.states.main_menu")
 
-function love.load(args)
-    love.graphics.setDefaultFilter("nearest", "nearest")
+function love.load()
+    stateManager = StateManager.new()
 
-    -- Инициализируем менеджер состояний
-    StateManager:init()
+    stateManager:register("main_menu", MainMenu)
 
-    -- Переходим в игровое состояние
-    StateManager:switch("main_menu")
+    stateManager:switch("main_menu")
 end
 
 function love.update(dt)
-    StateManager:update(dt)
+    stateManager:update(dt)
 end
 
 function love.draw()
-    StateManager:draw()
+    stateManager:draw()
 end
 
 function love.resize(w, h)

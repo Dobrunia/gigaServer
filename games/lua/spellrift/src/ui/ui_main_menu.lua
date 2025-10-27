@@ -1,4 +1,4 @@
-local UIConstants = require("src.ui.constants")
+local UIConstants = require("src.ui.ui_constants")
 
 local UIMainMenu = {}
 UIMainMenu.__index = UIMainMenu
