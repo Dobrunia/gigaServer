@@ -2,7 +2,7 @@ local HeroSelect = {}
 HeroSelect.__index = HeroSelect
 
 local UIHeroSelect = require("src.ui.ui_hero_select")
-local StateManager = require("src.states.state-manager")
+local StateManager = require("src.states.state_manager") -- поправлено имя файла (в Lua обычно без дефиса)
 local Input = require("src.system.input")
 
 function HeroSelect:enter()
@@ -12,20 +12,23 @@ function HeroSelect:enter()
     -- Создаем систему ввода
     self.input = Input.new()
     
-    -- Выбранный персонаж
-    self.selectedCharacter = nil
+    -- Текущий выбор
+    self.selectedHero = nil
 end
 
 function HeroSelect:update(dt)
     -- Обновляем ввод
     self.input:update(dt)
     
-    -- Обработка ESC - возврат в меню
+    -- ESC → возврат в главное меню
     if self.input:isEscapePressed() then
-        StateManager:switch("menu")
+        if StateManager and StateManager.switch then
+            StateManager:switch("main_menu")
+        end
+        return
     end
     
-    -- Обработка ЛКМ - выбор персонажа
+    -- ЛКМ → выбор персонажа
     if self.input:isLeftMousePressed() then
         local mouseX, mouseY = self.input:getMousePosition()
         self:handleMouseClick(mouseX, mouseY)
@@ -33,27 +36,27 @@ function HeroSelect:update(dt)
 end
 
 function HeroSelect:draw()
-    -- Рисуем UI выбора персонажа
     self.uiHeroSelect:draw()
 end
 
 function HeroSelect:handleMouseClick(x, y)
-    -- Обработка клика мыши по карточке персонажа
-    local selectedIndex = self.uiHeroSelect:handleClick(x, y, self.uiHeroSelect.heroes)
+    -- Получаем индекс выбранного героя
+    local selectedIndex = self.uiHeroSelect:handleClick(x, y)
     
     if selectedIndex then
         self.uiHeroSelect:selectByIndex(selectedIndex)
         self.selectedHero = self.uiHeroSelect:getSelectedHero()
-        
-        -- Автоматически переходим в игру после выбора
         self:confirmSelection()
     end
 end
 
 function HeroSelect:confirmSelection()
     if self.selectedHero then
-        -- Переходим в игру с выбранным персонажем
-        print("dfdfdf")
+        -- TODO: переход в игру, передача выбранного героя
+        print("Selected hero:", self.selectedHero.config.name)
+        -- if StateManager and StateManager.switch then
+        --     StateManager:switch("game", self.selectedHero)
+        -- end
     end
 end
 
