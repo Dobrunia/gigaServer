@@ -1,10 +1,12 @@
 local StateManager = require("src.states.state_manager")
 local MainMenu = require("src.states.main_menu")
+-- local HeroSelect = require("src.states.hero_select")
 
 function love.load()
     stateManager = StateManager.new()
 
     stateManager:register("main_menu", MainMenu)
+    -- stateManager:register("hero_select", HeroSelect)
 
     stateManager:switch("main_menu")
 end
