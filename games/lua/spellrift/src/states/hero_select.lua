@@ -53,7 +53,7 @@ end
 function HeroSelect:confirmSelection()
     if self.selectedHero then
         -- Переходим в игру с выбранным персонажем
-        StateManager:switch("game", self.selectedHero)
+        print("dfdfdf")
     end
 end
 
