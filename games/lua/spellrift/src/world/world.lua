@@ -1,3 +1,5 @@
+local Spawner = require("src.world.spawner")
+
 local World = {}
 World.__index = World
 
@@ -7,6 +9,7 @@ function World.new()
     self.enemies = {}
     self.projectiles = {}
     self.drops = {}
+    self.spawner = Spawner.new()
     return self
 end
 
@@ -53,6 +56,11 @@ function World:update(dt)
     
     for _, drop in ipairs(self.drops) do
         drop:update(dt, self.heroes[1])
+    end
+    
+    -- Обновляем спавнер (если есть герой)
+    if #self.heroes > 0 then
+        self.spawner:update(dt, self, self.heroes[1])
     end
 end
 

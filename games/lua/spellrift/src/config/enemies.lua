@@ -1,6 +1,6 @@
 local mobs = {
     -- === MELEE MOB ===
-    "zombie" = {
+    zombie = {
         id = "zombie",
         name = "Zombie",
         --type = "melee",
@@ -35,7 +35,7 @@ local mobs = {
 
 
     -- === RANGED MOB ===
-    "fireclaw" = {
+    fireclaw = {
         id = "fireclaw",
         name = "Fireclaw",
         type = "ranged",
