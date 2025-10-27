@@ -5,7 +5,7 @@ local MathUtils = require("src.utils.math_utils")
 local Hero = {}
 Hero.__index = Hero
 
-function Hero.new(x, y, heroId, level = 1)
+function Hero.new(x, y, heroId, level)
     local self = setmetatable({}, Hero)
 
     -- Загружаем спрайт только один раз на весь тип героя
@@ -17,7 +17,7 @@ function Hero.new(x, y, heroId, level = 1)
     end
 
     -- Инициализация базового существа
-    self = Creature.new(self, spriteSheet, x, y, config, level)
+    self = Creature.new(spriteSheet, x, y, config, level or 1)
 
     -- Свойства героя
     self.heroId = config.id

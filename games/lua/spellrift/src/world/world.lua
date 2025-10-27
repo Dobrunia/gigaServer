@@ -1,4 +1,5 @@
 local Spawner = require("src.world.spawner")
+local Hero = require("src.entity.hero")
 
 local World = {}
 World.__index = World
@@ -15,7 +16,7 @@ end
 
 function World:setup(selectedHero, selectedSkill)
     -- Создаем героя в центре карты
-    local hero = Hero.new(400, 300, selectedHero, 1)
+    local hero = Hero.new(400, 300, selectedHero.id, 1)
     
     -- Добавляем выбранный скилл герою
     hero:addSkill(selectedSkill, 1)
