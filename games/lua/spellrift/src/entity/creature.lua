@@ -1,5 +1,5 @@
 local Object = require("src.entity.object")
-local Constants = require("src.entity.constants")
+local Constants = require("src.constants")
 local Debuff = require("src.entity.debuff")
 
 local Creature = {}

@@ -1,27 +1,32 @@
--- minimap.lua
--- Minimap system showing player, enemies, and map boundaries
--- Public API: Minimap.new(), minimap:draw(player, mobs, projectiles, camera, assets)
--- Dependencies: constants.lua, utils.lua, colors.lua
-
-local Constants = require("src.constants")
-local Utils = require("src.utils")
-local Colors = require("src.ui.colors")
-local UIConstants = require("src.ui.constants")
+local UIConstants = require("src.ui.ui_constants")
 
 local Minimap = {}
 Minimap.__index = Minimap
 
--- === CONSTRUCTOR ===
+local MINIMAP_SIZE = 200                    -- Square minimap size
+local MINIMAP_PADDING = 10                 -- Distance from screen edge
+local MINIMAP_BORDER_WIDTH = 2             -- Border thickness
+local MINIMAP_PLAYER_SIZE = 4              -- Player dot size
+local MINIMAP_MOB_SIZE = 2                 -- Mob dot size
+local MINIMAP_PROJECTILE_SIZE = 1          -- Projectile dot size
+local MINIMAP_BACKGROUND_ALPHA = 0.7       -- Background transparency
+
+local MINIMAP_BG = {0.1, 0.1, 0.1, 1}
+local MINIMAP_BORDER = {0.2, 0.2, 0.2, 1}
+local MINIMAP_MAP_BORDER = {0.3, 0.3, 0.3, 1}
+local MINIMAP_PROJECTILE = {0.4, 0.4, 0.4, 1}
+local MINIMAP_MOB = {0.5, 0.5, 0.5, 1}
+local MINIMAP_PLAYER = {0.6, 0.6, 0.6, 1}
 
 function Minimap.new()
     local self = setmetatable({}, Minimap)
     
     -- Position (top-right corner)
     self.x = 0  -- Will be calculated in draw()
-    self.y = UIConstants.MINIMAP_PADDING
+    self.y = MINIMAP_PADDING
     
     -- Size
-    self.size = UIConstants.MINIMAP_SIZE
+    self.size = MINIMAP_SIZE
     
     return self
 end
@@ -35,7 +40,7 @@ function Minimap:draw(player, mobs, projectiles, camera, assets)
     local screenH = love.graphics.getHeight()
     
     -- Position in top-right corner
-    self.x = screenW - self.size - UIConstants.MINIMAP_PADDING
+    self.x = screenW - self.size - MINIMAP_PADDING
     
     -- Save current graphics state
     love.graphics.push()
@@ -61,12 +66,12 @@ end
 
 function Minimap:drawBackground()
     -- Background
-    Colors.setColor(Colors.MINIMAP_BG)
+    Colors.setColor(MINIMAP_BG)
     love.graphics.rectangle("fill", self.x, self.y, self.size, self.size)
     
     -- Border
-    Colors.setColor(Colors.MINIMAP_BORDER)
-    love.graphics.setLineWidth(UIConstants.MINIMAP_BORDER_WIDTH)
+    Colors.setColor(MINIMAP_BORDER)
+    love.graphics.setLineWidth(MINIMAP_BORDER_WIDTH)
     love.graphics.rectangle("line", self.x, self.y, self.size, self.size)
     love.graphics.setLineWidth(1)
 end
@@ -77,7 +82,7 @@ function Minimap:drawMapBoundaries()
     local mapW, mapH = self:worldToMinimap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
     
     -- Draw map boundary
-    Colors.setColor(Colors.MINIMAP_MAP_BORDER)
+    Colors.setColor(MINIMAP_MAP_BORDER)
     love.graphics.setLineWidth(1)
     love.graphics.rectangle("line", mapX, mapY, mapW - mapX, mapH - mapY)
 end
@@ -85,7 +90,7 @@ end
 function Minimap:drawProjectiles(projectiles)
     if not projectiles then return end
     
-    Colors.setColor(Colors.MINIMAP_PROJECTILE)
+    Colors.setColor(MINIMAP_PROJECTILE)
     
     for _, proj in ipairs(projectiles) do
         if proj.active and proj.owner == "mob" then  -- Only enemy projectiles
@@ -93,7 +98,7 @@ function Minimap:drawProjectiles(projectiles)
             
             -- Only draw if within minimap bounds
             if self:isPointInMinimap(px, py) then
-                love.graphics.circle("fill", px, py, UIConstants.MINIMAP_PROJECTILE_SIZE)
+                love.graphics.circle("fill", px, py, MINIMAP_PROJECTILE_SIZE)
             end
         end
     end
@@ -102,7 +107,7 @@ end
 function Minimap:drawMobs(mobs, player, camera)
     if not mobs then return end
     
-    Colors.setColor(Colors.MINIMAP_MOB)
+    Colors.setColor(MINIMAP_MOB)
     
     for _, mob in ipairs(mobs) do
         if mob.alive then
@@ -110,7 +115,7 @@ function Minimap:drawMobs(mobs, player, camera)
             
             -- Only draw if within minimap bounds
             if self:isPointInMinimap(mx, my) then
-                love.graphics.circle("fill", mx, my, UIConstants.MINIMAP_MOB_SIZE)
+                love.graphics.circle("fill", mx, my, MINIMAP_MOB_SIZE)
             end
         end
     end
@@ -122,13 +127,13 @@ function Minimap:drawPlayer(player, camera)
     local px, py = self:worldToMinimap(player.x, player.y)
     
     -- Player dot
-    Colors.setColor(Colors.MINIMAP_PLAYER)
-    love.graphics.circle("fill", px, py, UIConstants.MINIMAP_PLAYER_SIZE)
+    Colors.setColor(MINIMAP_PLAYER)
+    love.graphics.circle("fill", px, py, MINIMAP_PLAYER_SIZE)
     
     -- Player direction indicator (small line)
     local angle = math.atan2(player.aimY or 0, player.aimX or 0)
-    local dirX = px + math.cos(angle) * (UIConstants.MINIMAP_PLAYER_SIZE + 2)
-    local dirY = py + math.sin(angle) * (UIConstants.MINIMAP_PLAYER_SIZE + 2)
+    local dirX = px + math.cos(angle) * (MINIMAP_PLAYER_SIZE + 2)
+    local dirY = py + math.sin(angle) * (MINIMAP_PLAYER_SIZE + 2)
     
     love.graphics.setLineWidth(2)
     love.graphics.line(px, py, dirX, dirY)

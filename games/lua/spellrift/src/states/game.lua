@@ -1,7 +1,7 @@
 local World = require("src.world.world")
 local Input = require("src.system.input")
 local Camera = require("src.system.camera")
-local Minimap = require("src.ui.ui_minimap")
+local Minimap = require("src.system.minimap")
 local Map = require("src.world.map")
 
 local Game = {}

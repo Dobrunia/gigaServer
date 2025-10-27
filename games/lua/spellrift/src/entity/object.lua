@@ -5,12 +5,12 @@ local DEFAULT_WIDTH = 64
 local DEFAULT_HEIGHT = 64
 local DEFAULT_ANIMATION_SPEED = 0.3
 
-function Object.new(spriteSheet, x, y, width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT)
+function Object.new(spriteSheet, x, y, width, height)
     local self = setmetatable({}, Object)
     self.x = x
     self.y = y
-    self.width = width
-    self.height = height
+    self.width = width or DEFAULT_WIDTH
+    self.height = height or DEFAULT_HEIGHT
     
     self.spriteSheet = spriteSheet
     self.currentAnimation = "idle"
@@ -25,12 +25,12 @@ function Object:changePosition(x, y)
     self.y = self.y + y
 end
 
-function Object:setAnimationList(animationName, startRow, startCol, endCol, animationSpeed = DEFAULT_ANIMATION_SPEED)
+function Object:setAnimationList(animationName, startRow, startCol, endCol, animationSpeed)
     self.animationsList[animationName] = {
         startRow = startRow,
         startCol = startCol,
         endCol = endCol,
-        animationSpeed = animationSpeed,
+        animationSpeed = animationSpeed or DEFAULT_ANIMATION_SPEED,
         totalFrames = endCol - startCol + 1
     }
 end

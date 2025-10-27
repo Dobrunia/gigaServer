@@ -1,5 +1,5 @@
 local Creature = require("src.entity.creature")
-local Constants = require("src.entity.constants")
+local Constants = require("src.constants")
 local SpriteManager = require("src.utils.sprite_manager")
 
 local Enemy = {}
