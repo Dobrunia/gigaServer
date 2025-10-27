@@ -8,8 +8,8 @@ local MENU_BUTTON_HEIGHT = 40
 
 local COLOR_BUTTON_DEFAULT
 local COLOR_BUTTON_HOVER
-BUTTON_BORDER
-BUTTON_BORDER_RADIUS
+local BUTTON_BORDER
+local BUTTON_BORDER_RADIUS
 
 function MainMenu.new()
     local self = setmetatable({}, MainMenu)
@@ -18,7 +18,7 @@ end
 
 -- === DRAW ===
 
-function MainMenu:draw(assets)
+function MainMenu:draw()
     Colors.setColor(UIConstants.COLOR_BACKGROUND_PRIMARY)
     love.graphics.clear()
     
@@ -44,11 +44,6 @@ function MainMenu:draw(assets)
     love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
     Colors.setColor(Colors.TEXT_PRIMARY)
     love.graphics.printf("START GAME", buttonX, buttonY + MENU_BUTTON_HEIGHT / 2 - UIConstants.FONT_LARGE / 2, buttonWidth, "center")
-    
-    -- Draw instruction text below
-    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
-    Colors.setColor(Colors.TEXT_DIM)
-    -- love.graphics.printf("Click button or press SPACE", 0, buttonY + 80, love.graphics.getWidth(), "center")
 end
 
 -- === INPUT ===
