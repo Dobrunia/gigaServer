@@ -1,34 +1,34 @@
+local World = require("src.world.world")
+local Input = require("src.system.input")
+local Camera = require("src.system.camera")
+local Minimap = require("src.ui.ui_minimap")
+local Spawner = require("src.system.spawner")
+
 local Game = {}
-function Game:enter()
+Game.__index = Game
+
+function Game:enter(selectedHero, selectedSkill)
+  self.input = Input.new()
+  self.world = World.new()
+  self.camera = Camera.new()
+  self.minimap = Minimap.new()
+  self.spawner = Spawner.new()
+
+  self.world:setup(selectedHero, selectedSkill)
 end
 
 function Game:update(dt)
-    -- Обновляем ввод
-    self.input:update(dt)
-    
-    -- 1. ПКМ - движение к курсору
-    if self.input:isRightMouseDown() then
-        local mouseX, mouseY = self.input:getMouseWorldPosition(self.world:getCamera())
-        local dx, dy = self.input:getDirectionToMouse(self.player.x, self.player.y)
-        
-        -- Двигаем героя к курсору
-        local speed = self.player.moveSpeed * dt
-        self.player.x = self.player.x + dx * speed
-        self.player.y = self.player.y + dy * speed
-    end
-    
-    -- 2. ЛКМ - заглушка
-    if self.input:isLeftMousePressed() then
-        print("Left mouse clicked!")
-    end
-    
-    -- 3. ESC - заглушка
-    if self.input:isEscapePressed() then
-        print("Escape pressed!")
-    end
-    
-    -- Обновляем мир
-    self.world:update(dt)
+  self.input:update(dt)
+
+  if self.input.isEscapePressed and self.input:isEscapePressed() then
+      self.manager:switch("pause_menu")
+      return
+  end
+
+  self.world:update(dt)
+  self.camera:update(self.world.heroes[1].x, self.world.heroes[1].y)
+  self.minimap:update(self.world.heroes[1], self.world.enemies, self.world.projectiles, self.camera)
+  self.spawner:update(dt)
 end
 
 function Game:draw()
