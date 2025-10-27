@@ -1,3 +1,5 @@
+local SpriteManager = require("src.utils.sprite_manager")
+
 local Debuff = {}
 Debuff.__index = Debuff
 

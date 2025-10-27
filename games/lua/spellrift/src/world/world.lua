@@ -10,6 +10,17 @@ function World.new()
     return self
 end
 
+function World:setup(selectedHero, selectedSkill)
+    -- Создаем героя в центре карты
+    local hero = Hero.new(400, 300, selectedHero, 1)
+    
+    -- Добавляем выбранный скилл герою
+    hero:addSkill(selectedSkill, 1)
+    
+    -- Добавляем героя в мир
+    self:addHero(hero)
+end
+
 function World:addHero(hero)
     table.insert(self.heroes, hero)
 end

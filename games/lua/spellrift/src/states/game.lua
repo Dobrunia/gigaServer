@@ -3,6 +3,7 @@ local Input = require("src.system.input")
 local Camera = require("src.system.camera")
 local Minimap = require("src.ui.ui_minimap")
 local Spawner = require("src.system.spawner")
+local Map = require("src.world.map")
 
 local Game = {}
 Game.__index = Game
@@ -13,6 +14,7 @@ function Game:enter(selectedHero, selectedSkill)
   self.camera = Camera.new()
   self.minimap = Minimap.new()
   self.spawner = Spawner.new()
+  self.map = Map.new()
 
   self.world:setup(selectedHero, selectedSkill)
 end
@@ -32,6 +34,18 @@ function Game:update(dt)
 end
 
 function Game:draw()
+    self.camera:apply()
+    
+    -- Рисуем карту/фон
+    self.map:draw()
+    
+    -- Рисуем мир
+    self.world:draw()
+    
+    -- Рисуем мини-карту
+    self.minimap:draw()
+    
+    self.camera:unapply()
 end
 
 return Game
