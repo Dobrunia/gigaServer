@@ -64,7 +64,7 @@ function CharacterSelect:draw()
     local totalWidth = (CARD_WIDTH * CARDS_PER_ROW) + (CARD_SPACING * (CARDS_PER_ROW - 1))
     local startX = (screenW - totalWidth) / 2
     
-    for i, hero in ipairs(heroes) do
+    for i, character in ipairs(self.characters) do
         local row = math.floor((i - 1) / CARDS_PER_ROW)
         local col = ((i - 1) % CARDS_PER_ROW)
         
