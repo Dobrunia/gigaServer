@@ -1,28 +1,52 @@
-local UIConstants = require("src.ui.constants")
+local UIConstants = require("src.ui.ui_constants")
+local heroes = require("src.config.heroes")
 
 local CharacterSelect = {}
 CharacterSelect.__index = CharacterSelect
 
--- === CONSTRUCTOR ===
+local CARD_WIDTH = 500
+local CARD_HEIGHT = 390
+local CARD_SPACING = 40
+local CARDS_PER_ROW = 3
+local CARDS_START_Y = 100
+local CARD_BORDER_RADIUS = 8
+local CARD_PADDING = 20
+local CARD_MAIN_SPRITE_SIZE = 128
+local CARD_ELEMENTS_OFFSET_Y = 100
+local CARD_ELEMENTS_OFFSET_X = 100
+
+local CARD_INNATE_SPRITE_SIZE = 40
+local CARD_DESCRIPTION_HEIGHT= CARD_INNATE_SPRITE_SIZE + CARD_PADDING * 2
+
+
+local ICON_STAT_SIZE = UIConstants.FONT_MEDIUM
 
 function CharacterSelect.new()
     local self = setmetatable({}, CharacterSelect)
+
+    -- Получаем список всех персонажей
+    self.characters = {}
+    self:loadCharacters()
     return self
+end
+
+function CharacterSelect:loadCharacters()
+    -- Проходим по всем персонажам из конфига
+    for heroId, heroConfig in pairs(heroes) do
+        local character = {
+            sprite = SpriteManager.loadHeroSprite(heroId), -- TODO: мб без кэша надо
+            config = heroConfig
+        }
+        
+        table.insert(self.characters, character)
+    end
 end
 
 -- === DRAW ===
 
-function CharacterSelect:draw(assets, heroes, selectedIndex)
+function CharacterSelect:draw()
     Colors.setColor(Colors.BACKGROUND_PRIMARY)
     love.graphics.clear()
-    
-    local bg = assets.getImage("menuBg")
-    if bg then
-        Colors.setColor(Colors.TEXT_PRIMARY)
-        local scaleX = love.graphics.getWidth() / bg:getWidth()
-        local scaleY = love.graphics.getHeight() / bg:getHeight()
-        love.graphics.draw(bg, 0, 0, 0, scaleX, scaleY)
-    end
     
     -- Title
     love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
@@ -32,39 +56,34 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
     -- Hero cards grid
     local screenW = love.graphics.getWidth()
     local screenH = love.graphics.getHeight()
-    local cardWidth = UIConstants.CARD_WIDTH
-    local cardHeight = UIConstants.CARD_HEIGHT
-    local cardSpacing = UIConstants.CARD_SPACING
-    local cardsPerRow = UIConstants.CARDS_PER_ROW
-    local startY = UIConstants.CARDS_START_Y
     
     -- Calculate grid positioning
-    local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))
+    local totalWidth = (CARD_WIDTH * CARDS_PER_ROW) + (CARD_SPACING * (CARDS_PER_ROW - 1))
     local startX = (screenW - totalWidth) / 2
     
     for i, hero in ipairs(heroes) do
-        local row = math.floor((i - 1) / cardsPerRow)
-        local col = ((i - 1) % cardsPerRow)
+        local row = math.floor((i - 1) / CARDS_PER_ROW)
+        local col = ((i - 1) % CARDS_PER_ROW)
         
-        local cardX = startX + col * (cardWidth + cardSpacing)
-        local cardY = startY + row * (cardHeight + cardSpacing)
+        local cardX = startX + col * (CARD_WIDTH + CARD_SPACING)
+        local cardY = CARDS_START_Y + row * (CARD_HEIGHT + CARD_SPACING)
         
         -- Check if mouse is hovering over this card
         local mx, my = love.mouse.getPosition()
-        local isHovered = mx >= cardX and mx <= cardX + cardWidth and
-                         my >= cardY and my <= cardY + cardHeight
+        local isHovered = mx >= cardX and mx <= cardX + CARD_WIDTH and
+                         my >= cardY and my <= cardY + CARD_HEIGHT
         -- Card background
         if isHovered then
             Colors.setColor(Colors.CARD_HOVER)
         else
             Colors.setColor(Colors.CARD_DEFAULT)
         end
-        love.graphics.rectangle("fill", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+        love.graphics.rectangle("fill", cardX, cardY, CARD_WIDTH, CARD_HEIGHT, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         
         -- Card border
         Colors.setColor(Colors.BORDER_DEFAULT)
         love.graphics.setLineWidth(1)
-        love.graphics.rectangle("line", cardX, cardY, cardWidth, cardHeight, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+        love.graphics.rectangle("line", cardX, cardY, CARD_WIDTH, CARD_HEIGHT, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
         love.graphics.setLineWidth(1)
         
         -- Hero name
@@ -132,7 +151,7 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
             local innateX = cardX + UIConstants.CARD_PADDING
             
             Colors.setColor(Colors.ZONE_PASSIVE)
-            love.graphics.rectangle("fill", innateX, innateY, cardWidth - UIConstants.CARD_PADDING * 2, UIConstants.CARD_DESCRIPTION_HEIGHT, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
+            love.graphics.rectangle("fill", innateX, innateY, CARD_WIDTH - UIConstants.CARD_PADDING * 2, UIConstants.CARD_DESCRIPTION_HEIGHT, UIConstants.CARD_BORDER_RADIUS, UIConstants.CARD_BORDER_RADIUS)
             
             -- Draw innate skill icon (properly centered in panel)
             local iconX = innateX + UIConstants.CARD_PADDING + UIConstants.CARD_INNATE_SPRITE_SIZE / 2
@@ -154,7 +173,7 @@ function CharacterSelect:draw(assets, heroes, selectedIndex)
             Colors.setColor(Colors.TEXT_ACCENT)
             local descriptionX = iconX + UIConstants.CARD_PADDING + iconSize / 2
             local descriptionY = iconY - 10
-            love.graphics.printf(hero.innateSkill.description, descriptionX, descriptionY, cardWidth - UIConstants.CARD_ELEMENTS_OFFSET_X - UIConstants.CARD_PADDING, "left")
+            love.graphics.printf(hero.innateSkill.description, descriptionX, descriptionY, CARD_WIDTH - UIConstants.CARD_ELEMENTS_OFFSET_X - UIConstants.CARD_PADDING, "left")
         end
         
     end
@@ -169,26 +188,21 @@ end
 
 function CharacterSelect:handleClick(x, y, heroes)
     local screenW = love.graphics.getWidth()
-    local cardWidth = UIConstants.CARD_WIDTH
-    local cardHeight = UIConstants.CARD_HEIGHT
-    local cardSpacing = UIConstants.CARD_SPACING
-    local cardsPerRow = UIConstants.CARDS_PER_ROW
-    local startY = UIConstants.CARDS_START_Y
     
     -- Calculate grid positioning
-    local totalWidth = (cardWidth * cardsPerRow) + (cardSpacing * (cardsPerRow - 1))
+    local totalWidth = (CARD_WIDTH * CARDS_PER_ROW) + (CARD_SPACING * (CARDS_PER_ROW - 1))
     local startX = (screenW - totalWidth) / 2
     
     for i, hero in ipairs(heroes) do
-        local row = math.floor((i - 1) / cardsPerRow)
-        local col = ((i - 1) % cardsPerRow)
+        local row = math.floor((i - 1) / CARDS_PER_ROW)
+        local col = ((i - 1) % CARDS_PER_ROW)
         
-        local cardX = startX + col * (cardWidth + cardSpacing)
-        local cardY = startY + row * (cardHeight + cardSpacing)
+        local cardX = startX + col * (CARD_WIDTH + CARD_SPACING)
+        local cardY = CARDS_START_Y + row * (CARD_HEIGHT + CARD_SPACING)
         
         -- Check if click is within this card
-        if x >= cardX and x <= cardX + cardWidth and
-           y >= cardY and y <= cardY + cardHeight then
+        if x >= cardX and x <= cardX + CARD_WIDTH and
+           y >= cardY and y <= cardY + CARD_HEIGHT then
             return i  -- Return hero index
         end
     end
