@@ -65,6 +65,9 @@ function CharacterSelect:draw()
     local startX = (screenW - totalWidth) / 2
     
     for i, character in ipairs(self.characters) do
+        local hero = character.config
+        local sprite = character.sprite
+
         local row = math.floor((i - 1) / CARDS_PER_ROW)
         local col = ((i - 1) % CARDS_PER_ROW)
         
@@ -90,12 +93,12 @@ function CharacterSelect:draw()
         local spriteX = nameX + CARD_MAIN_SPRITE_SIZE / 2
         local spriteY = nameY + CARD_ELEMENTS_OFFSET_Y
 
-        local sprite = hero.loadedSprites.idle
-        local spriteW, spriteH = sprite:getDimensions()
+        local spriteIdle = -- 1 ряд 1 колонка 64 на 64
+        local spriteW, spriteH = spriteIdle:getDimensions()
         -- Scale sprite to fit configured size in card
         local targetSize = hero.spriteSize or CARD_MAIN_SPRITE_SIZE
         local scale = targetSize / math.max(spriteW, spriteH)
-        love.graphics.draw(sprite, spriteX, spriteY, 0, scale, scale, spriteW/2, spriteH/2)
+        love.graphics.draw(spriteIdle, spriteX, spriteY, 0, scale, scale, spriteW/2, spriteH/2)
 
         -- Key stats with growth (moved to right side) with icons
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
@@ -124,32 +127,29 @@ function CharacterSelect:draw()
         Icons.drawWithText(castIcon, hero.baseCastSpeed .. "x (+" .. hero.castSpeedGrowth .. ")", statsX, castSpeedY, ICON_STAT_SIZE)
         
         -- Passive ability description with icon (description section)
-        if hero.innateSkill and hero.innateSkill.description then
-            local innateY = castSpeedY + CARD_ELEMENTS_OFFSET_Y - 60
-            local innateX = cardX + CARD_PADDING
-            
-            Colors.setColor(SMALL_CARD_BACKGROUND)
-            love.graphics.rectangle("fill", innateX, innateY, CARD_WIDTH - CARD_PADDING * 2, CARD_DESCRIPTION_HEIGHT, CARD_BORDER_RADIUS, CARD_BORDER_RADIUS)
-            
-            -- Draw innate skill icon (properly centered in panel)
-            local iconX = innateX + CARD_PADDING + CARD_INNATE_SPRITE_SIZE / 2
-            local iconY = innateY + CARD_PADDING + CARD_INNATE_SPRITE_SIZE / 2
-            local iconSize = CARD_INNATE_SPRITE_SIZE
-            local innateIcon = assets.getImage("innate_" .. hero.innateSkill.id)
-
-            love.graphics.setColor(1, 1, 1, 1)  -- White for sprites
-            local iconW, iconH = innateIcon:getDimensions()
-            local scale = iconSize / math.max(iconW, iconH)
-            love.graphics.draw(innateIcon, iconX, iconY, 0, scale, scale, iconW/2, iconH/2)
-
-            
-            love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
-            Colors.setColor(UIConstants.COLOR_TEXT_PRIMARY)
-            local descriptionX = iconX + CARD_PADDING + iconSize / 2
-            local descriptionY = iconY - 10
-            love.graphics.printf(hero.innateSkill.description, descriptionX, descriptionY, CARD_WIDTH - CARD_ELEMENTS_OFFSET_X - CARD_PADDING, "left")
-        end
+        local innateY = castSpeedY + CARD_ELEMENTS_OFFSET_Y - 60
+        local innateX = cardX + CARD_PADDING
         
+        Colors.setColor(SMALL_CARD_BACKGROUND)
+        love.graphics.rectangle("fill", innateX, innateY, CARD_WIDTH - CARD_PADDING * 2, CARD_DESCRIPTION_HEIGHT, CARD_BORDER_RADIUS, CARD_BORDER_RADIUS)
+        
+        -- Draw innate skill icon (properly centered in panel)
+        local iconX = innateX + CARD_PADDING + CARD_INNATE_SPRITE_SIZE / 2
+        local iconY = innateY + CARD_PADDING + CARD_INNATE_SPRITE_SIZE / 2
+        local iconSize = CARD_INNATE_SPRITE_SIZE
+        local spriteInnate = -- 1 ряд 2 колонка
+
+        love.graphics.setColor(1, 1, 1, 1)  -- White for sprites
+        local iconW, iconH = spriteInnate:getDimensions()
+        local scale = iconSize / math.max(iconW, iconH)
+        love.graphics.draw(spriteInnate, iconX, iconY, 0, scale, scale, iconW/2, iconH/2)
+
+        
+        love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
+        Colors.setColor(UIConstants.COLOR_TEXT_PRIMARY)
+        local descriptionX = iconX + CARD_PADDING + iconSize / 2
+        local descriptionY = iconY - 10
+        love.graphics.printf(hero.innateSkill.description, descriptionX, descriptionY, CARD_WIDTH - CARD_ELEMENTS_OFFSET_X - CARD_PADDING, "left")
     end
     
     -- Instructions
