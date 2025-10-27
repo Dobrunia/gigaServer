@@ -76,4 +76,23 @@ function SpriteManager.getCacheInfo()
     return info
 end
 
+-- Создает quad (кадр) по позиции в сетке
+-- spriteSheet: love.graphics.newImage(...)
+-- col, row: номер колонки и ряда (начиная с 1)
+-- tileWidth, tileHeight: размер кадра (например, 64x64)
+function SpriteManager.getQuad(spriteSheet, col, row, tileWidth, tileHeight)
+    local sheetWidth = spriteSheet:getWidth()
+    local sheetHeight = spriteSheet:getHeight()
+
+    local x = (col - 1) * tileWidth
+    local y = (row - 1) * tileHeight
+
+    -- Проверка, чтобы не выйти за пределы спрайт-листа
+    if x + tileWidth > sheetWidth or y + tileHeight > sheetHeight then
+        error(("Quad выходит за границы спрайтлиста: (%d,%d)"):format(col, row))
+    end
+
+    return love.graphics.newQuad(x, y, tileWidth, tileHeight, sheetWidth, sheetHeight)
+end
+
 return SpriteManager

@@ -1,8 +1,8 @@
 local UIConstants = require("src.ui.ui_constants")
 local heroes = require("src.config.heroes")
 
-local CharacterSelect = {}
-CharacterSelect.__index = CharacterSelect
+local HeroSelect = {}
+HeroSelect.__index = HeroSelect
 
 local CARD_WIDTH = 500
 local CARD_HEIGHT = 390
@@ -24,8 +24,8 @@ local CARD_DESCRIPTION_HEIGHT= CARD_INNATE_SPRITE_SIZE + CARD_PADDING * 2
 
 local ICON_STAT_SIZE = UIConstants.FONT_MEDIUM
 
-function CharacterSelect.new()
-    local self = setmetatable({}, CharacterSelect)
+function HeroSelect.new()
+    local self = setmetatable({}, HeroSelect)
 
     -- Получаем список всех персонажей
     self.characters = {}
@@ -33,7 +33,7 @@ function CharacterSelect.new()
     return self
 end
 
-function CharacterSelect:loadCharacters()
+function HeroSelect:loadCharacters()
     -- Проходим по всем персонажам из конфига
     for heroId, heroConfig in pairs(heroes) do
         local character = {
@@ -47,7 +47,7 @@ end
 
 -- === DRAW ===
 
-function CharacterSelect:draw()
+function HeroSelect:draw()
     Colors.setColor(MAIN_CARD_BACKGROUND)
     love.graphics.clear()
     
@@ -93,12 +93,12 @@ function CharacterSelect:draw()
         local spriteX = nameX + CARD_MAIN_SPRITE_SIZE / 2
         local spriteY = nameY + CARD_ELEMENTS_OFFSET_Y
 
-        local spriteIdle = -- 1 ряд 1 колонка 64 на 64
-        local spriteW, spriteH = spriteIdle:getDimensions()
+        -- Используем SpriteManager.getQuad для создания quad
+        local spriteIdleQuad = SpriteManager.getQuad(spriteSheet, 1, 1, 64, 64)   
         -- Scale sprite to fit configured size in card
-        local targetSize = hero.spriteSize or CARD_MAIN_SPRITE_SIZE
-        local scale = targetSize / math.max(spriteW, spriteH)
-        love.graphics.draw(spriteIdle, spriteX, spriteY, 0, scale, scale, spriteW/2, spriteH/2)
+        local targetSize = CARD_MAIN_SPRITE_SIZE
+        local scale = targetSize / 64
+        love.graphics.draw(spriteSheet, spriteIdleQuad, spriteX, spriteY, 0, scale, scale, 32, 32)
 
         -- Key stats with growth (moved to right side) with icons
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
@@ -137,13 +137,12 @@ function CharacterSelect:draw()
         local iconX = innateX + CARD_PADDING + CARD_INNATE_SPRITE_SIZE / 2
         local iconY = innateY + CARD_PADDING + CARD_INNATE_SPRITE_SIZE / 2
         local iconSize = CARD_INNATE_SPRITE_SIZE
-        local spriteInnate = -- 1 ряд 2 колонка
 
+        -- Используем SpriteManager.getQuad для innate skill
+        local spriteInnateQuad = SpriteManager.getQuad(spriteSheet, 2, 1, 64, 64)
         love.graphics.setColor(1, 1, 1, 1)  -- White for sprites
-        local iconW, iconH = spriteInnate:getDimensions()
-        local scale = iconSize / math.max(iconW, iconH)
-        love.graphics.draw(spriteInnate, iconX, iconY, 0, scale, scale, iconW/2, iconH/2)
-
+        local scale = iconSize / 64
+        love.graphics.draw(spriteSheet, spriteInnateQuad, iconX, iconY, 0, scale, scale, 32, 32)
         
         love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_SMALL))
         Colors.setColor(UIConstants.COLOR_TEXT_PRIMARY)
@@ -155,7 +154,7 @@ end
 
 -- === INPUT ===
 
-function CharacterSelect:handleClick(x, y, heroes)
+function HeroSelect:handleClick(x, y, heroes)
     local screenW = love.graphics.getWidth()
     
     -- Calculate grid positioning
@@ -179,5 +178,5 @@ function CharacterSelect:handleClick(x, y, heroes)
     return nil
 end
 
-return CharacterSelect
+return HeroSelect
 
