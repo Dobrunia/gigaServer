@@ -37,7 +37,7 @@ end
 
 -- === DRAW ===
 
-function Minimap:draw(player, mobs, projectiles, camera, assets)
+function Minimap:draw(player, enemies, projectiles, camera, assets)
     if not player then return end
     
     local screenW = love.graphics.getWidth()
@@ -58,8 +58,8 @@ function Minimap:draw(player, mobs, projectiles, camera, assets)
     -- Draw projectiles (enemy projectiles only)
     self:drawProjectiles(projectiles)
     
-    -- Draw mobs
-    self:drawMobs(mobs, player, camera)
+    -- Draw enemies
+    self:drawEnemies(enemies, player, camera)
     
     -- Draw player (always on top)
     self:drawPlayer(player, camera)
@@ -108,12 +108,12 @@ function Minimap:drawProjectiles(projectiles)
     end
 end
 
-function Minimap:drawMobs(mobs, player, camera)
-    if not mobs then return end
+function Minimap:drawEnemies(enemies, player, camera)
+    if not enemies then return end
     
     love.graphics.setColor(MINIMAP_MOB)
     
-    for _, mob in ipairs(mobs) do
+    for _, mob in ipairs(enemies) do
         if not mob.isDead then
             local mx, my = self:worldToMinimap(mob.x, mob.y)
             

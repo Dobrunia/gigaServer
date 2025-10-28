@@ -1,4 +1,4 @@
-local mobs = {
+local enemies = {
     -- === MELEE MOB ===
     -- zombie = {
     --     id = "zombie",
@@ -60,8 +60,6 @@ local mobs = {
         armorGrowth = 0.2,
         baseMoveSpeed = 40,
         speedGrowth = 1,
-        baseDamage = 15,
-        damageGrowth = 5,
         
         skills = {'fireball'},
 
@@ -118,5 +116,5 @@ local mobs = {
     }
 }
 
-return mobs
+return enemies
 
