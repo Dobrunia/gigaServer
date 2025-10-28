@@ -4,19 +4,21 @@ local Hero = require("src.entity.hero")
 local World = {}
 World.__index = World
 
-function World.new()
+function World.new(mapWidth, mapHeight)
     local self = setmetatable({}, World)
     self.heroes = {}
     self.enemies = {}
     self.projectiles = {}
     self.drops = {}
-    self.spawner = Spawner.new()
+    self.spawner = Spawner.new(mapWidth, mapHeight)
     return self
 end
 
-function World:setup(selectedHeroId, selectedSkillId)
+function World:setup(selectedHeroId, selectedSkillId, mapWidth, mapHeight)
     -- Создаем героя в центре карты
-    local hero = Hero.new(400, 300, selectedHeroId, 1)
+    local centerX = mapWidth / 2
+    local centerY = mapHeight / 2
+    local hero = Hero.new(centerX, centerY, selectedHeroId, 1)
     
     -- Добавляем выбранный скилл герою
     hero:addSkill(selectedSkillId, 1)

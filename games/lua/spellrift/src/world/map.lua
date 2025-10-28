@@ -4,8 +4,8 @@ Map.__index = Map
 function Map.new(width, height)
     local self = setmetatable({}, Map)
     
-    self.width = width or 1000
-    self.height = height or 1000
+    self.width = width or 5000  -- Увеличиваем размер карты
+    self.height = height or 5000
     
     -- Создаем Canvas для карты
     self.canvas = love.graphics.newCanvas(self.width, self.height)

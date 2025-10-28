@@ -13,10 +13,10 @@ function Game:enter(selectedHeroId, selectedSkillId)
   self.input = Input.new()
   self.input:snapshotNow()
   
-  self.world = World.new()
+  self.map = Map.new()
+  self.world = World.new(self.map.width, self.map.height)
   self.camera = Camera.new()
   self.minimap = Minimap.new()
-  self.map = Map.new()
 
   self.isPaused = false
   self.uiPauseMenu = UIPauseMenu.new()
@@ -24,7 +24,7 @@ function Game:enter(selectedHeroId, selectedSkillId)
   -- fixed timestep аккумулятор
   self._accum = 0
   -- инициализация мира
-  self.world:setup(selectedHeroId, selectedSkillId)
+  self.world:setup(selectedHeroId, selectedSkillId, self.map.width, self.map.height)
 end
 
 function Game:update(dt)

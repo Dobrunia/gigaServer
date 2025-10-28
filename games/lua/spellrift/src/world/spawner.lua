@@ -58,14 +58,43 @@ local function chooseWeightedEnemy(elapsedTime)
     return candidates[1].id -- Fallback
 end
 
-local function randomRingPoint(cx, cy, minR, maxR)
-    local r = MathUtils.randomRange(minR, maxR)
+-- Проверяем, находится ли точка в пределах карты
+local function isPointInBounds(x, y, mapWidth, mapHeight, margin)
+    return x >= margin and x <= mapWidth - margin and 
+           y >= margin and y <= mapHeight - margin
+end
+
+-- Генерируем случайную точку в кольце вокруг героя, но в пределах карты
+local function randomRingPointInBounds(cx, cy, minR, maxR, mapWidth, mapHeight, margin)
+    local attempts = 0
+    local maxAttempts = 20
+    
+    repeat
+        local r = MathUtils.randomRange(minR, maxR)
+        local a = MathUtils.randomRange(0, math.pi * 2)
+        local x = cx + math.cos(a) * r
+        local y = cy + math.sin(a) * r
+        
+        if isPointInBounds(x, y, mapWidth, mapHeight, margin) then
+            return x, y
+        end
+        
+        attempts = attempts + 1
+    until attempts >= maxAttempts
+    
+    -- Если не удалось найти подходящую точку, возвращаем точку ближе к центру
+    local r = MathUtils.randomRange(minR, maxR * 0.5)
     local a = MathUtils.randomRange(0, math.pi * 2)
     return cx + math.cos(a) * r, cy + math.sin(a) * r
 end
 
-function Spawner.new()
+function Spawner.new(mapWidth, mapHeight)
     local self = setmetatable({}, Spawner)
+    
+    -- Размеры карты
+    self.mapWidth = mapWidth
+    self.mapHeight = mapHeight
+    self.mapMargin = 100  -- Отступ от краев карты
     
     -- Настройки спавна
     self.cooldown = 2.0                    -- Интервал между спавнами
@@ -145,13 +174,8 @@ function Spawner:update(dt, world, hero)
     
     -- Спавним группу врагов
     for i = 1, canSpawn do
-        local attempts = 0
-        local sx, sy
-        
-        repeat
-            attempts = attempts + 1
-            sx, sy = randomRingPoint(hero.x, hero.y, self.minRadius, self.maxRadius)
-        until sx and sy or attempts >= self.maxAttempts
+        local sx, sy = randomRingPointInBounds(hero.x, hero.y, self.minRadius, self.maxRadius, 
+                                             self.mapWidth, self.mapHeight, self.mapMargin)
         
         if sx and sy then
             local enemy = Enemy.new(sx, sy, enemyId, enemyLevel)
