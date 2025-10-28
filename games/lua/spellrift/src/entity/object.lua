@@ -1,4 +1,5 @@
 local SpriteManager = require("src.utils.sprite_manager")
+local Constants = require("src.constants")
 
 local Object = {}
 Object.__index = Object
@@ -126,6 +127,13 @@ function Object:draw()
         local sx = (self.facing == -1) and -1 or 1
         local ox = (sx == -1) and self.baseWidth or 0
         love.graphics.draw(self.spriteSheet, quad, self.x, self.y, 0, sx * self.scaleWidth, self.scaleHeight, ox, 0)
+    end
+    
+    -- Рисуем хитбокс если включена отладка
+    if Constants.DEBUG_DRAW_HITBOXES then
+        love.graphics.setColor(0, 1, 0, 0.5) -- зеленый полупрозрачный
+        love.graphics.rectangle("line", self.x, self.y, self.effectiveWidth, self.effectiveHeight)
+        love.graphics.setColor(1, 1, 1, 1) -- сбрасываем цвет
     end
 end
 

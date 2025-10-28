@@ -1,5 +1,6 @@
 local Object = require("src.entity.object")
 local SpriteManager = require("src.utils.sprite_manager")
+local Constants = require("src.constants")
 
 local Projectile = {}
 Projectile.__index = Projectile
@@ -149,7 +150,7 @@ function Projectile:update(dt, world)
     -- цели: враги если кастер герой, и герои если кастер враг
     local targets = (self.caster and self.caster.enemyId) and (world and world.heroes) or (world and world.enemies)
     if targets then
-        local cx, cy = self.x + self.effectiveWidth * 0.5, self.y + self.effectiveHeight * 0.5
+        local cx, cy = self.x, self.y  -- self.x, self.y уже центр спрайта
         local r2 = self.radius * self.radius
         for i = 1, #targets do
             local t = targets[i]
@@ -186,6 +187,16 @@ function Projectile:draw()
         local ox = self.baseWidth * 0.5  -- центр спрайта
         local oy = self.baseHeight * 0.5
         love.graphics.draw(self.spriteSheet, quad, self.x, self.y, self.angle, self.scaleWidth, self.scaleHeight, ox, oy)
+    end
+    
+    -- Рисуем хитбокс если включена отладка
+    if Constants.DEBUG_DRAW_HITBOXES then
+        love.graphics.setColor(0, 1, 0, 0.5) -- зеленый полупрозрачный
+        -- Центрируем хитбокс как спрайт (с учетом ox, oy)
+        local hitboxX = self.x - self.effectiveWidth * 0.5
+        local hitboxY = self.y - self.effectiveHeight * 0.5
+        love.graphics.rectangle("line", hitboxX, hitboxY, self.effectiveWidth, self.effectiveHeight)
+        love.graphics.setColor(1, 1, 1, 1) -- сбрасываем цвет
     end
 end
 
