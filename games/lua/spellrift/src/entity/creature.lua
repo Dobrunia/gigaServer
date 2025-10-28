@@ -5,12 +5,12 @@ local Skill = require("src.entity.skill")
 
 local Creature = {}
 Creature.__index = Creature
+setmetatable(Creature, {__index = Object})
 
 function Creature.new(spriteSheet, x, y, config, level)
-    local self = setmetatable({}, Creature)
-    
-    -- Инициализируем как Object
-    self = Object.new(self, spriteSheet, x, y, config.width, config.height)
+    local self = Object.new(spriteSheet, x, y, config.width, config.height)
+    -- Устанавливаем Creature как метатаблицу для наследования
+    setmetatable(self, Creature)
     
     -- Добавляем свойства существа
     self.level = level
@@ -110,6 +110,9 @@ function Creature:draw()
     local barHeight = 4
     local barX = self.x
     local barY = self.y - 10
+
+    -- Calculate health percentage
+    local healthPercent = self.hp / self.baseHp
     
     -- Фон
     love.graphics.setColor(0.2, 0.2, 0.2, 0.8)

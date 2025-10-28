@@ -3,10 +3,9 @@ local SpriteManager = require("src.utils.sprite_manager")
 
 local Drop = {}
 Drop.__index = Drop
+setmetatable(Drop, {__index = Object})
 
 function Drop.new(x, y, dropId)
-    local self = setmetatable({}, Drop)
-    
     -- Загружаем спрайт
     local spriteSheet = SpriteManager.loadDropSprite(dropId)
 
@@ -16,7 +15,9 @@ function Drop.new(x, y, dropId)
         error("Drop config not found: " .. dropId)
     end
     -- Инициализируем как Object
-    self = Object.new(self, spriteSheet, x, y, config.width, config.height)  -- Дропы меньше по размеру
+    local self = Object.new(spriteSheet, x, y, config.width, config.height)  -- Дропы меньше по размеру
+    -- Устанавливаем Drop как метатаблицу
+    setmetatable(self, Drop)
     
     -- Свойства дропа
     self.dropId = config.id

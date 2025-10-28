@@ -3,6 +3,7 @@ local MathUtils = require("src.utils.math_utils")
 local Skill = {}
 Skill.__index = Skill
 
+-- скилл не наследний объекта, он вызывает/создает объекты проджектаилы, лужи и тд
 function Skill.new(skillId, level, caster)
     local self = setmetatable({}, Skill)
 

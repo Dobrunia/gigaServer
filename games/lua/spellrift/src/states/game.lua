@@ -27,7 +27,6 @@ function Game:update(dt)
 
   self.world:update(dt)
   self.camera:update(self.world.heroes[1].x, self.world.heroes[1].y)
-  self.minimap:update(self.world.heroes[1], self.world.enemies, self.world.projectiles, self.camera)
 end
 
 function Game:draw()
@@ -42,7 +41,7 @@ function Game:draw()
     -- Рисуем мини-карту
     self.minimap:draw()
     
-    self.camera:unapply()
+    self.camera:clear()
 end
 
 return Game

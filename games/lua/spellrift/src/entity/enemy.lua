@@ -4,10 +4,9 @@ local SpriteManager = require("src.utils.sprite_manager")
 
 local Enemy = {}
 Enemy.__index = Enemy
+setmetatable(Enemy, {__index = Creature})
 
 function Enemy.new(x, y, enemyId, level)
-    local self = setmetatable({}, Enemy)
-    
     -- Загружаем спрайт только один раз
     local spriteSheet = SpriteManager.loadEnemySprite(enemyId)
     
@@ -18,7 +17,9 @@ function Enemy.new(x, y, enemyId, level)
     end
     
     -- Инициализируем как Creature
-    self = Creature.new(self, spriteSheet, x, y, config, level)
+    local self = Creature.new(spriteSheet, x, y, config, level)
+    -- Устанавливаем Enemy как метатаблицу
+    setmetatable(self, Enemy)
     
     -- Свойства врага
     self.enemyId = config.id
@@ -42,3 +43,5 @@ function Enemy:createDrop()
     -- Создаем XP дроп
     -- Добавляем в список дропа
 end
+
+return Enemy

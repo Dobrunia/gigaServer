@@ -4,10 +4,9 @@ local MathUtils = require("src.utils.math_utils")
 
 local Hero = {}
 Hero.__index = Hero
+setmetatable(Hero, {__index = Creature})
 
 function Hero.new(x, y, heroId, level)
-    local self = setmetatable({}, Hero)
-
     -- Загружаем спрайт только один раз на весь тип героя
     local spriteSheet = SpriteManager.loadHeroSprite(heroId)
     local config = require("src.config.heroes")[heroId]
@@ -17,8 +16,10 @@ function Hero.new(x, y, heroId, level)
     end
 
     -- Инициализация базового существа
-    self = Creature.new(spriteSheet, x, y, config, level or 1)
-    setmetatable(self, { __index = setmetatable(Hero, { __index = Creature }) })
+    local self = Creature.new(spriteSheet, x, y, config, level or 1)
+    -- Устанавливаем Hero как метатаблицу
+    setmetatable(self, Hero)
+
     -- Свойства героя
     self.heroId = config.id
     self.heroName = config.name

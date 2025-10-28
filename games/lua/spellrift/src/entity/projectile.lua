@@ -8,9 +8,10 @@ Projectile.__index = Projectile
 -- Пул объектов для переиспользования
 local projectilePool = {}
 local activeProjectiles = {}
+setmetatable(Projectile, {__index = Object})
 
 function Projectile.new(x, y, targetX, targetY, spriteSheet)
-    local self = table.remove(projectilePool) or setmetatable({}, Projectile)
+    local self = table.remove(projectilePool) or Object.new(spriteSheet, x, y, config.width, config.height)
     
     local config = require("src.config.projectiles")[projectileId]
 
@@ -18,7 +19,9 @@ function Projectile.new(x, y, targetX, targetY, spriteSheet)
         error("Projectile config not found: " .. projectileId)
     end
     -- Инициализируем как Object
-    self = Object.new(self, spriteSheet, x, y, config.width, config.height)  -- Маленький размер для снарядов
+    local self = Object.new(spriteSheet, x, y, config.width, config.height)  -- Маленький размер для снарядов
+    -- Устанавливаем Projectile как метатаблицу
+    setmetatable(self, Projectile)
     
     -- Свойства снаряда
     self.damage = config.damage
