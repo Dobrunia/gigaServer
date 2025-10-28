@@ -78,9 +78,7 @@ local enemies = {
             quads = {
                 idle = {
                     row = 1,
-                    col = 1,
-                    tileWidth = 64,
-                    tileHeight = 64
+                    col = 1
                 }
             }
         },
@@ -91,26 +89,23 @@ local enemies = {
         spawnEndTime = nil,
         spawnGroupSize = 2,
 
+        width = 32,
+        height = 32,
+
         quads = {
             idle = {
                 row = 1,
                 col = 1,
-                tileWidth = 64,
-                tileHeight = 64
             },
             walk = {
                 startrow = 1,
                 startcol = 2,
                 endrow = 1,
                 endcol = 3,
-                tileWidth = 64,
-                tileHeight = 64,
             },
             cast = {
                 row = 1,
                 col = 4,
-                tileWidth = 64,
-                tileHeight = 64,
             }
         }
     }

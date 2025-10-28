@@ -72,7 +72,7 @@ function Enemy:tryCastAt(hero)
             end
 
             -- запускаем скилл (сейчас только КД; спавн проджектайла добавим позже)
-            sk:cast()
+            sk:castAt(self.world, hero.x, hero.y)
             return true
         end
     end

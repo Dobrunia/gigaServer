@@ -22,7 +22,26 @@ Skills["fireball"] = {
         debuffDamage = 8,     -- Урон за тик
         debuffTickRate = 1.0  -- Частота тиков
     },
-    
+
+    width = 32,
+    height = 32,
+
+    quads = {
+        idle = {
+            row = 1,
+            col = 1
+        },
+        fly = {
+            startrow = 1,
+            startcol = 2,
+            endrow = 1,
+            endcol = 4,
+        },
+        hit = {
+            row = 1,
+            col = 5,
+        }
+    },
     -- Апгрейды по уровням
     upgrades = {
         -- Level 2: больше урона и дольше

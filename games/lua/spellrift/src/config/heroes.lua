@@ -22,29 +22,21 @@ local heroes = {
         quads = {
             idle = {
                 row = 1,
-                col = 1,
-                tileWidth = 64,
-                tileHeight = 64
+                col = 1
             },
             innateSkill = {
                 row = 1,
-                col = 2,
-                tileWidth = 64,
-                tileHeight = 64
+                col = 2
             },
             walk = {
                 startrow = 1,
                 startcol = 3,
                 endrow = 1,
-                endcol = 4,
-                tileWidth = 64,
-                tileHeight = 64,
+                endcol = 4
             },
             cast = {
                 row = 1,
-                col = 5,
-                tileWidth = 64,
-                tileHeight = 64,
+                col = 5
             }
         }
     }

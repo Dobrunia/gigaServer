@@ -1,128 +1,220 @@
 local Object = require("src.entity.object")
 local SpriteManager = require("src.utils.sprite_manager")
-local MathUtils = require("src.utils.math_utils")
 
 local Projectile = {}
 Projectile.__index = Projectile
+setmetatable(Projectile, { __index = Object })
 
--- Пул объектов для переиспользования
-local projectilePool = {}
+-- Пул / активные снаряды
+local projectilePool    = {}
 local activeProjectiles = {}
-setmetatable(Projectile, {__index = Object})
 
-function Projectile.new(x, y, targetX, targetY, spriteSheet)
-    local self = table.remove(projectilePool) or Object.new(spriteSheet, x, y, config.width, config.height)
-    
-    local config = require("src.config.projectiles")[projectileId]
-
-    if not config then
-        error("Projectile config not found: " .. projectileId)
+-- Достаём только fly/hit из конфига скилла
+local function getSkillQuads(skillId)
+    local skills = require("src.config.skills")
+    local s = skills[skillId]
+    if not s then error("Projectile: skill not found: " .. tostring(skillId)) end
+    local q = s.quads or {}
+    if not q.fly then
+        error("Projectile: skills[" .. tostring(skillId) .. "].quads.fly is required")
     end
-    -- Инициализируем как Object
-    local self = Object.new(spriteSheet, x, y, config.width, config.height)  -- Маленький размер для снарядов
-    -- Устанавливаем Projectile как метатаблицу
-    setmetatable(self, Projectile)
+    return q.fly, q.hit
+end
+
+-- Переинициализация без аллокаций
+local function initProjectile(self, world, caster, skill, tx, ty)
+    self.world  = world
+    self.caster = caster
+    self.skill  = skill
+
+    local st = skill.stats or {}
+    self.speed   = st.speed  or 180
+    self.radius  = st.radius or 12
+    self.maxDist = st.range  or 250
+    self.damage  = st.damage or 0
+
+    -- старт из центра кастера
+    self.x = caster.x + (caster.effectiveWidth or 0) * 0.5
+    self.y = caster.y + (caster.effectiveHeight or 0) * 0.5
+    self.startX, self.startY = self.x, self.y
+    self.travel = 0
+
+    -- направление
+    local dx, dy = (tx - self.x), (ty - self.y)
+    local d = math.sqrt(dx*dx + dy*dy)
+    if d < 0.001 then dx, dy, d = 1, 0, 1 end
+    self.vx, self.vy = (dx / d) * self.speed, (dy / d) * self.speed
+
+    self.facing = (self.vx < 0) and -1 or 1
+    self.state = "fly"        -- fly | hit | dead
+    self.stateTimer = 0
+end
+
+-- Публичный спавн (через пул)
+function Projectile.spawn(world, caster, skill, tx, ty)
+    local skillId = skill.id
+    local qfly, qhit = getSkillQuads(skillId)
+    local sheet = SpriteManager.loadSkillSprite(skillId)
+
+    -- готовим объект (pool -> reuse)
+    local self = table.remove(projectilePool)
+    if not self then
+        -- создаем объект с размером 64x64 (базовый размер)
+        self = Object.new(sheet, 0, 0, 64, 64)
+        setmetatable(self, Projectile)
+    else
+        self.spriteSheet = sheet
+        self.animationsList = {}
+        self.currentAnimation = "idle"
+        self.currentAnimationTime = 0
+        self.currentAnimationFrame = 1
+    end
     
-    -- Свойства снаряда
-    self.damage = config.damage
-    self.speed = config.speed
-    self.active = true
-    
-    -- Направление движения
-    local dx, dy = MathUtils.direction(x, y, targetX, targetY)
-    self.velocityX = dx * self.speed
-    self.velocityY = dy * self.speed
-    
-    -- Настраиваем анимацию
-    self:setupAnimations()
-    
-    -- Добавляем в активные
+    -- устанавливаем размер из конфига скилла
+    local skillConfig = require("src.config.skills")[skillId]
+    if skillConfig and skillConfig.width and skillConfig.height then
+        self:setSize(skillConfig.width, skillConfig.height)
+    end
+
+    -- анимация полёта (обязательна)
+    self:setAnimationList(
+        "fly",
+        qfly.startrow or qfly.row or 1,
+        qfly.startcol or qfly.col or 1,
+        qfly.endcol   or qfly.col or 1,
+        qfly.animationSpeed or 0.1
+    )
+    self:playAnimation("fly")
+
+    -- анимация удара (опционально)
+    self._hasHitAnim = false
+    self._hitHold = (qhit and qhit.hold) or 0.15
+    if qhit then
+        self:setAnimationList(
+            "hit",
+            qhit.startrow or qhit.row or 1,
+            qhit.startcol or qhit.col or 1,
+            qhit.endcol   or qhit.col or 1,
+            qhit.animationSpeed or 0.08
+        )
+        self._hasHitAnim = true
+    end
+
+    initProjectile(self, world, caster, skill, tx, ty)
     table.insert(activeProjectiles, self)
-    
     return self
 end
 
-function Projectile:setupAnimations()
-    -- Простая анимация полета
-    self:setAnimationList("fly", 1, 1, 3, 0.1)
-    self:playAnimation("fly")
+-- переход к hit/исчезновению
+function Projectile:impact()
+    if self.state ~= "fly" then return end
+    if self._hasHitAnim then
+        self.state = "hit"
+        self.stateTimer = self._hitHold
+        self:playAnimation("hit")
+    else
+        self.state = "dead"
+    end
 end
 
-function Projectile:update(dt, player)
-    if not self.active then
+function Projectile:update(dt, world)
+    if self.state == "dead" then return end
+
+    if self.state == "hit" then
+        self.stateTimer = self.stateTimer - dt
+        if self.stateTimer <= 0 then
+            self.state = "dead"
+        end
+        Object.update(self, dt)
         return
     end
-    
-    -- Обновляем анимацию
-    Object.update(self, dt)
-    
-    -- Движение
-    self:changePosition(self.velocityX * dt, self.velocityY * dt)
-    
-    -- Проверяем столкновение с игроком
-    if self:checkCollision(player) then
-        player:takeDamage(self.damage)
-        self:destroy()
-    end
-end
 
-function Projectile:checkCollision(target)
-    if not target or target.isDead then
-        return false
-    end
-    
-    -- Простая проверка столкновения (AABB)
-    return self.x < target.x + target.width and
-           self.x + self.width > target.x and
-           self.y < target.y + target.height and
-           self.y + self.height > target.y
-end
-
-function Projectile:destroy()
-    if not self.active then
+    -- fly: движение
+    local dx, dy = self.vx * dt, self.vy * dt
+    self:changePosition(dx, dy)
+    self.travel = self.travel + math.sqrt(dx*dx + dy*dy)
+    if self.travel >= self.maxDist then
+        self:impact()
+        Object.update(self, dt)
         return
     end
-    
-    self.active = false
-    
-    -- Удаляем из активных
-    for i, projectile in ipairs(activeProjectiles) do
-        if projectile == self then
-            table.remove(activeProjectiles, i)
-            break
+
+    -- цели: враги если кастер герой, и герои если кастер враг
+    local targets = (self.caster and self.caster.enemyId) and (world and world.heroes) or (world and world.enemies)
+    if targets then
+        local cx, cy = self.x + self.effectiveWidth * 0.5, self.y + self.effectiveHeight * 0.5
+        local r2 = self.radius * self.radius
+        for i = 1, #targets do
+            local t = targets[i]
+            if t and not t.isDead then
+                local targetWidth = t.effectiveWidth
+                local targetHeight = t.effectiveHeight
+                local closestX = math.max(t.x, math.min(cx, t.x + targetWidth))
+                local closestY = math.max(t.y, math.min(cy, t.y + targetHeight))
+                local ddx, ddy = cx - closestX, cy - closestY
+                if (ddx*ddx + ddy*ddy) <= r2 then
+                    -- попадание
+                    if t.takeDamage then t:takeDamage(self.damage) end
+                    local st = self.skill.stats
+                    if st.debuffType and t.addDebuff then
+                        t:addDebuff(st.debuffType, st.debuffDuration, {
+                            damagePerTick = st.debuffDamage,
+                            tickRate      = st.debuffTickRate,
+                        }, self.caster)
+                    end
+                    self:impact()
+                    break
+                end
+            end
         end
     end
+
+    Object.update(self, dt)
 end
 
 function Projectile:draw()
-    if self.active then
-        Object.draw(self)
+    if self.state == "dead" then return end
+    local quad = self:getCurrentQuad()
+    if quad then
+        local sx = (self.vx < 0) and -1 or 1
+        local ox = (sx == -1) and self.baseWidth or 0
+        love.graphics.draw(self.spriteSheet, quad, self.x, self.y, 0, sx * self.scaleWidth, self.scaleHeight, ox, 0)
     end
 end
 
--- Статические методы для управления всеми снарядами
-function Projectile.updateAll(dt, player)
+function Projectile:isDead()
+    return self.state == "dead"
+end
+
+function Projectile:dispose()
+    self.world, self.caster, self.skill = nil, nil, nil
+    self.state, self.stateTimer = "dead", 0
+    table.insert(projectilePool, self)
+end
+
+-- батч-апдейты
+function Projectile.updateAll(dt, world)
     for i = #activeProjectiles, 1, -1 do
-        local projectile = activeProjectiles[i]
-        projectile:update(dt, player)
-        
-        if not projectile.active then
+        local p = activeProjectiles[i]
+        p:update(dt, world)
+        if p:isDead() then
+            p:dispose()
             table.remove(activeProjectiles, i)
         end
     end
 end
 
 function Projectile.drawAll()
-    for _, projectile in ipairs(activeProjectiles) do
-        projectile:draw()
+    for i = 1, #activeProjectiles do
+        activeProjectiles[i]:draw()
     end
 end
 
 function Projectile.clearAll()
-    for _, projectile in ipairs(activeProjectiles) do
-        projectile.active = false
+    for i = #activeProjectiles, 1, -1 do
+        activeProjectiles[i]:dispose()
+        table.remove(activeProjectiles, i)
     end
-    activeProjectiles = {}
 end
 
 function Projectile.getCount()

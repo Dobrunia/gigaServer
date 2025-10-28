@@ -1,15 +1,16 @@
-local MathUtils = require("src.utils.math_utils")
+local MathUtils   = require("src.utils.math_utils")
+local Projectile  = require("src.entity.projectile")
 
 local Skill = {}
 Skill.__index = Skill
 
--- скилл не наследний объекта, он вызывает/создает объекты проджектаилы, лужи и тд
+-- скилл не наследник Object, он создаёт/управляет сущностями (проджектайлы, зоны и т.п.)
 function Skill.new(skillId, level, caster)
     local self = setmetatable({}, Skill)
 
     local config = require("src.config.skills")[skillId]
     if not config then
-        error("Skill config not found: " .. skillId)
+        error("Skill config not found: " .. tostring(skillId))
     end
 
     self.id = config.id
@@ -17,61 +18,88 @@ function Skill.new(skillId, level, caster)
     self.description = config.description
     self.type = config.type
     self.level = level or 1
-    self.maxLevel = #config.upgrades + 1
+    self.maxLevel = (config.upgrades and #config.upgrades or 0) + 1
     self.isStartingSkill = config.isStartingSkill
-
-    -- Копируем (не ссылку!)
-    -- Таблицы - нужно копировать глубоко
-    self.upgrades = MathUtils.deepCopy(config.upgrades)
-    self.stats = MathUtils.deepCopy(config.stats)
-
+    self.upgrades = MathUtils.deepCopy(config.upgrades or {})
+    self.stats = MathUtils.deepCopy(config.stats or {})
     self.caster = caster or nil
-
     self.cooldownTimer = 0
     self.isOnCooldown = false
-
     self:applyCasterModifiers()
 
     return self
 end
 
--- Применяем модификаторы кастера
+-- Применяем модификаторы кастера к базовым статам (например, CDR)
 function Skill:applyCasterModifiers()
-    if self.caster.cooldownReduction then
+    if self.caster and self.caster.cooldownReduction and self.stats and self.stats.cooldown then
         self.stats.cooldown = self.stats.cooldown * (1 - self.caster.cooldownReduction)
     end
 end
 
--- Проверка на возможность каста
+-- ==== КУЛДАУН ====
 function Skill:canCast()
     return not self.isOnCooldown
 end
 
--- Активация способности
+function Skill:startCooldown()
+    local cd = (self.stats and self.stats.cooldown) or 0
+    if cd > 0 then
+        self.isOnCooldown  = true
+        self.cooldownTimer = cd
+    else
+        -- мгновенно готов снова
+        self.isOnCooldown  = false
+        self.cooldownTimer = 0
+    end
+end
+
+-- Базовый каст без цели (оставлен для совместимости с бафами/аурами)
 function Skill:cast()
     if not self:canCast() then
         return false
     end
-
-    -- Запускаем кулдаун
-    self.isOnCooldown = true
-    self.cooldownTimer = self.stats.cooldown
+    self:startCooldown()
+    return true
 end
 
--- Обновление таймера кулдауна
+-- Каст по точке: для projectile — спавним проджектайл и запускаем КД
+function Skill:castAt(world, tx, ty)
+    if not self:canCast() then
+        return false
+    end
+
+    if self.type == "projectile" then
+        if not (world and self.caster) then
+            -- без мира/кастера проджектайл создать нельзя
+            return false
+        end
+
+        Projectile.spawn(world, self.caster, self, tx, ty)
+        self:startCooldown()
+        return true
+    end
+
+    -- другие типы добавим позже (aoe/instant и т.д.)
+    return self:cast()
+end
+
+-- ==== ТИК КУЛДАУНА ====
 function Skill:update(dt)
     if self.isOnCooldown then
         self.cooldownTimer = self.cooldownTimer - dt
         if self.cooldownTimer <= 0 then
-            self.isOnCooldown = false
+            self.isOnCooldown  = false
             self.cooldownTimer = 0
         end
     end
 end
 
+-- ==== ПРОКАЧКА ====
 function Skill:applyUpgrades(level)
-    -- применяем все апгрейды до текущего уровня
-    for i = 1, math.min(level - 1, #self.upgrades) do
+    -- применяем все апгрейды до текущего уровня включительно (кроме базового)
+    local targetLevel = math.min(level - 1, #self.upgrades)
+    for i = 1, targetLevel do
         for key, value in pairs(self.upgrades[i]) do
             self.stats[key] = value
         end
@@ -86,17 +114,15 @@ function Skill:levelUp()
     if not self:canLevelUp() then
         return
     end
-    
     self.level = self.level + 1
     self:applyUpgrades(self.level)
 end
 
 function Skill:getStatValue(statName)
-    if not self.stats[statName] then
-        error("Stat not found: " .. statName)
+    if not self.stats or self.stats[statName] == nil then
+        error("Stat not found: " .. tostring(statName))
     end
     return self.stats[statName]
 end
 
 return Skill
-    

@@ -8,7 +8,10 @@ Creature.__index = Creature
 setmetatable(Creature, {__index = Object})
 
 function Creature.new(spriteSheet, x, y, config, level)
-    local self = Object.new(spriteSheet, x, y, config)
+    -- Передаем размеры из конфига в Object.new
+    local targetWidth = config.width or 64
+    local targetHeight = config.height or 64
+    local self = Object.new(spriteSheet, x, y, targetWidth, targetHeight)
     -- Устанавливаем Creature как метатаблицу для наследования
     setmetatable(self, Creature)
     
@@ -161,17 +164,12 @@ end
 function Creature:draw()
     if self.isDead then return end
 
-    -- Текущий quad из Object
-    local quad = self:getCurrentQuad()
-    if quad then
-        local sx = (self.facing == -1) and -1 or 1
-        local ox = (sx == -1) and self.width or 0
-        love.graphics.draw(self.spriteSheet, quad, self.x, self.y, 0, sx, 1, ox, 0)
-    end
+    -- Используем базовую отрисовку из Object
+    Object.draw(self)
 
-    -- Полоска HP
-    local barWidth, barHeight = self.width, 4
-    local barX, barY = self.x, self.y - 10
+    -- Полоска HP (масштабированная)
+    local barWidth, barHeight = self.effectiveWidth, 4 * self.scaleHeight
+    local barX, barY = self.x, self.y - 10 * self.scaleHeight
     local healthPercent = (self.baseHp and self.baseHp > 0) and (self.hp / self.baseHp) or 0
 
     love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
