@@ -16,7 +16,7 @@ function Game:enter(selectedHeroId, selectedSkillId)
   self.map = Map.new()
   self.world = World.new(self.map.width, self.map.height)
   self.camera = Camera.new()
-  self.minimap = Minimap.new()
+  self.minimap = Minimap.new(self.map.width, self.map.height)
 
   self.isPaused = false
   self.uiPauseMenu = UIPauseMenu.new()
@@ -107,7 +107,10 @@ function Game:draw()
     self.camera:clear()
 
     -- оверлеи/экранные UI вне камеры (чтобы не скроллились)
-    self.minimap:draw()
+    local hero = self.world.heroes and self.world.heroes[1]
+    if hero then
+      self.minimap:draw(hero, self.world.enemies, self.world.projectiles, self.camera)
+    end
   end
 end
 

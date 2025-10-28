@@ -18,7 +18,7 @@ local MINIMAP_PROJECTILE = {0.4, 0.4, 0.4, 1}
 local MINIMAP_MOB = {0.5, 0.5, 0.5, 1}
 local MINIMAP_PLAYER = {0.6, 0.6, 0.6, 1}
 
-function Minimap.new()
+function Minimap.new(mapWidth, mapHeight)
     local self = setmetatable({}, Minimap)
     
     -- Position (top-right corner)
@@ -27,6 +27,10 @@ function Minimap.new()
     
     -- Size
     self.size = MINIMAP_SIZE
+    
+    -- Map dimensions
+    self.mapWidth = mapWidth
+    self.mapHeight = mapHeight
     
     return self
 end
@@ -66,11 +70,11 @@ end
 
 function Minimap:drawBackground()
     -- Background
-    Colors.setColor(MINIMAP_BG)
+    love.graphics.setColor(MINIMAP_BG)
     love.graphics.rectangle("fill", self.x, self.y, self.size, self.size)
     
     -- Border
-    Colors.setColor(MINIMAP_BORDER)
+    love.graphics.setColor(MINIMAP_BORDER)
     love.graphics.setLineWidth(MINIMAP_BORDER_WIDTH)
     love.graphics.rectangle("line", self.x, self.y, self.size, self.size)
     love.graphics.setLineWidth(1)
@@ -79,10 +83,10 @@ end
 function Minimap:drawMapBoundaries()
     -- Calculate map bounds in minimap coordinates
     local mapX, mapY = self:worldToMinimap(0, 0)
-    local mapW, mapH = self:worldToMinimap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
+    local mapW, mapH = self:worldToMinimap(self.mapWidth, self.mapHeight)
     
     -- Draw map boundary
-    Colors.setColor(MINIMAP_MAP_BORDER)
+    love.graphics.setColor(MINIMAP_MAP_BORDER)
     love.graphics.setLineWidth(1)
     love.graphics.rectangle("line", mapX, mapY, mapW - mapX, mapH - mapY)
 end
@@ -90,7 +94,7 @@ end
 function Minimap:drawProjectiles(projectiles)
     if not projectiles then return end
     
-    Colors.setColor(MINIMAP_PROJECTILE)
+    love.graphics.setColor(MINIMAP_PROJECTILE)
     
     for _, proj in ipairs(projectiles) do
         if proj.active and proj.owner == "mob" then  -- Only enemy projectiles
@@ -107,10 +111,10 @@ end
 function Minimap:drawMobs(mobs, player, camera)
     if not mobs then return end
     
-    Colors.setColor(MINIMAP_MOB)
+    love.graphics.setColor(MINIMAP_MOB)
     
     for _, mob in ipairs(mobs) do
-        if mob.alive then
+        if not mob.isDead then
             local mx, my = self:worldToMinimap(mob.x, mob.y)
             
             -- Only draw if within minimap bounds
@@ -122,16 +126,16 @@ function Minimap:drawMobs(mobs, player, camera)
 end
 
 function Minimap:drawPlayer(player, camera)
-    if not player or not player.alive then return end
+    if not player or player.isDead then return end
     
     local px, py = self:worldToMinimap(player.x, player.y)
     
     -- Player dot
-    Colors.setColor(MINIMAP_PLAYER)
+    love.graphics.setColor(MINIMAP_PLAYER)
     love.graphics.circle("fill", px, py, MINIMAP_PLAYER_SIZE)
     
-    -- Player direction indicator (small line)
-    local angle = math.atan2(player.aimY or 0, player.aimX or 0)
+    -- Player direction indicator (small line) - используем facing из Creature
+    local angle = (player.facing == -1) and math.pi or 0
     local dirX = px + math.cos(angle) * (MINIMAP_PLAYER_SIZE + 2)
     local dirY = py + math.sin(angle) * (MINIMAP_PLAYER_SIZE + 2)
     
@@ -145,8 +149,8 @@ end
 -- Convert world coordinates to minimap coordinates
 function Minimap:worldToMinimap(worldX, worldY)
     -- Scale world coordinates to minimap size
-    local scaleX = self.size / Constants.MAP_WIDTH
-    local scaleY = self.size / Constants.MAP_HEIGHT
+    local scaleX = self.size / self.mapWidth
+    local scaleY = self.size / self.mapHeight
     
     local minimapX = self.x + worldX * scaleX
     local minimapY = self.y + worldY * scaleY
@@ -164,14 +168,14 @@ end
 
 -- Get minimap bounds in world coordinates
 function Minimap:getWorldBounds()
-    local worldScaleX = Constants.MAP_WIDTH / self.size
-    local worldScaleY = Constants.MAP_HEIGHT / self.size
+    local worldScaleX = self.mapWidth / self.size
+    local worldScaleY = self.mapHeight / self.size
     
     return {
         left = 0,
         top = 0,
-        right = Constants.MAP_WIDTH,
-        bottom = Constants.MAP_HEIGHT,
+        right = self.mapWidth,
+        bottom = self.mapHeight,
         scaleX = worldScaleX,
         scaleY = worldScaleY
     }
