@@ -46,6 +46,7 @@ local function initProjectile(self, world, caster, skill, tx, ty)
     self.vx, self.vy = (dx / d) * self.speed, (dy / d) * self.speed
 
     self.facing = (self.vx < 0) and -1 or 1
+    self.angle = math.atan2(self.vy, self.vx)  -- угол поворота в радианах
     self.state = "fly"        -- fly | hit | dead
     self.stateTimer = 0
 end
@@ -105,7 +106,7 @@ function Projectile.spawn(world, caster, skill, tx, ty)
     return self
 end
 
--- переход к hit/исчезновению
+-- переход к hit анимации (при попадании в цель)
 function Projectile:impact()
     if self.state ~= "fly" then return end
     if self._hasHitAnim then
@@ -115,6 +116,12 @@ function Projectile:impact()
     else
         self.state = "dead"
     end
+end
+
+-- исчезновение без анимации (при достижении максимальной дистанции)
+function Projectile:disappear()
+    if self.state ~= "fly" then return end
+    self.state = "dead"
 end
 
 function Projectile:update(dt, world)
@@ -134,7 +141,7 @@ function Projectile:update(dt, world)
     self:changePosition(dx, dy)
     self.travel = self.travel + math.sqrt(dx*dx + dy*dy)
     if self.travel >= self.maxDist then
-        self:impact()
+        self:disappear()
         Object.update(self, dt)
         return
     end
@@ -176,9 +183,9 @@ function Projectile:draw()
     if self.state == "dead" then return end
     local quad = self:getCurrentQuad()
     if quad then
-        local sx = (self.vx < 0) and -1 or 1
-        local ox = (sx == -1) and self.baseWidth or 0
-        love.graphics.draw(self.spriteSheet, quad, self.x, self.y, 0, sx * self.scaleWidth, self.scaleHeight, ox, 0)
+        local ox = self.baseWidth * 0.5  -- центр спрайта
+        local oy = self.baseHeight * 0.5
+        love.graphics.draw(self.spriteSheet, quad, self.x, self.y, self.angle, self.scaleWidth, self.scaleHeight, ox, oy)
     end
 end
 
