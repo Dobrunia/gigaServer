@@ -178,6 +178,11 @@ function Creature:draw()
     love.graphics.setColor(1, 0, 0, 0.9)
     love.graphics.rectangle("fill", barX, barY, barWidth * healthPercent, barHeight)
     love.graphics.setColor(1, 1, 1, 1)
+
+    -- рисуем эффекты под ногами
+    for _, debuff in ipairs(self.debuffs) do
+        debuff:draw(self)
+    end
 end
 
 return Creature

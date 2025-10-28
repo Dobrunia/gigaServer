@@ -164,10 +164,10 @@ function Projectile:update(dt, world)
                     if t.takeDamage then t:takeDamage(self.damage) end
                     local st = self.skill.stats
                     if st.debuffType and t.addDebuff then
-                        t:addDebuff(st.debuffType, st.debuffDuration, {
-                            damagePerTick = st.debuffDamage,
-                            tickRate      = st.debuffTickRate,
-                        }, self.caster)
+                        t:addDebuff("burn", st.debuffDuration, {
+                            damage = st.debuffDamage,   -- опционально
+                            tickRate = st.debuffTickRate -- опционально
+                        }, self.caster)                        
                     end
                     self:impact()
                     break
