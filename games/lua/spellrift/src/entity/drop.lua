@@ -24,7 +24,7 @@ function Drop.new(x, y, config, mobLevel)
     self.collected= false
 
     local q = config.quads.idle
-    self:setAnimationList("idle", q.row, q.col, q.col, q.animationSpeed or 0.5)
+    self:setAnimationList("idle", q.row, q.col, q.col, q.animationSpeed or 999999)
     self:playAnimation("idle")
     return self
 end

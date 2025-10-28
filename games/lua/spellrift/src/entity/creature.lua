@@ -44,14 +44,14 @@ function Creature.new(spriteSheet, x, y, config, level)
     -- idle: один кадр (row/col)
     if config.quads and config.quads.idle then
         local idle = config.quads.idle
-        self:setAnimationList("idle", idle.row, idle.col, idle.col, (idle.animationSpeed or nil))
+        self:setAnimationList("idle", idle.row, idle.col, idle.col, 999999)
         self:playAnimation("idle")
     end
 
     -- walk: диапазон колонок в одной строке (startrow,startcol,endcol)
     if config.quads and config.quads.walk then
         local wq = config.quads.walk
-        local speed = wq.animationSpeed or wq.speed or nil
+        local speed = wq.animationSpeed or 0.3
         self:setAnimationList("walk", wq.startrow, wq.startcol, wq.endcol, speed)
     end
 
