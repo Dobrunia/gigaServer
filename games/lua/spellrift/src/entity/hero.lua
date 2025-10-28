@@ -55,4 +55,20 @@ function Hero:levelUp()
     -- Показываем выбор навыка
 end
 
+function Hero:getStats()
+    return {
+        level = self.level,
+        hp = self.hp,
+        maxHp = self.baseHp,
+        xp = self.experience,
+        xpToNext = self.experienceToNext,
+        armor = self.armor,
+        armorGrowth = self.armorGrowth,
+        speed = self.moveSpeed,
+        speedGrowth = self.speedGrowth,
+        castSpeed = self.castSpeed,
+        castSpeedGrowth = self.castSpeedGrowth
+    }
+end
+
 return Hero

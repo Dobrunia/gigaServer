@@ -69,4 +69,23 @@ function MathUtils.randomRange(min, max)
     return min + math.random() * (max - min)
 end
 
+-- Округление числа до указанного количества знаков после запятой
+function MathUtils.round(num, decimals)
+    if num == nil then
+        return 0
+    end
+    local mult = 10^(decimals or 0)
+    return math.floor(num * mult + 0.5) / mult
+end
+
+-- Форматирование времени в MM:SS
+function MathUtils.formatTime(seconds)
+    if seconds == nil then
+        return "00:00"
+    end
+    local minutes = math.floor(seconds / 60)
+    local secs = math.floor(seconds % 60)
+    return string.format("%02d:%02d", minutes, secs)
+end
+
 return MathUtils
