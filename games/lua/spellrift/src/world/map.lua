@@ -21,8 +21,8 @@ function Map:renderMap()
     love.graphics.setCanvas(self.canvas)
     love.graphics.clear()
     
-    -- Просто зеленый фон
-    love.graphics.setColor(0.2, 0.8, 0.2, 1)
+    -- Темно-зеленый фон
+    love.graphics.setColor(0.1, 0.3, 0.1, 1)
     love.graphics.rectangle("fill", 0, 0, self.width, self.height)
     
     love.graphics.setCanvas()

@@ -89,7 +89,7 @@ function SpriteManager.getQuad(spriteSheet, col, row, tileWidth, tileHeight)
 
     -- Проверка, чтобы не выйти за пределы спрайт-листа
     if x + tileWidth > sheetWidth or y + tileHeight > sheetHeight then
-        error(("Quad выходит за границы спрайтлиста: (%d,%d)"):format(col, row))
+        return nil  -- Возвращаем nil вместо ошибки для лучшей переиспользуемости
     end
 
     return love.graphics.newQuad(x, y, tileWidth, tileHeight, sheetWidth, sheetHeight)
