@@ -6,6 +6,12 @@ local Map = require("src.world.map")
 local Constants = require("src.constants")
 local UIPauseMenu = require("src.ui.ui_pause_menu")
 
+-- Подключаем отладку только если включена
+local DebugDisplay = nil
+if Constants.DEBUG_DRAW_FPS then
+    DebugDisplay = require("src.system.debug_display")
+end
+
 local Game = {}
 Game.__index = Game
 
@@ -20,6 +26,11 @@ function Game:enter(selectedHeroId, selectedSkillId)
 
   self.isPaused = false
   self.uiPauseMenu = UIPauseMenu.new()
+  
+  -- Инициализируем отладку только если включена
+  if DebugDisplay then
+    self.debugDisplay = DebugDisplay.new()
+  end
 
   -- fixed timestep аккумулятор
   self._accum = 0
@@ -30,6 +41,12 @@ end
 function Game:update(dt)
   -- обновляем ввод на реальном dt (чтобы клики/нажатия были отзывчивы)
   self.input:update(dt)
+  
+  -- обновляем отладочную информацию (только если не на паузе)
+  if self.debugDisplay and not self.isPaused then
+    local hero = self.world.heroes and self.world.heroes[1]
+    self.debugDisplay:update(dt, self.world, hero, self.camera)
+  end
 
   -- пауза
   if self.input.isEscapePressed and self.input:isEscapePressed() then
@@ -110,6 +127,11 @@ function Game:draw()
     local hero = self.world.heroes and self.world.heroes[1]
     if hero then
       self.minimap:draw(hero, self.world.enemies, self.world.projectiles, self.camera)
+    end
+    
+    -- отладочная информация (левый верхний угол)
+    if self.debugDisplay then
+      self.debugDisplay:draw()
     end
   end
 end
