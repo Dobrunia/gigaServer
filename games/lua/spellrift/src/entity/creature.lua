@@ -78,6 +78,11 @@ function Creature:changePosition(dx, dy)
         self.facing = 1        -- смотрим вправо
     end
 
+    -- Применяем отталкивание перед основным движением
+    local separationDx, separationDy = self:getSeparationForce()
+    dx = dx + separationDx
+    dy = dy + separationDy
+
     -- Реальный сдвиг делает базовый Object
     Object.changePosition(self, dx, dy)
 end
@@ -123,6 +128,54 @@ end
 
 function Creature:cleanse()
     self.debuffs = {}
+end
+
+-- Получить силу отталкивания от других существ
+function Creature:getSeparationForce()
+    if not self.world then return 0, 0 end
+    
+    local separationForce = 50  -- сила отталкивания
+    local separationRadius = 40 -- радиус отталкивания
+    local separationX, separationY = 0, 0
+    
+    -- Проверяем всех врагов
+    if self.world.enemies then
+        for _, other in ipairs(self.world.enemies) do
+            if other ~= self and not other.isDead then
+                local dx = self.x - other.x
+                local dy = self.y - other.y
+                local distance = math.sqrt(dx * dx + dy * dy)
+                
+                if distance > 0 and distance < separationRadius then
+                    -- Нормализуем и применяем силу отталкивания
+                    local force = (separationRadius - distance) / separationRadius
+                    separationX = separationX + (dx / distance) * force
+                    separationY = separationY + (dy / distance) * force
+                end
+            end
+        end
+    end
+    
+    -- Проверяем всех героев
+    if self.world.heroes then
+        for _, other in ipairs(self.world.heroes) do
+            if other ~= self and not other.isDead then
+                local dx = self.x - other.x
+                local dy = self.y - other.y
+                local distance = math.sqrt(dx * dx + dy * dy)
+                
+                if distance > 0 and distance < separationRadius then
+                    -- Нормализуем и применяем силу отталкивания
+                    local force = (separationRadius - distance) / separationRadius
+                    separationX = separationX + (dx / distance) * force
+                    separationY = separationY + (dy / distance) * force
+                end
+            end
+        end
+    end
+    
+    -- Возвращаем силу отталкивания (без dt, так как применяется в changePosition)
+    return separationX * separationForce, separationY * separationForce
 end
 
 function Creature:update(dt)
