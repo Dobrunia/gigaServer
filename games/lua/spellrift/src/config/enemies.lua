@@ -31,6 +31,29 @@ local mobs = {
         spawnStartTime = 0,         -- Can spawn from game start
         spawnEndTime = nil,         -- Spawns forever (no end time)
         spawnGroupSize = 1,         -- Single mob spawns
+
+        quads = {
+            idle = {
+                row = 1,
+                col = 1,
+                tileWidth = 64,
+                tileHeight = 64
+            },
+            walk = {
+                startrow = 1,
+                startcol = 2,
+                endrow = 1,
+                endcol = 3,
+                tileWidth = 64,
+                tileHeight = 64,
+            },
+            cast = {
+                row = 1,
+                col = 4,
+                tileWidth = 64,
+                tileHeight = 64,
+            }
+        }
     },
 
 
@@ -64,6 +87,29 @@ local mobs = {
         spawnStartTime = 0,
         spawnEndTime = nil,
         spawnGroupSize = 2,
+
+        quads = {
+            idle = {
+                row = 1,
+                col = 1,
+                tileWidth = 64,
+                tileHeight = 64
+            },
+            walk = {
+                startrow = 1,
+                startcol = 2,
+                endrow = 1,
+                endcol = 3,
+                tileWidth = 64,
+                tileHeight = 64,
+            },
+            cast = {
+                row = 1,
+                col = 4,
+                tileWidth = 64,
+                tileHeight = 64,
+            }
+        }
     }
 }
 
