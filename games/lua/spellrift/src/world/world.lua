@@ -30,6 +30,7 @@ function World:addHero(hero)
 end
 
 function World:addEnemy(enemy)
+    enemy.world = self
     table.insert(self.enemies, enemy)
 end
 

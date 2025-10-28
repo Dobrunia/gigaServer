@@ -10,6 +10,7 @@ local heroes = {
         speedGrowth = 1,
         width = 64,
         height = 64,
+        pickupRange = 100,
         innateSkill = {
             id = "сhronomancer_innate",
             name = "Spell Mastery",

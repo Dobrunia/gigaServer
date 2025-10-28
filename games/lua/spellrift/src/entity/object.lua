@@ -33,9 +33,9 @@ function Object:setAnimationList(animationName, startRow, startCol, endCol, anim
     local anim = {
         startRow = startRow,
         startCol = startCol,
-        endCol   = endCol,
+        endCol = endCol,
         animationSpeed = animationSpeed or DEFAULT_ANIMATION_SPEED,
-        totalFrames    = endCol - startCol + 1,
+        totalFrames = endCol - startCol + 1,
         quads = {}  -- предкэш кадров
     }
 
