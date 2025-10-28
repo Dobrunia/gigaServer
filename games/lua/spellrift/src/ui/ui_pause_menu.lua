@@ -33,29 +33,34 @@ local function pointInRect(px, py, x, y, w, h)
   return (px >= x and px <= x + w and py >= y and py <= y + h)
 end
 
--- Возвращает "resume", если была нажата кнопка
-function UIPauseMenu:update(dt, input)
-  local mx, my = input:getMousePosition()
-
-  self.isHover = pointInRect(mx, my, self.btnX, self.btnY, self.btnW, self.btnH)
-
-  -- фиксируем нажатие/отжатие ЛКМ
-  local clicked = false
-  if input.isLeftMousePressed and input:isLeftMousePressed() then
-    self.isDown = self.isHover
-  end
-  if input.isLeftMouseReleased and input:isLeftMouseReleased() then
-    clicked = self.isHover and self.isDown
-    self.isDown = false
-  end
-
-  if clicked then
-    return "resume"
-  end
-  return nil
+function UIPauseMenu:resize(w, h)
+    self:setupLayout(w, h)
 end
 
+function UIPauseMenu:update(dt, input)
+    -- экранные координаты подходят: input:getMousePosition() уже берёт love.mouse.getPosition()
+    local mx, my = input:getMousePosition()
+
+    self.isHover = (mx >= self.btnX and mx <= self.btnX + self.btnW
+                    and my >= self.btnY and my <= self.btnY + self.btnH)
+
+    -- визуальное "нажатие" (подсветка/состояние)
+    self.isDown = self.isHover and input:isLeftMouseDown()
+
+    -- клик: один кадр, когда кнопка нажата внутри хитбокса
+    if self.isHover and input:isLeftMousePressed() then
+        return "resume"
+    end
+
+    return nil
+end  
+
 function UIPauseMenu:draw()
+  -- затемняем фон (поверх того, что уже отрисовал предыдущий state, если менеджер так делает)
+  love.graphics.setColor(0, 0, 0, 0.6)
+  love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+  love.graphics.setColor(1, 1, 1, 1)
+  
   -- Заголовок
   love.graphics.setFont(self.fontTitle)
   love.graphics.printf(self.title, 0, self.titleY, love.graphics.getWidth(), "center")
