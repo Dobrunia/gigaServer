@@ -8,7 +8,7 @@ Creature.__index = Creature
 setmetatable(Creature, {__index = Object})
 
 function Creature.new(spriteSheet, x, y, config, level)
-    local self = Object.new(spriteSheet, x, y, config.width, config.height)
+    local self = Object.new(spriteSheet, x, y, config)
     -- Устанавливаем Creature как метатаблицу для наследования
     setmetatable(self, Creature)
     
@@ -70,7 +70,7 @@ function Creature:changePosition(dx, dy)
     end
 
     -- Реальный сдвиг делает базовый Object
-    Object.changePosition(dx, dy)
+    Object.changePosition(self, dx, dy)
 end
 
 function Creature:addSkill(skillId, level)
@@ -152,7 +152,7 @@ function Creature:draw()
     if self.isDead then return end
 
     -- Текущий quad из Object
-    local quad = self.getCurrentQuad and self:getCurrentQuad() or nil
+    local quad = self:getCurrentQuad()
     if quad then
         local sx = (self.facing == -1) and -1 or 1
         local ox = (sx == -1) and self.width or 0

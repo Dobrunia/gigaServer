@@ -7,12 +7,14 @@ local DEFAULT_WIDTH = 64
 local DEFAULT_HEIGHT = 64
 local DEFAULT_ANIMATION_SPEED = 0.3
 
-function Object.new(spriteSheet, x, y, width, height)
+function Object.new(spriteSheet, x, y, config)
     local self = setmetatable({}, Object)
     self.x = x
     self.y = y
-    self.width = width or DEFAULT_WIDTH
-    self.height = height or DEFAULT_HEIGHT
+    
+    -- Используем tileWidth/tileHeight из конфига, если есть, иначе width/height, иначе дефолты
+    self.width = (config and config.tileWidth) or (config and config.width) or DEFAULT_WIDTH
+    self.height = (config and config.tileHeight) or (config and config.height) or DEFAULT_HEIGHT
     
     self.spriteSheet = spriteSheet
     self.currentAnimation = "idle"
