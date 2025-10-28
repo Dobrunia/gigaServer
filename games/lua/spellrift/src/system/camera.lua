@@ -46,4 +46,12 @@ function Camera:resize(w, h)
     self.h = h
 end
 
+-- конвертировать экранные координаты в мировые
+function Camera:screenToWorld(screenX, screenY)
+    -- Учитываем трансформации камеры в обратном порядке
+    local worldX = (screenX - self.w / 2) / (1 / self.viewHeight) + self.x
+    local worldY = (screenY - self.h / 2) / (1 / self.viewHeight) + self.y
+    return worldX, worldY
+end
+
 return Camera

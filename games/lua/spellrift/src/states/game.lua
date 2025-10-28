@@ -67,9 +67,29 @@ function Game:update(dt)
     self._accum = 0
   end
 
-  -- камера следует за героем после логических шагов
+  -- Обработка движения героя при зажатой ПКМ
   local hero = self.world.heroes and self.world.heroes[1]
   if hero then
+    -- Движение только при зажатой ПКМ
+    if self.input:isRightMouseDown() then
+      local mx, my = self.input:getMousePosition()
+      -- Конвертируем экранные координаты в мировые
+      local worldX, worldY = self.camera:screenToWorld(mx, my)
+      
+      -- Вычисляем направление движения
+      local dx = worldX - hero.x
+      local dy = worldY - hero.y
+      local distance = math.sqrt(dx * dx + dy * dy)
+      
+      -- Нормализуем и применяем скорость
+      if distance > 5 then -- минимальное расстояние для движения
+        dx = (dx / distance) * hero.moveSpeed * dt
+        dy = (dy / distance) * hero.moveSpeed * dt
+        hero:changePosition(dx, dy)
+      end
+    end
+    
+    -- камера следует за героем после логических шагов
     self.camera:update(hero.x, hero.y)
   end
 end
