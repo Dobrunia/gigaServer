@@ -94,6 +94,13 @@ end
 
 function Creature:takeDamage(damage)
     self.hp = self.hp - damage
+    
+    -- Показываем цифру урона если включена отладка
+    if self.world and self.world.damageManager then
+        local color = {1, 0, 0, 1} -- красный для урона
+        self.world.damageManager:addDamageNumber(self.x, self.y, damage, color)
+    end
+    
     if self.hp <= 0 then
         self:die()
     end

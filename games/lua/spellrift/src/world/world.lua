@@ -1,6 +1,8 @@
 local Spawner = require("src.world.spawner")
 local Hero = require("src.entity.hero")
 local Projectile = require("src.entity.projectile")
+local DamageManager = require("src.system.damage_manager")
+local Constants = require("src.constants")
 
 local World = {}
 World.__index = World
@@ -13,6 +15,13 @@ function World.new(mapWidth, mapHeight)
     self.heroes = {}
     self.enemies = {}
     self.drops = {}
+    
+    -- Создаем менеджер урона только если включена отладка
+    if Constants.DEBUG_DRAW_DAMAGE_NUMBERS then
+        self.damageManager = DamageManager.new()
+    else
+        self.damageManager = nil
+    end
 
     self.spawner = Spawner.new(self.width, self.height)
 
@@ -104,6 +113,11 @@ function World:update(dt)
         self.spawner:update(dt, self, hero)
     end
 
+    -- Обновляем цифры урона
+    if self.damageManager then
+        self.damageManager:update(dt)
+    end
+
     -- Очистка умерших врагов (если кто-то не удалил сам)
     for i = #self.enemies, 1, -1 do
         if self.enemies[i].isDead then
@@ -137,6 +151,11 @@ function World:draw()
     for i = 1, #self._legacyProjectiles do
         local p = self._legacyProjectiles[i]
         if p.draw then p:draw() end
+    end
+
+    -- 6) Цифры урона (поверх всего)
+    if self.damageManager then
+        self.damageManager:draw()
     end
 end
 
