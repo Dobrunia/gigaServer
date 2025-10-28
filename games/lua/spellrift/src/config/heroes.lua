@@ -17,6 +17,34 @@ local heroes = {
             modifiers = {
                 cooldownReduction = 0.3
             }
+        },
+        quads = {
+            idle = {
+                row = 1,
+                col = 1,
+                tileWidth = 64,
+                tileHeight = 64
+            },
+            innateSkill = {
+                row = 1,
+                col = 2,
+                tileWidth = 64,
+                tileHeight = 64
+            },
+            walk = {
+                startrow = 1,
+                startcol = 3,
+                endrow = 1,
+                endcol = 4,
+                tileWidth = 64,
+                tileHeight = 64,
+            },
+            cast = {
+                row = 1,
+                col = 5,
+                tileWidth = 64,
+                tileHeight = 64,
+            }
         }
     }
 }

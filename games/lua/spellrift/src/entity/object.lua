@@ -1,3 +1,5 @@
+local SpriteManager = require("src.utils.sprite_manager")
+
 local Object = {}
 Object.__index = Object
 
@@ -26,13 +28,37 @@ function Object:changePosition(x, y)
 end
 
 function Object:setAnimationList(animationName, startRow, startCol, endCol, animationSpeed)
-    self.animationsList[animationName] = {
+    local anim = {
         startRow = startRow,
         startCol = startCol,
-        endCol = endCol,
+        endCol   = endCol,
         animationSpeed = animationSpeed or DEFAULT_ANIMATION_SPEED,
-        totalFrames = endCol - startCol + 1
+        totalFrames    = endCol - startCol + 1,
+        quads = {}  -- предкэш кадров
     }
+
+    -- Предкэшируем все кадры через SpriteManager.getQuad
+    for i = 0, (anim.totalFrames - 1) do
+        local col = startCol + i
+        anim.quads[i + 1] = SpriteManager.getQuad(self.spriteSheet, col, startRow, self.width, self.height)
+    end
+
+    self.animationsList[animationName] = anim
+end
+
+function Object:getCurrentQuad()
+    if not (self.currentAnimation and self.animationsList[self.currentAnimation]) then
+        return nil
+    end
+    local anim = self.animationsList[self.currentAnimation]
+    -- если по какой-то причине quads не был заполнен — подстрахуемся
+    if anim.quads and anim.quads[self.currentAnimationFrame] then
+        return anim.quads[self.currentAnimationFrame]
+    else
+        -- fallback: безопасно получить quad "на лету"
+        local currentCol = anim.startCol + self.currentAnimationFrame - 1
+        return SpriteManager.getQuad(self.spriteSheet, currentCol, anim.startRow, self.width, self.height)
+    end
 end
 
 function Object:playAnimation(animationName)
@@ -60,20 +86,11 @@ function Object:update(dt)
 end
 
 function Object:draw()
-    if self.spriteSheet and self.currentAnimation and self.animationsList[self.currentAnimation] then
-        local anim = self.animationsList[self.currentAnimation]
-        local currentCol = anim.startCol + self.currentAnimationFrame - 1
-        
-        -- Создаем quad для текущего кадра
-        local quad = love.graphics.newQuad(
-            (currentCol - 1) * self.width,           -- x
-            (anim.startRow - 1) * self.height,      -- y
-            self.width,                             -- width
-            self.height,                            -- height
-            self.spriteSheet:getWidth(),            -- image width
-            self.spriteSheet:getHeight()            -- image height
-        )
-        
+    if not (self.spriteSheet and self.currentAnimation and self.animationsList[self.currentAnimation]) then
+        return
+    end
+    local quad = self:getCurrentQuad()
+    if quad then
         love.graphics.draw(self.spriteSheet, quad, self.x, self.y)
     end
 end
