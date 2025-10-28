@@ -1,6 +1,7 @@
 local Object = require("src.entity.object")
 local Constants = require("src.constants")
 local Debuff = require("src.entity.debuff")
+local Skill = require("src.entity.skill")
 
 local Creature = {}
 Creature.__index = Creature

@@ -200,34 +200,23 @@ end
 
 -- Клик мыши → выбрать карточку
 function UISkillSelect:handleClick(x, y)
-  local screenW = love.graphics.getWidth()
-  local totalWidth = (CARD_WIDTH * CARDS_PER_ROW) + (CARD_SPACING * (CARDS_PER_ROW - 1))
-  local startX = (screenW - totalWidth) / 2
+    local screenW = love.graphics.getWidth()
+    local totalWidth = (CARD_WIDTH * CARDS_PER_ROW) + (CARD_SPACING * (CARDS_PER_ROW - 1))
+    local startX = (screenW - totalWidth) / 2
 
-  for i = 1, #self.skills do
-    local row = math.floor((i - 1) / CARDS_PER_ROW)
-    local col = (i - 1) % CARDS_PER_ROW
-    local cardX = startX + col * (CARD_WIDTH + CARD_SPACING)
-    local cardY = CARDS_START_Y + row * (CARD_HEIGHT + CARD_SPACING)
+    for i = 1, #self.skills do
+        local row = math.floor((i - 1) / CARDS_PER_ROW)
+        local col = (i - 1) % CARDS_PER_ROW
+        local cardX = startX + col * (CARD_WIDTH + CARD_SPACING)
+        local cardY = CARDS_START_Y + row * (CARD_HEIGHT + CARD_SPACING)
 
-    if x >= cardX and x <= cardX + CARD_WIDTH and
-       y >= cardY and y <= cardY + CARD_HEIGHT
-    then
-      self.selectedIndex = i
-      return i
+        if x >= cardX and x <= cardX + CARD_WIDTH and
+           y >= cardY and y <= cardY + CARD_HEIGHT
+        then
+            return self.skills[i].id  -- Return skill ID directly
+        end
     end
-  end
-  return nil
-end
-
-function UISkillSelect:selectByIndex(index)
-  if index and index >= 1 and index <= #self.skills then
-    self.selectedIndex = index
-  end
-end
-
-function UISkillSelect:getSelectedSkill()
-  return (self.selectedIndex and self.skills[self.selectedIndex]) or nil
+    return nil
 end
 
 return UISkillSelect

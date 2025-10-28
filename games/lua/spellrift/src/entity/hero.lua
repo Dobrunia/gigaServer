@@ -18,7 +18,7 @@ function Hero.new(x, y, heroId, level)
 
     -- Инициализация базового существа
     self = Creature.new(spriteSheet, x, y, config, level or 1)
-
+    setmetatable(self, { __index = setmetatable(Hero, { __index = Creature }) })
     -- Свойства героя
     self.heroId = config.id
     self.heroName = config.name

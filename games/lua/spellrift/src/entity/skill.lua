@@ -3,7 +3,7 @@ local MathUtils = require("src.utils.math_utils")
 local Skill = {}
 Skill.__index = Skill
 
-function Skill.new(skillId, level = 1, caster = nil)
+function Skill.new(skillId, level, caster)
     local self = setmetatable({}, Skill)
 
     local config = require("src.config.skills")[skillId]
@@ -15,7 +15,7 @@ function Skill.new(skillId, level = 1, caster = nil)
     self.name = config.name
     self.description = config.description
     self.type = config.type
-    self.level = level
+    self.level = level or 1
     self.maxLevel = #config.upgrades + 1
     self.isStartingSkill = config.isStartingSkill
 
@@ -24,7 +24,7 @@ function Skill.new(skillId, level = 1, caster = nil)
     self.upgrades = MathUtils.deepCopy(config.upgrades)
     self.stats = MathUtils.deepCopy(config.stats)
 
-    self.caster = caster
+    self.caster = caster or nil
 
     self.cooldownTimer = 0
     self.isOnCooldown = false
