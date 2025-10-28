@@ -8,6 +8,7 @@ function SkillSelect:enter(selectedHeroId)
     self.selectedHeroId = selectedHeroId
     self.ui = UISkillSelect.new()
     self.input = Input.new()
+    self.input:snapshotNow()
 end
 
 function SkillSelect:update(dt)

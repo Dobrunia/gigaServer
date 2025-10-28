@@ -7,6 +7,7 @@ HeroSelect.__index = HeroSelect
 function HeroSelect:enter()
     self.uiHeroSelect = UIHeroSelect.new()
     self.input = Input.new()
+    self.input:snapshotNow()
 end
 
 function HeroSelect:update(dt)

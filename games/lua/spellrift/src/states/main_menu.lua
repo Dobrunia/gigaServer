@@ -10,6 +10,7 @@ function MainMenu:enter()
 
     -- Создаем систему ввода
     self.input = Input.new()
+    self.input:snapshotNow()
 end
 
 function MainMenu:update(dt)

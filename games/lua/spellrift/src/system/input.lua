@@ -23,6 +23,22 @@ function Input.new()
     return self
 end
 
+function Input:snapshotNow()
+    -- Считываем текущее физическое состояние и делаем его "предыдущим",
+    -- чтобы на первом update НЕ родились ложные *_Pressed
+    local l = love.mouse.isDown(1)
+    local r = love.mouse.isDown(2)
+    self.mouse.leftDown     = l
+    self.mouse.rightDown    = r
+    self.mouse.leftPressed  = false
+    self.mouse.rightPressed = false
+
+    local esc = love.keyboard.isDown("escape")
+    self.keys.escape        = esc
+    self.keys.escapePressed = false
+end
+
+
 function Input:update(dt)
     -- Получаем позицию мыши
     self.mouse.x, self.mouse.y = love.mouse.getPosition()

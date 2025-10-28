@@ -11,6 +11,8 @@ Game.__index = Game
 
 function Game:enter(selectedHeroId, selectedSkillId)
   self.input = Input.new()
+  self.input:snapshotNow()
+  
   self.world = World.new()
   self.camera = Camera.new()
   self.minimap = Minimap.new()
