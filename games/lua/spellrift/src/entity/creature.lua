@@ -55,6 +55,12 @@ function Creature.new(spriteSheet, x, y, config, level)
         self:setAnimationList("walk", wq.startrow, wq.startcol, wq.endcol, speed)
     end
 
+    if config.quads and config.quads.cast then
+        local cq = config.quads.cast
+        -- один кадр: start=end=col; скорость любая (мы удерживаем кадр таймером)
+        self:setAnimationList("cast", cq.row, cq.col, cq.col, 999999)
+    end
+
     return self
 end
 
@@ -132,7 +138,11 @@ function Creature:update(dt)
 
     -- ВЫБОР АНИМАЦИИ по движению за этот кадр
     local mv = math.abs(self._lastMoveX) + math.abs(self._lastMoveY)
-    if mv > 0.01 and self.animationsList["walk"] then
+    
+    -- НЕ переключаем анимацию если уже играет cast
+    if self.currentAnimation == "cast" then
+        -- оставляем cast анимацию как есть
+    elseif mv > 0.01 and self.animationsList["walk"] then
         if self.currentAnimation ~= "walk" then
             self:playAnimation("walk")
         end
