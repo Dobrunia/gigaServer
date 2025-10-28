@@ -173,7 +173,6 @@ function UIHeroSelect:draw()
     end
 end
 
--- input handling: returns selected index or nil
 function UIHeroSelect:handleClick(x, y)
     local screenW = love.graphics.getWidth()
     local totalWidth = (CARD_WIDTH * CARDS_PER_ROW) + (CARD_SPACING * (CARDS_PER_ROW - 1))
@@ -184,22 +183,13 @@ function UIHeroSelect:handleClick(x, y)
         local col = (i - 1) % CARDS_PER_ROW
         local cardX = startX + col * (CARD_WIDTH + CARD_SPACING)
         local cardY = CARDS_START_Y + row * (CARD_HEIGHT + CARD_SPACING)
-        if x >= cardX and x <= cardX + CARD_WIDTH and y >= cardY and y <= cardY + CARD_HEIGHT then
-            self.selectedIndex = i
-            return i
+        
+        if x >= cardX and x <= cardX + CARD_WIDTH and 
+           y >= cardY and y <= cardY + CARD_HEIGHT then
+            return self.heroes[i].id  -- Возвращаем ID героя напрямую
         end
     end
     return nil
-end
-
-function UIHeroSelect:selectByIndex(index)
-    if index and index >= 1 and index <= #self.heroes then
-        self.selectedIndex = index
-    end
-end
-
-function UIHeroSelect:getSelectedHero()
-    return self.selectedIndex and self.heroes[self.selectedIndex] or nil
 end
 
 return UIHeroSelect

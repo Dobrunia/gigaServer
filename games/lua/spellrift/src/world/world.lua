@@ -14,12 +14,12 @@ function World.new()
     return self
 end
 
-function World:setup(selectedHero, selectedSkill)
+function World:setup(selectedHeroId, selectedSkillId)
     -- Создаем героя в центре карты
-    local hero = Hero.new(400, 300, selectedHero.id, 1)
+    local hero = Hero.new(400, 300, selectedHeroId, 1)
     
     -- Добавляем выбранный скилл герою
-    hero:addSkill(selectedSkill, 1)
+    hero:addSkill(selectedSkillId, 1)
     
     -- Добавляем героя в мир
     self:addHero(hero)

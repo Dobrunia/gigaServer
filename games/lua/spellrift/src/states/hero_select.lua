@@ -1,16 +1,12 @@
-local HeroSelect = {}
-HeroSelect.__index = HeroSelect
-
 local UIHeroSelect = require("src.ui.ui_hero_select")
 local Input = require("src.system.input")
 
+local HeroSelect = {}
+HeroSelect.__index = HeroSelect
+
 function HeroSelect:enter()
-    -- UI выбора героя
     self.uiHeroSelect = UIHeroSelect.new()
-    -- Ввод
     self.input = Input.new()
-    -- Текущий выбор
-    self.selectedHero = nil
 end
 
 function HeroSelect:update(dt)
@@ -24,10 +20,13 @@ function HeroSelect:update(dt)
         return
     end
 
-    -- ЛКМ → выбор героя
+    -- ЛКМ → выбор героя и переход к выбору скилла
     if self.input:isLeftMousePressed() then
         local mx, my = self.input:getMousePosition()
-        self:handleMouseClick(mx, my)
+        local heroId = self.uiHeroSelect:handleClick(mx, my)
+        if heroId and self.manager and self.manager.switch then
+            self.manager:switch("skill_select", heroId)
+        end
     end
 end
 
@@ -35,27 +34,9 @@ function HeroSelect:draw()
     self.uiHeroSelect:draw()
 end
 
-function HeroSelect:handleMouseClick(x, y)
-    local selectedIndex = self.uiHeroSelect:handleClick(x, y)
-    if selectedIndex then
-        self.uiHeroSelect:selectByIndex(selectedIndex)
-        self.selectedHero = self.uiHeroSelect:getSelectedHero()
-        self:confirmSelection()
-    end
-end
-
-function HeroSelect:confirmSelection()
-    if self.selectedHero and self.manager and self.manager.switch then
-        self.manager:switch("skill_select", self.selectedHero)
-    end
-end
-
 function HeroSelect:exit()
-    -- подчистка ссылок при выходе из состояния (по желанию)
-    -- (ресурсы шрифтов/картинок UI обычно кэшируются менеджерами и не требуют явной выгрузки)
     self.uiHeroSelect = nil
     self.input = nil
-    self.selectedHero = nil
 end
 
 return HeroSelect

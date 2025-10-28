@@ -7,14 +7,14 @@ local Map = require("src.world.map")
 local Game = {}
 Game.__index = Game
 
-function Game:enter(selectedHero, selectedSkill)
+function Game:enter(selectedHeroId, selectedSkillId)
   self.input = Input.new()
   self.world = World.new()
   self.camera = Camera.new()
   self.minimap = Minimap.new()
   self.map = Map.new()
 
-  self.world:setup(selectedHero, selectedSkill)
+  self.world:setup(selectedHeroId, selectedSkillId)
 end
 
 function Game:update(dt)
