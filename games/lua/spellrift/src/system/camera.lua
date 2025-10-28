@@ -9,7 +9,7 @@ function Camera.new(viewHeight)
     self.y = 0
 
     -- "высота" камеры над миром — можно думать как масштаб
-    self.viewHeight = viewHeight or 1
+    self.viewHeight = viewHeight or 0.5  -- приближаем в 2 раза
 
     -- размеры экрана
     self.w = love.graphics.getWidth()
