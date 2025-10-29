@@ -5,6 +5,7 @@ local DamageManager = require("src.system.damage_manager")
 local Constants = require("src.constants")
 local Melee = require("src.entity.skill_types.melee")
 local Orbital = require("src.entity.skill_types.orbital")
+local Aura = require("src.entity.skill_types.aura")
 
 local World = {}
 World.__index = World
@@ -95,6 +96,7 @@ function World:update(dt)
     Projectile.updateAll(dt, self)
     Melee.updateAll(dt, self)
     Orbital.updateAll(dt, self)
+    Aura.updateAll(dt, self)
 
     -- Совместимость: если кто-то вручную добавил projectile-объекты
     -- требующие update — поддержим
@@ -151,6 +153,7 @@ function World:draw()
     Projectile.drawAll()
     Melee.drawAll()
     Orbital.drawAll()
+    Aura.drawAll()
 
     -- 4) Дропы
     for i = 1, #self.drops do

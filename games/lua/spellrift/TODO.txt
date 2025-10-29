@@ -1,3 +1,5 @@
 мили атаки (нужны тесты)
-
+-- === BUFF SKILLS ===
+-- === SUMMON SKILLS ===
+-- === LASER SKILLS ===
 выбор скиллов

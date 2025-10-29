@@ -278,4 +278,52 @@ Skills["axe-whirlwind"] = {
         }
     },
 }
+
+-- == AURA SKILLS ===
+Skills["satan-aura"] = {
+    id = "satan-aura",
+    name = "Satan Aura",
+    description = "Creates a satan aura around the player that deals damage over time",
+    type = "aura",
+    isStartingSkill = true,
+
+    stats = {
+        damage = 5,
+        cooldown = 14.0,
+        radius = 200,
+        tickRate = 0.3, -- Частота тиков урона по цели за секунду
+        duration = 8.0, 
+
+        debuffType = nil,
+        debuffDuration = 0,
+        debuffDamage = 0,
+        debuffTickRate = 0,
+    },
+
+    quads = {
+        idle = {
+            row = 1,
+            col = 1
+        },
+        fly = {
+            startrow = 1,
+            startcol = 3,
+            endrow = 1,
+            endcol = 3,
+        }
+    },
+
+    upgrades = {
+        {
+            duration = 10.0, 
+        },
+        {
+            damage = 10,
+            radius = 250,
+        },
+        {
+            tickRate = 0.2,
+        },
+    },
+}
 return Skills

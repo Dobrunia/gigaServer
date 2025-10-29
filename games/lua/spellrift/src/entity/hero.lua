@@ -157,8 +157,8 @@ function Hero:_attackLogic()
     if not target then return end
 
     for _, skill in ipairs(self.skills) do
-        -- Орбитальные скиллы уже кастуются автоматически в Creature.update()
-        if skill.type ~= "orbital" and skill:canCast() then
+        -- Орбитальные скиллы и ауры уже кастуются автоматически в Creature.update()
+        if skill.type ~= "orbital" and skill.type ~= "aura" and skill:canCast() then
             local range = (skill.stats and skill.stats.range) or 0
             if range > 0 and MathUtils.canAttackTarget(self, target, range) then
                 self:_faceAndPlayCast(target.x, target.y)
