@@ -141,6 +141,14 @@ function Game:update(dt)
         hero:changePosition(dx, dy)
       end
     end
+
+    -- === ЛКМ: прицельный режим для направленных скиллов ===
+    if self.input:isLeftMouseDown() then
+      local wx, wy = self.input:getMouseWorldPosition(self.camera)
+      hero:setAimPoint(wx, wy)
+    elseif self.input:isLeftMouseReleased() then
+      hero:clearAim()
+    end
     
     -- камера следует за героем после логических шагов
     self.camera:update(hero.x, hero.y)

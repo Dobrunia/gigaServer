@@ -1,3 +1,8 @@
 Constants.DEBUG_DRAW_DIRECTION_ARROW = false -- Toggle direction arrow rendering
 
+автоака по зажатой лкм в направлении + DEBUG_DRAW_DIRECTION_ARROW, когда отпуускаем автоатака
+
+скилл ближнего боя ( спрайт найти )
+
++ фикс апа уровня
 выбор скиллов
