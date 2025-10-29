@@ -72,10 +72,11 @@ function Projectile.spawn(world, caster, skill, tx, ty)
         self.currentAnimationFrame = 1
     end
     
-    -- устанавливаем размер из конфига скилла
+    -- устанавливаем размер на основе радиуса (диаметр = 2 * радиус)
     local skillConfig = require("src.config.skills")[skillId]
-    if skillConfig and skillConfig.width and skillConfig.height then
-        self:setSize(skillConfig.width, skillConfig.height)
+    if skillConfig and skillConfig.stats and skillConfig.stats.radius then
+        local size = skillConfig.stats.radius * 2
+        self:setSize(size, size)
     end
 
     -- анимация полёта (обязательна)

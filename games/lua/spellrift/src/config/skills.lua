@@ -13,7 +13,7 @@ Skills["fireball"] = {
         cooldown = 3.0,        -- Кулдаун скилла
         range = 250,           -- Дальность полета
         speed = 180,           -- Скорость снаряда
-        radius = 15,           -- Радиус проджектаила
+        radius = 14,           -- Радиус проджектаила
         
         -- Параметры дебаффа
         debuffType = "burn", -- Тип дебаффа
@@ -22,8 +22,6 @@ Skills["fireball"] = {
         debuffTickRate = 1.0  -- Частота тиков
     },
 
-    width = 32,
-    height = 32,
 
     quads = {
         idle = {
@@ -81,7 +79,7 @@ Skills["green-fireball"] = {
         cooldown = 3.0,        -- Кулдаун скилла
         range = 250,           -- Дальность полета
         speed = 100,           -- Скорость снаряда
-        radius = 15,           -- Радиус проджектаила
+        radius = 14,           -- Радиус проджектаила
         
         -- Параметры дебаффа
         debuffType = "burn", -- Тип дебаффа
@@ -90,8 +88,6 @@ Skills["green-fireball"] = {
         debuffTickRate = 0.3  -- Частота тиков
     },
 
-    width = 32,
-    height = 32,
 
     quads = {
         idle = {
@@ -177,6 +173,61 @@ Skills["zombie-cleave"] = {
     upgrades = {
         { damage = 80, cooldown = 0.85, arcAngleDeg = 140 },
         { damage = 100, cooldown = 0.7, arcAngleDeg = 160 },
+    }
+}
+
+Skills["crimson-volley"] = {
+    id = "crimson-volley",
+    name = "Crimson Volley",
+    description = "Shoots a volley of crimson arrows in 8 directions",
+    type = "volley",
+    isStartingSkill = true,
+    
+    -- Базовые характеристики
+    stats = {
+        damage = 30,           -- Урон при попадании
+        cooldown = 3.0,        -- Кулдаун скилла
+        range = 300,           -- Дальность полета
+        speed = 300,           -- Скорость снаряда
+        radius = 14,           -- Радиус проджектаила
+        direction = 8,         -- Количество направлений (4 = крест, 8 = + диагонали)
+    },
+
+
+    quads = {
+        idle = {
+            row = 1,
+            col = 1
+        },
+        fly = {
+            startrow = 1,
+            startcol = 2,
+            endrow = 1,
+            endcol = 4,
+        },
+        hit = {
+            row = 1,
+            col = 5,
+        }
+    },
+    -- Апгрейды по уровням
+    upgrades = {
+        -- Level 2: больше урона и дольше
+        {
+            damage = 40,
+            range = 350,
+        },
+        -- Level 3: быстрее кулдаун и сильнее
+        {
+            damage = 50,
+            cooldown = 2.5,
+            range = 400,
+        },
+        -- Level 4: максимальная мощь
+        {
+            damage = 60,
+            cooldown = 1.5,
+        }
     }
 }
 

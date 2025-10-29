@@ -99,6 +99,29 @@ function Skill:castAt(world, tx, ty)
         Melee.spawn(world, self.caster, self, tx, ty)
         self:startCooldown()
         return true
+
+    elseif self.type == "volley" then
+        if not (world and self.caster) then return false end
+        
+        local directions = self.stats.direction or 4
+        local angleStep = (2 * math.pi) / directions
+        
+        -- Создаем проджектайлы в разных направлениях
+        for i = 0, directions - 1 do
+            local angle = i * angleStep
+            local dirX = math.cos(angle)
+            local dirY = math.sin(angle)
+            
+            -- Вычисляем целевую точку в направлении стрельбы
+            local range = self.stats.range or 250
+            local targetX = self.caster.x + (self.caster.effectiveWidth or 0) * 0.5 + dirX * range
+            local targetY = self.caster.y + (self.caster.effectiveHeight or 0) * 0.5 + dirY * range
+            
+            Projectile.spawn(world, self.caster, self, targetX, targetY)
+        end
+        
+        self:startCooldown()
+        return true
     end
 
     -- другие типы добавим позже (aoe/instant и т.д.)
