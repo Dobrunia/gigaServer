@@ -3,8 +3,8 @@ local Skills = {}
 -- Пример скилла "Огненный шар"
 Skills["fireball"] = {
     id = "fireball",
-    name = "Огненный шар",
-    description = "Запускает огненный шар, который наносит урон врагам",
+    name = "Fireball",
+    description = "Shoots a fireball that deals damage to enemies",
     type = "projectile",
     isStartingSkill = true,
     
@@ -66,6 +66,74 @@ Skills["fireball"] = {
             debuffDuration = 8.0,
             debuffDamage = 20,
             debuffTickRate = 0.6
+        }
+    }
+}
+
+Skills["green-fireball"] = {
+    id = "green-fireball",
+    name = "Green Fireball",
+    description = "Shoots a green fireball that deals damage to enemies",
+    type = "projectile",
+    
+    -- Базовые характеристики
+    stats = {
+        damage = 20,           -- Урон при попадании
+        cooldown = 3.0,        -- Кулдаун скилла
+        range = 250,           -- Дальность полета
+        speed = 100,           -- Скорость снаряда
+        radius = 15,           -- Радиус проджектаила
+        
+        -- Параметры дебаффа
+        debuffType = "burn", -- Тип дебаффа
+        debuffDuration = 3.0, -- Длительность отравления
+        debuffDamage = 5,     -- Урон за тик
+        debuffTickRate = 0.3  -- Частота тиков
+    },
+
+    width = 32,
+    height = 32,
+
+    quads = {
+        idle = {
+            row = 1,
+            col = 1
+        },
+        fly = {
+            startrow = 1,
+            startcol = 2,
+            endrow = 1,
+            endcol = 4,
+        },
+        hit = {
+            row = 1,
+            col = 5,
+        }
+    },
+    -- Апгрейды по уровням
+    upgrades = {
+        -- Level 2: больше урона и дольше
+        {
+            damage = 30,
+            debuffDuration = 4.0,
+            debuffDamage = 7
+        },
+        -- Level 3: быстрее кулдаун и сильнее
+        {
+            damage = 40,
+            cooldown = 2.5,
+            debuffDuration = 5.0,
+            debuffDamage = 9,
+            debuffTickRate = 0.5
+        },
+        -- Level 4: максимальная мощь
+        {
+            damage = 50,
+            cooldown = 2.0,
+            range = 250,
+            debuffDuration = 6.0,
+            debuffDamage = 12,
+            debuffTickRate = 0.4
         }
     }
 }

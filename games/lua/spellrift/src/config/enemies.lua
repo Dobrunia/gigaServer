@@ -61,7 +61,7 @@ local enemies = {
         baseMoveSpeed = 40,
         speedGrowth = 1,
         
-        skills = {'fireball'},
+        skills = {'green-fireball'},
 
         drop = {
             id = "xp",
