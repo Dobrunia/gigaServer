@@ -142,6 +142,7 @@ function Hero:_attackLogic()
 
         for _, skill in ipairs(self.skills) do
             -- считаем направленными скиллы типа "projectile" и "melee"
+            -- орбитальные скиллы не кастуются в режиме прицеливания
             if (skill.type == "projectile" or skill.type == "melee") and skill:canCast() then
                 -- Играем анимацию только при успешном касте
                 self:_faceAndPlayCast(tx, ty)
@@ -156,7 +157,8 @@ function Hero:_attackLogic()
     if not target then return end
 
     for _, skill in ipairs(self.skills) do
-        if skill:canCast() then
+        -- Орбитальные скиллы уже кастуются автоматически в Creature.update()
+        if skill.type ~= "orbital" and skill:canCast() then
             local range = (skill.stats and skill.stats.range) or 0
             if range > 0 and MathUtils.canAttackTarget(self, target, range) then
                 self:_faceAndPlayCast(target.x, target.y)

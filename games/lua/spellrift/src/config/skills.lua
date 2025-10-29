@@ -232,5 +232,50 @@ Skills["crimson-volley"] = {
     }
 }
 
-
+-- === ORBITAL SKILLS ===
+Skills["axe-whirlwind"] = {
+    id = "axe-whirlwind",
+    name = "Axe Whirlwind",
+    description = "Flying axes orbit around you, dealing damage to enemies",
+    type = "orbital",
+    isStartingSkill = true,
+    stats = {
+        -- боевые
+        damage = 15,                    -- Урон за попадание
+        cooldown = 12.0,                 -- Кулдаун скилла
+        radius = 20,                    -- Радиус проджектайла
+        
+        -- орбитальные параметры
+        duration = 8.0,                -- Длительность существования
+        orbitRadius = 200,              -- Радиус орбиты вокруг кастера
+        orbitSpeed = 2,               -- Скорость вращения вокруг кастера (рад/сек)
+        projectileCount = 3,            -- Количество топоров
+        
+        -- вращение проджектайлов
+        selfRotationSpeed = 3.0,        -- Скорость вращения топора вокруг своей оси
+        
+        -- поведение
+        followCaster = true,            -- Следовать за кастером
+        destroyOnCasterDeath = true,    -- Уничтожать при смерти кастера
+        destroyOnHit = false,           -- Уничтожать топор при попадании (false = постоянные)
+        
+        -- дебаффы (опционально)
+        debuffType = nil,               -- Тип дебаффа
+        debuffDuration = 0,             -- Длительность дебаффа
+        debuffDamage = 0,               -- Урон дебаффа
+        debuffTickRate = 0,             -- Частота тиков дебаффа
+    },
+    quads = {
+        idle = {
+            row = 1,
+            col = 1
+        },
+        fly = {
+            startrow = 1,
+            startcol = 2,
+            endrow = 1,
+            endcol = 2,
+        }
+    },
+}
 return Skills

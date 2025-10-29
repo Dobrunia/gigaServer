@@ -3,6 +3,7 @@ local Projectile  = require("src.entity.projectile")
 
 -- types
 local Melee = require("src.entity.skill_types.melee")
+local Orbital = require("src.entity.skill_types.orbital")
 
 local Skill = {}
 Skill.__index = Skill
@@ -120,6 +121,15 @@ function Skill:castAt(world, tx, ty)
             Projectile.spawn(world, self.caster, self, targetX, targetY)
         end
         
+        self:startCooldown()
+        return true
+
+    elseif self.type == "orbital" then
+        if not (world and self.caster) then return false end
+        
+        -- Орбитальные скиллы кастуются автоматически по готовности (как ауры)
+        -- Не требуют целей рядом, кастуются всегда когда не в КД
+        Orbital.spawn(world, self.caster, self)
         self:startCooldown()
         return true
     end

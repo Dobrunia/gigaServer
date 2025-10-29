@@ -246,6 +246,13 @@ function Creature:update(dt)
         skill:update(dt)
     end
 
+    -- Автокаст орбитальных скиллов ( и аур ) - они не требуют целей
+    for _, skill in ipairs(self.skills) do
+        if skill.type == "orbital" and skill:canCast() then
+            skill:castAt(self.world, nil, nil) -- орбитальные не нуждаются в координатах
+        end
+    end
+
     -- Обновляем дебаффы
     for i = #self.debuffs, 1, -1 do
         local debuff = self.debuffs[i]
