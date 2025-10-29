@@ -147,7 +147,7 @@ Skills["zombie-cleave"] = {
     stats = {
         -- боевые
         damage = 35,
-        cooldown = 1.0,
+        cooldown = 2.0,
         range = 80,            -- триггер-дистанция для AI (если не передан tx,ty)
         hitMaxTargets = 0,     -- 0 = без лимита
         knockback = 0,
@@ -159,7 +159,7 @@ Skills["zombie-cleave"] = {
         arcOffsetDeg = 0,
 
         -- тайминги
-        windup = 0.7,         -- замах
+        windup = 0.8,         -- замах
         active = 0.05,         -- окно урона
 
         -- поведение наведения
