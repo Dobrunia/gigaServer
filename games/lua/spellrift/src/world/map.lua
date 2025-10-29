@@ -24,6 +24,9 @@ function Map.new(width, height)
         self.biomeQuads[i] = SpriteManager.getQuad(self.mapSpriteSheet, i, 1, self.tileSize, self.tileSize)
     end
     
+    -- Создаем quad для стены (6-я колонка)
+    self.wallQuad = SpriteManager.getQuad(self.mapSpriteSheet, 6, 1, self.tileSize, self.tileSize)
+    
     -- Генерируем случайные позиции биомов
     self:generateBiomes()
     
@@ -166,6 +169,51 @@ function Map:renderMap()
     for _, biome in ipairs(self.biomes) do
         if biome.quad then
             love.graphics.draw(self.mapSpriteSheet, biome.quad, biome.x, biome.y)
+        end
+    end
+    
+    -- Рисуем стены по краям карты (непроходимые)
+    love.graphics.setColor(0.65, 0.65, 0.65, 1)  -- такой же уровень затемнения
+    local cols = math.ceil(self.width / self.tileSize)
+    local rows = math.ceil(self.height / self.tileSize)
+    
+    -- Верхняя стена
+    for x = 0, cols - 1 do
+        local wallX = x * self.tileSize
+        if wallX < self.width then
+            love.graphics.draw(self.mapSpriteSheet, self.wallQuad, wallX, 0)
+        end
+    end
+    
+    -- Нижняя стена
+    local bottomY = rows * self.tileSize - self.tileSize
+    if bottomY + self.tileSize > self.height then
+        bottomY = self.height - self.tileSize
+    end
+    for x = 0, cols - 1 do
+        local wallX = x * self.tileSize
+        if wallX < self.width then
+            love.graphics.draw(self.mapSpriteSheet, self.wallQuad, wallX, bottomY)
+        end
+    end
+    
+    -- Левая стена
+    for y = 1, rows - 2 do
+        local wallY = y * self.tileSize
+        if wallY + self.tileSize <= self.height then
+            love.graphics.draw(self.mapSpriteSheet, self.wallQuad, 0, wallY)
+        end
+    end
+    
+    -- Правая стена
+    local rightX = cols * self.tileSize - self.tileSize
+    if rightX + self.tileSize > self.width then
+        rightX = self.width - self.tileSize
+    end
+    for y = 1, rows - 2 do
+        local wallY = y * self.tileSize
+        if wallY + self.tileSize <= self.height then
+            love.graphics.draw(self.mapSpriteSheet, self.wallQuad, rightX, wallY)
         end
     end
     

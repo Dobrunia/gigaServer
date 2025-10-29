@@ -83,6 +83,32 @@ function Creature:changePosition(dx, dy)
     dx = dx + separationDx
     dy = dy + separationDy
 
+    -- Проверяем границы карты перед движением
+    if self.world then
+        local newX = self.x + dx
+        local newY = self.y + dy
+        
+        -- Ограничиваем движение границами карты (с учетом размера существа + 1 блок отступ)
+        local blockSize = 64  -- размер блока карты
+        local minX = blockSize
+        local minY = blockSize
+        local maxX = self.world.width - self.effectiveWidth - blockSize
+        local maxY = self.world.height - self.effectiveHeight - blockSize
+        
+        -- Корректируем движение, если выходим за границы
+        if newX < minX then
+            dx = minX - self.x
+        elseif newX > maxX then
+            dx = maxX - self.x
+        end
+        
+        if newY < minY then
+            dy = minY - self.y
+        elseif newY > maxY then
+            dy = maxY - self.y
+        end
+    end
+
     -- Реальный сдвиг делает базовый Object
     Object.changePosition(self, dx, dy)
 end
