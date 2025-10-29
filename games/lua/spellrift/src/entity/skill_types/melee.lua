@@ -46,9 +46,9 @@ local function _build(world, caster, skill, tx, ty)
 
     -- поведение
     self.followAim         = (st.followAim ~= false)
-    self.trackDuringWindup = (st.trackDuringWindup ~= false)
-    self.lockMovement      = (st.lockMovement == true)
-    self.directionMode     = st.directionMode or "free" -- free|horizontal|vertical
+    self.trackDuringWindup = false            -- ВАЖНО: во время замаха ничего не «подтягиваем»
+    self.lockMovement      = (st.lockMovement ~= false)
+    self.directionMode     = st.directionMode or "free"
     self.centerOffset      = st.centerOffset or 0
 
     -- визуал
@@ -59,10 +59,10 @@ local function _build(world, caster, skill, tx, ty)
     self.centerX = caster.x + (caster.effectiveWidth  or 0) * 0.5
     self.centerY = caster.y + (caster.effectiveHeight or 0) * 0.5
     self.dirX, self.dirY = MathUtils.directionFromCaster(caster, tx, ty, self.followAim, self.directionMode)
-    
-    -- сохраняем исходную точку наведения для windup
-    self.targetX = tx
-    self.targetY = ty
+
+    -- сохраняем "снимок" на старте (именно эти значения и рисуем, и бьём)
+    self.fixedCenterX, self.fixedCenterY = self.centerX, self.centerY
+    self.fixedDirX,    self.fixedDirY    = self.dirX, self.dirY
 
     if self.centerOffset ~= 0 then
         self.centerX = self.centerX + self.dirX * self.centerOffset
@@ -94,6 +94,16 @@ function Melee.spawn(world, caster, skill, tx, ty)
     end
     self._dead = false              -- <-- обязательно сбрасываем
     table.insert(_alive, self)
+    
+    -- Заморозка кастера на время замаха (и фейс не менять)
+    if self.lockMovement and caster then
+        if caster.lockMovement then caster:lockMovement(self.windup or 0) end
+        if caster.lockFacing  then caster:lockFacing(self.windup or 0)  end
+        if caster.animationsList and caster.animationsList["cast"] then
+            caster:playAnimation("cast")
+        end
+    end
+    
     return self
 end
 
@@ -121,7 +131,31 @@ function Melee:_applyHit()
             local rectW = t.effectiveWidth or 0
             local rectH = t.effectiveHeight or 0
             
-            if MathUtils.rectIntersectsSector(rectX, rectY, rectW, rectH, cx, cy, dx, dy, self.arcInner, self.arcRadius, self.halfAngle) then
+            -- Проверяем несколько точек внутри хитбокса цели
+            local points = {
+                -- Центр
+                {rectX + rectW * 0.5, rectY + rectH * 0.5},
+                -- Углы
+                {rectX, rectY},
+                {rectX + rectW, rectY},
+                {rectX, rectY + rectH},
+                {rectX + rectW, rectY + rectH},
+                -- Середины сторон
+                {rectX + rectW * 0.5, rectY},
+                {rectX + rectW * 0.5, rectY + rectH},
+                {rectX, rectY + rectH * 0.5},
+                {rectX + rectW, rectY + rectH * 0.5}
+            }
+            
+            local hit = false
+            for _, point in ipairs(points) do
+                if MathUtils.pointInSector(point[1], point[2], cx, cy, dx, dy, self.arcInner, self.arcRadius, self.halfAngle) then
+                    hit = true
+                    break
+                end
+            end
+            
+            if hit then
                 local px = rectX + rectW * 0.5
                 local py = rectY + rectH * 0.5
                 if t.takeDamage then t:takeDamage(dmg) end
@@ -139,19 +173,7 @@ end
 function Melee:update(dt)
     self.timer = self.timer + dt
 
-    if self.timer < self.windup and self.trackDuringWindup then
-        self.centerX = self.caster.x + (self.caster.effectiveWidth  or 0) * 0.5
-        self.centerY = self.caster.y + (self.caster.effectiveHeight or 0) * 0.5
-        if self.followAim then
-            -- используем сохраненную точку наведения вместо caster.aimX/aimY
-            self.dirX, self.dirY = MathUtils.directionFromCaster(self.caster, self.targetX, self.targetY, true, self.directionMode)
-        end
-        if self.centerOffset ~= 0 then
-            self.centerX = self.centerX + self.dirX * self.centerOffset
-            self.centerY = self.centerY + self.dirY * self.centerOffset
-        end
-    end
-
+    -- Никакого «прилипания»: используем фиксированные значения
     if not self.didHit and self.timer >= self.windup then
         self.didHit = true
         self:_applyHit()

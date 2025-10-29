@@ -150,10 +150,18 @@ function MathUtils.pointInSector(px, py, cx, cy, dx, dy, rMin, rMax, halfAngle)
     if dist2 < rMin*rMin or dist2 > rMax*rMax then return false end
     local d = math.sqrt(dist2)
     if d < 1e-6 then return true end
+    
+    -- Нормализуем вектор от центра к точке
     vx, vy = vx/d, vy/d
+    
+    -- Вычисляем угол между направлением сектора и вектором к точке
     local dot = vx*dx + vy*dy
     if dot > 1 then dot = 1 elseif dot < -1 then dot = -1 end
-    return math.acos(dot) <= halfAngle
+    local angle = math.acos(dot)
+    
+    -- Проверяем, что угол меньше половины угла сектора
+    -- halfAngle уже в радианах и представляет половину угла сектора
+    return angle <= halfAngle
 end
 
 -- Проверяет, пересекается ли прямоугольник с сектором

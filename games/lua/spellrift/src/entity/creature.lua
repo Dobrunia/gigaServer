@@ -43,6 +43,10 @@ function Creature.new(spriteSheet, x, y, config, level)
     self._lastMoveX = 0
     self._lastMoveY = 0
 
+    self._moveLockTimer = 0   -- заморозка перемещения
+    self._faceLockTimer = 0   -- заморозка поворота
+    self._lockedFacing  = 1   -- тут хранится фиксированный фейс
+
     -- Настройка анимаций из конфига героя (heroes.lua -> quads)
     -- idle: один кадр (row/col)
     if config.quads and config.quads.idle then
@@ -67,7 +71,24 @@ function Creature.new(spriteSheet, x, y, config, level)
     return self
 end
 
+function Creature:lockMovement(duration)
+    if duration and duration > 0 then
+        self._moveLockTimer = math.max(self._moveLockTimer or 0, duration)
+    end
+end
+
+function Creature:lockFacing(duration)
+    if duration and duration > 0 then
+        self._lockedFacing = self.facing
+        self._faceLockTimer = math.max(self._faceLockTimer or 0, duration)
+    end
+end
+
 function Creature:changePosition(dx, dy)
+    if (self._moveLockTimer or 0) > 0 then
+        return
+    end
+
     -- Запоминаем последний сдвиг для выбора анимации и флипа
     self._lastMoveX = dx or 0
     self._lastMoveY = dy or 0
@@ -208,6 +229,16 @@ function Creature:update(dt)
     -- Если мертв, не обновляем логику
     if self.isDead then
         return
+    end
+
+    -- Тикаем локи
+    if self._moveLockTimer and self._moveLockTimer > 0 then
+        self._moveLockTimer = math.max(0, self._moveLockTimer - dt)
+    end
+    if self._faceLockTimer and self._faceLockTimer > 0 then
+        self._faceLockTimer = math.max(0, self._faceLockTimer - dt)
+        -- фиксируем фейс, если кто-то попытается поменять где-то ещё
+        self.facing = self._lockedFacing or self.facing
     end
 
     -- Обновляем кулдауны всех использованных навыков

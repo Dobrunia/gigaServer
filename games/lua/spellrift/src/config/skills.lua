@@ -153,7 +153,7 @@ Skills["zombie-cleave"] = {
         knockback = 0,
 
         -- геометрия сектора
-        arcAngleDeg = 60,     -- 360 = круг
+        arcAngleDeg = 30,     -- 360 = круг
         arcRadius = 80,
         arcInnerRadius = 0,
         arcOffsetDeg = 0,
