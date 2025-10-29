@@ -47,7 +47,13 @@ function Drop:update(dt, player)
             local dx, dy = MathUtils.directionBetween(self, player)
             self:changePosition(dx * speed, dy * speed)
         end
-        if distance < 10 then
+        
+        -- Проверяем касание с границей хитбокса героя
+        local playerRadius = (player.effectiveWidth or 0) * 0.5
+        local dropRadius = (self.effectiveWidth or 0) * 0.5
+        local touchDistance = playerRadius + dropRadius
+        
+        if distance <= touchDistance then
             self:collect(player)
         end
     end
