@@ -1,5 +1,6 @@
 local Creature = require("src.entity.creature")
 local SpriteManager = require("src.utils.sprite_manager")
+local MathUtils = require("src.utils.math_utils")
 local Drop = require("src.entity.drop")
 
 local Enemy = {}
@@ -55,13 +56,12 @@ end
 function Enemy:tryCastAt(hero)
     if not (self.skills and hero) then return false end
 
-    local dx, dy = hero.x - self.x, hero.y - self.y
-    local dist = math.sqrt(dx*dx + dy*dy)
-
     for _, sk in ipairs(self.skills) do
         local r = sk.stats and sk.stats.range
-        if r and sk:canCast() and dist <= r then
+        if r and sk:canCast() and MathUtils.canAttackTarget(self, hero, r) then
             -- смотреть на цель
+            local dx = hero.x - self.x
+            local dy = hero.y - self.y
             if dx < -0.001 then self.facing = -1
             elseif dx > 0.001 then self.facing = 1 end
 
@@ -71,7 +71,7 @@ function Enemy:tryCastAt(hero)
                 self._attackAnimTimer = self._castHold
             end
 
-            -- запускаем скилл (сейчас только КД; спавн проджектайла добавим позже)
+            -- запускаем скилл
             sk:castAt(self.world, hero.x, hero.y)
             return true
         end

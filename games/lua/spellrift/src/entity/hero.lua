@@ -28,6 +28,10 @@ function Hero.new(x, y, heroId, level)
     self.experience = 0
     self.experienceToNext = 100
 
+    -- Таймер удержания анимации каста
+    self._castAnimTimer = 0
+    self._castHold = 0.3  -- длительность удержания каста
+
     return self
 end
 
@@ -89,7 +93,7 @@ function Hero:findNearestEnemyInRange()
             -- Проверяем, есть ли у нас навык с достаточным радиусом
             for _, skill in ipairs(self.skills) do
                 local skillRange = skill.stats and skill.stats.range or 0
-                if skillRange > 0 and distance <= skillRange and distance < nearestDistance then
+                if skillRange > 0 and MathUtils.canAttackTarget(self, enemy, skillRange) and distance < nearestDistance then
                     nearestEnemy = enemy
                     nearestDistance = distance
                     break
@@ -114,14 +118,23 @@ function Hero:autoAttack()
     -- Ищем первый навык не на кулдауне
     for _, skill in ipairs(self.skills) do
         if skill:canCast() then
-            -- Направляемся к цели для каста
-            local dx = target.x - self.x
-            local dy = target.y - self.y
-            local distance = math.sqrt(dx * dx + dy * dy)
-            
-            -- Если цель в радиусе - кастуем
             local skillRange = skill.stats and skill.stats.range or 0
-            if distance <= skillRange then
+            if skillRange > 0 and MathUtils.canAttackTarget(self, target, skillRange) then
+                -- Смотрим на цель
+                local dx = target.x - self.x
+                local dy = target.y - self.y
+                if dx < -0.001 then
+                    self.facing = -1
+                elseif dx > 0.001 then
+                    self.facing = 1
+                end
+                
+                -- Переключаемся на анимацию каста
+                if self.animationsList and self.animationsList["cast"] then
+                    self:playAnimation("cast")
+                    self._castAnimTimer = self._castHold
+                end
+                
                 skill:castAt(self.world, target.x, target.y)
                 return
             end
@@ -131,10 +144,28 @@ end
 
 -- Переопределяем update для добавления автоатаки
 function Hero:update(dt)
+    -- Если мертв, не обновляем логику
+    if self.isDead then
+        return
+    end
+
+    -- Обновляем таймер анимации каста
+    if self._castAnimTimer and self._castAnimTimer > 0 then
+        self._castAnimTimer = self._castAnimTimer - dt
+        -- Пока кастуем - не двигаемся и не атакуем
+        Creature.update(self, dt)
+        return
+    else
+        -- Сбрасываем анимацию каста когда таймер закончился
+        if self.currentAnimation == "cast" then
+            self:playAnimation("idle")
+        end
+    end
+
     -- Вызываем базовый update из Creature
     Creature.update(self, dt)
     
-    -- Автоатака (только если герой жив)
+    -- Автоатака (только если герой жив и не кастует)
     if not self.isDead then
         self:autoAttack()
     end

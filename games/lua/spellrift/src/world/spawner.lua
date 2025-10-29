@@ -64,28 +64,32 @@ local function isPointInBounds(x, y, mapWidth, mapHeight, margin)
            y >= margin and y <= mapHeight - margin
 end
 
--- Генерируем случайную точку в кольце вокруг героя, но в пределах карты
-local function randomRingPointInBounds(cx, cy, minR, maxR, mapWidth, mapHeight, margin)
+-- Генерируем случайную точку на карте, но не ближе minDistance от героя
+local function randomPointAwayFromHero(heroX, heroY, minDistance, mapWidth, mapHeight, margin)
     local attempts = 0
-    local maxAttempts = 20
+    local maxAttempts = 50
     
     repeat
-        local r = MathUtils.randomRange(minR, maxR)
-        local a = MathUtils.randomRange(0, math.pi * 2)
-        local x = cx + math.cos(a) * r
-        local y = cy + math.sin(a) * r
+        -- Случайная точка на всей карте
+        local x = MathUtils.randomRange(margin, mapWidth - margin)
+        local y = MathUtils.randomRange(margin, mapHeight - margin)
         
-        if isPointInBounds(x, y, mapWidth, mapHeight, margin) then
+        -- Проверяем расстояние до героя
+        local dx = x - heroX
+        local dy = y - heroY
+        local distance = math.sqrt(dx * dx + dy * dy)
+        
+        if distance >= minDistance then
             return x, y
         end
         
         attempts = attempts + 1
     until attempts >= maxAttempts
     
-    -- Если не удалось найти подходящую точку, возвращаем точку ближе к центру
-    local r = MathUtils.randomRange(minR, maxR * 0.5)
-    local a = MathUtils.randomRange(0, math.pi * 2)
-    return cx + math.cos(a) * r, cy + math.sin(a) * r
+    -- Если не удалось найти подходящую точку, возвращаем точку в углу карты
+    local cornerX = (heroX < mapWidth / 2) and (mapWidth - margin) or margin
+    local cornerY = (heroY < mapHeight / 2) and (mapHeight - margin) or margin
+    return cornerX, cornerY
 end
 
 function Spawner.new(mapWidth, mapHeight)
@@ -101,9 +105,8 @@ function Spawner.new(mapWidth, mapHeight)
     self.timer = 0
     self.maxAlive = 20                     -- Максимум живых врагов
     
-    -- Радиус спавна вокруг героя
-    self.minRadius = 200
-    self.maxRadius = 400
+    -- Минимальное расстояние от героя для спавна
+    self.minDistanceFromHero = 300
     
     -- Прогрессия сложности
     self.elapsed = 0
@@ -174,7 +177,7 @@ function Spawner:update(dt, world, hero)
     
     -- Спавним группу врагов
     for i = 1, canSpawn do
-        local sx, sy = randomRingPointInBounds(hero.x, hero.y, self.minRadius, self.maxRadius, 
+        local sx, sy = randomPointAwayFromHero(hero.x, hero.y, self.minDistanceFromHero, 
                                              self.mapWidth, self.mapHeight, self.mapMargin)
         
         if sx and sy then

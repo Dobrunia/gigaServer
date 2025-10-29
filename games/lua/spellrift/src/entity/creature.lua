@@ -243,6 +243,18 @@ function Creature:draw()
     for _, debuff in ipairs(self.debuffs) do
         debuff:draw(self)
     end
+    
+    -- Рисуем дальность навыков если включена отладка
+    if Constants.DEBUG_DRAW_HITBOXES then
+        for _, skill in ipairs(self.skills) do
+            local range = skill:getRange()
+            if range > 0 then
+                love.graphics.setColor(0, 1, 1, 0.3) -- голубой полупрозрачный
+                love.graphics.circle("line", self.x + self.effectiveWidth * 0.5, self.y + self.effectiveHeight * 0.5, range)
+                love.graphics.setColor(1, 1, 1, 1) -- сбрасываем цвет
+            end
+        end
+    end
 end
 
 return Creature

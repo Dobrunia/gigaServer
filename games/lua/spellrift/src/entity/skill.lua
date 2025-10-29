@@ -125,4 +125,9 @@ function Skill:getStatValue(statName)
     return self.stats[statName]
 end
 
+-- Получить радиус навыка для отрисовки
+function Skill:getRange()
+    return self.stats and self.stats.range or 0
+end
+
 return Skill
