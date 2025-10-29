@@ -9,6 +9,7 @@ local spriteCaches = {
     skills = {},
     items = {},
     debuffs = {},
+    map = nil,  -- спрайт-лист карты (один общий)
 }
 
 function SpriteManager.loadHeroSprite(heroId)
@@ -51,6 +52,13 @@ function SpriteManager.loadDebuffSprite(debuffType)
         spriteCaches.debuffs[debuffType] = love.graphics.newImage("assets/debuffs/" .. debuffType .. "/spritesheet.png")
     end
     return spriteCaches.debuffs[debuffType]
+end
+
+function SpriteManager.loadMapSprite()
+    if not spriteCaches.map then
+        spriteCaches.map = love.graphics.newImage("assets/map/spritesheet.png")
+    end
+    return spriteCaches.map
 end
 
 -- Очистка кеша (если нужно)

@@ -64,66 +64,66 @@ local enemies = {
 
 
     -- === RANGED MOB ===
-    -- fireclaw = {
-    --     id = "fireclaw",
-    --     name = "Fireclaw",
-    --     type = "ranged",
+    fireclaw = {
+        id = "fireclaw",
+        name = "Fireclaw",
+        type = "ranged",
         
-    --     baseHp = 30,
-    --     hpGrowth = 5,
-    --     baseArmor = 0,
-    --     armorGrowth = 0.2,
-    --     baseMoveSpeed = 40,
-    --     speedGrowth = 1,
+        baseHp = 30,
+        hpGrowth = 5,
+        baseArmor = 0,
+        armorGrowth = 0.2,
+        baseMoveSpeed = 40,
+        speedGrowth = 1,
         
-    --     skills = {'green-fireball'},
+        skills = {'green-fireball'},
 
-    --     drop = {
-    --         id = "xp",
-    --         name = "XP",
-    --         description = "XP",
-    --         type = "xp",
+        drop = {
+            id = "xp",
+            name = "XP",
+            description = "XP",
+            type = "xp",
 
-    --         value = 15,
-    --         valueGrowth = 3,
+            value = 15,
+            valueGrowth = 3,
 
-    --         width = 32,
-    --         height = 32,
+            width = 32,
+            height = 32,
         
-    --         quads = {
-    --             idle = {
-    --                 row = 1,
-    --                 col = 1
-    --             }
-    --         }
-    --     },
+            quads = {
+                idle = {
+                    row = 1,
+                    col = 1
+                }
+            }
+        },
         
-    --     -- Spawn parameters
-    --     spawnWeight = 3,
-    --     spawnStartTime = 0,
-    --     spawnEndTime = nil,
-    --     spawnGroupSize = 2,
+        -- Spawn parameters
+        spawnWeight = 3,
+        spawnStartTime = 0,
+        spawnEndTime = nil,
+        spawnGroupSize = 2,
 
-    --     width = 32,
-    --     height = 32,
+        width = 32,
+        height = 32,
 
-    --     quads = {
-    --         idle = {
-    --             row = 1,
-    --             col = 1,
-    --         },
-    --         walk = {
-    --             startrow = 1,
-    --             startcol = 2,
-    --             endrow = 1,
-    --             endcol = 3,
-    --         },
-    --         cast = {
-    --             row = 1,
-    --             col = 4,
-    --         }
-    --     }
-    -- }
+        quads = {
+            idle = {
+                row = 1,
+                col = 1,
+            },
+            walk = {
+                startrow = 1,
+                startcol = 2,
+                endrow = 1,
+                endcol = 3,
+            },
+            cast = {
+                row = 1,
+                col = 4,
+            }
+        }
+    }
 }
 
 return enemies

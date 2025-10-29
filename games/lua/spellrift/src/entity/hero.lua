@@ -69,8 +69,6 @@ function Hero:levelUp()
     self.armor = self.armor + self.armorGrowth
     self.baseMoveSpeed = self.baseMoveSpeed + self.speedGrowth
     self.moveSpeed = self.moveSpeed + self.speedGrowth
-    self.baseCastSpeed = self.baseCastSpeed + self.castSpeedGrowth
-    self.castSpeed = self.castSpeed + self.castSpeedGrowth
 end
 
 function Hero:getStats()
@@ -84,8 +82,6 @@ function Hero:getStats()
         armorGrowth = self.armorGrowth,
         speed = self.moveSpeed,
         speedGrowth = self.speedGrowth,
-        castSpeed = self.castSpeed,
-        castSpeedGrowth = self.castSpeedGrowth
     }
 end
 
