@@ -71,4 +71,73 @@ function Hero:getStats()
     }
 end
 
+-- Найти ближайшего врага в радиусе атаки
+function Hero:findNearestEnemyInRange()
+    if not self.world or not self.world.enemies then
+        return nil
+    end
+    
+    local nearestEnemy = nil
+    local nearestDistance = math.huge
+    
+    for _, enemy in ipairs(self.world.enemies) do
+        if enemy and not enemy.isDead then
+            local dx = enemy.x - self.x
+            local dy = enemy.y - self.y
+            local distance = math.sqrt(dx * dx + dy * dy)
+            
+            -- Проверяем, есть ли у нас навык с достаточным радиусом
+            for _, skill in ipairs(self.skills) do
+                local skillRange = skill.stats and skill.stats.range or 0
+                if skillRange > 0 and distance <= skillRange and distance < nearestDistance then
+                    nearestEnemy = enemy
+                    nearestDistance = distance
+                    break
+                end
+            end
+        end
+    end
+    
+    return nearestEnemy
+end
+
+-- Автоатака - использует первый доступный навык
+function Hero:autoAttack()
+    if not self.world then return end
+    
+    -- Ищем ближайшего врага в радиусе атаки
+    local target = self:findNearestEnemyInRange()
+    if not target then
+        return -- нет целей в радиусе
+    end
+    
+    -- Ищем первый навык не на кулдауне
+    for _, skill in ipairs(self.skills) do
+        if skill:canCast() then
+            -- Направляемся к цели для каста
+            local dx = target.x - self.x
+            local dy = target.y - self.y
+            local distance = math.sqrt(dx * dx + dy * dy)
+            
+            -- Если цель в радиусе - кастуем
+            local skillRange = skill.stats and skill.stats.range or 0
+            if distance <= skillRange then
+                skill:castAt(self.world, target.x, target.y)
+                return
+            end
+        end
+    end
+end
+
+-- Переопределяем update для добавления автоатаки
+function Hero:update(dt)
+    -- Вызываем базовый update из Creature
+    Creature.update(self, dt)
+    
+    -- Автоатака (только если герой жив)
+    if not self.isDead then
+        self:autoAttack()
+    end
+end
+
 return Hero

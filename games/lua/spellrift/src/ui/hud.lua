@@ -276,7 +276,7 @@ function HUD:drawSkills(player)
             end
             
             -- Cooldown overlay and circular progress
-            if skill.cooldownTimer and skill.cooldownTimer > 0 then
+            if skill.cooldownTimer and skill.cooldownTimer > 0 and skill.cooldown and skill.cooldown > 0 then
                 local cooldownPercent = skill.cooldownTimer / skill.cooldown
                 
                 -- Dark overlay

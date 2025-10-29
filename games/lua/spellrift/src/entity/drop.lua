@@ -12,8 +12,10 @@ function Drop.new(x, y, config, mobLevel)
 
     local spriteSheet = SpriteManager.loadDropSprite(config.id)
 
-    -- ВАЖНО: Object.new ждёт CONFIG, а не width/height по отдельности
-    local self = Object.new(spriteSheet, x, y, config)
+    -- Передаем width и height из конфига
+    local width = config.width or 32
+    local height = config.height or 32
+    local self = Object.new(spriteSheet, x, y, width, height)
     setmetatable(self, Drop)
 
     self.dropId = config.id
@@ -36,7 +38,7 @@ function Drop:update(dt, player)
 
     if not player then return end
 
-    local pickupRange = player.pickupRange
+    local pickupRange = player.pickupRange or 200  -- значение по умолчанию
     local distance = MathUtils.distanceBetween(self, player)
 
     if distance <= pickupRange then
