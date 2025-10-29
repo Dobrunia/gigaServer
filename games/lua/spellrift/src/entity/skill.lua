@@ -130,4 +130,17 @@ function Skill:getRange()
     return self.stats and self.stats.range or 0
 end
 
+function Skill:getCooldownDuration()
+    return (self.stats and self.stats.cooldown) or 0
+end
+
+function Skill:getCooldownRemaining()
+    return self.cooldownTimer or 0
+end
+
+function Skill:isOnCD()
+    return self.isOnCooldown and (self.cooldownTimer or 0) > 0
+end
+
+
 return Skill
