@@ -3,6 +3,7 @@ local Hero = require("src.entity.hero")
 local Projectile = require("src.entity.projectile")
 local DamageManager = require("src.system.damage_manager")
 local Constants = require("src.constants")
+local Melee = require("src.entity.skill_types.melee")
 
 local World = {}
 World.__index = World
@@ -91,6 +92,7 @@ function World:update(dt)
 
     -- Проджектайлы из пула (главный путь)
     Projectile.updateAll(dt, self)
+    Melee.updateAll(dt, self)
 
     -- Совместимость: если кто-то вручную добавил projectile-объекты
     -- требующие update — поддержим
@@ -145,6 +147,7 @@ function World:draw()
 
     -- 3) Проджектайлы из пула
     Projectile.drawAll()
+    Melee.drawAll()
 
     -- 4) Дропы
     for i = 1, #self.drops do

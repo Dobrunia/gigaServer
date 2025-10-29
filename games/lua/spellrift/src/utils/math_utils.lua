@@ -115,4 +115,101 @@ function MathUtils.canAttackTarget(attacker, target, skillRange)
                                         targetX, targetY, targetW, targetH)
 end
 
+-- Находит ближайшего противника в заданном радиусе
+function MathUtils.findNearestOpponent(caster, world, maxDist)
+    local list = (caster and caster.enemyId) and (world and world.heroes) or (world and world.enemies)
+    if not list then return nil end
+    local cx = caster.x + (caster.effectiveWidth or 0) * 0.5
+    local cy = caster.y + (caster.effectiveHeight or 0) * 0.5
+    local best, bestD2 = nil, (maxDist and maxDist*maxDist) or math.huge
+    for i=1,#list do
+        local t = list[i]
+        if t and not t.isDead then
+            local px = t.x + (t.effectiveWidth  or 0) * 0.5
+            local py = t.y + (t.effectiveHeight or 0) * 0.5
+            local dx, dy = px-cx, py-cy
+            local d2 = dx*dx + dy*dy
+            if d2 < bestD2 then
+                best, bestD2 = {x=px,y=py}, d2
+            end
+        end
+    end
+    return best, math.sqrt(bestD2)
+end
+
+-- Поворот вектора на заданный угол (в радианах)
+function MathUtils.rotateVector(x, y, angle)
+    local ca, sa = math.cos(angle), math.sin(angle)
+    return x*ca - y*sa, x*sa + y*ca
+end
+
+-- Проверяет, находится ли точка в секторе
+function MathUtils.pointInSector(px, py, cx, cy, dx, dy, rMin, rMax, halfAngle)
+    local vx, vy = px - cx, py - cy
+    local dist2 = vx*vx + vy*vy
+    if dist2 < rMin*rMin or dist2 > rMax*rMax then return false end
+    local d = math.sqrt(dist2)
+    if d < 1e-6 then return true end
+    vx, vy = vx/d, vy/d
+    local dot = vx*dx + vy*dy
+    if dot > 1 then dot = 1 elseif dot < -1 then dot = -1 end
+    return math.acos(dot) <= halfAngle
+end
+
+-- Проверяет, пересекается ли прямоугольник с сектором
+function MathUtils.rectIntersectsSector(rectX, rectY, rectW, rectH, cx, cy, dx, dy, rMin, rMax, halfAngle)
+    -- Проверяем углы прямоугольника
+    local corners = {
+        {rectX, rectY},                    -- левый верхний
+        {rectX + rectW, rectY},            -- правый верхний
+        {rectX, rectY + rectH},            -- левый нижний
+        {rectX + rectW, rectY + rectH}     -- правый нижний
+    }
+    
+    -- Проверяем центр прямоугольника
+    local centerX = rectX + rectW * 0.5
+    local centerY = rectY + rectH * 0.5
+    table.insert(corners, {centerX, centerY})
+    
+    -- Если хотя бы одна точка попадает в сектор, считаем пересечение
+    for _, corner in ipairs(corners) do
+        if MathUtils.pointInSector(corner[1], corner[2], cx, cy, dx, dy, rMin, rMax, halfAngle) then
+            return true
+        end
+    end
+    
+    -- Дополнительная проверка: если центр сектора находится внутри прямоугольника
+    if centerX >= rectX and centerX <= rectX + rectW and 
+       centerY >= rectY and centerY <= rectY + rectH then
+        return true
+    end
+    
+    return false
+end
+
+-- Получает направление от кастера к цели с учетом режима направления
+function MathUtils.directionFromCaster(caster, tx, ty, followAim, directionMode)
+    local cx = caster.x + (caster.effectiveWidth  or 0) * 0.5
+    local cy = caster.y + (caster.effectiveHeight or 0) * 0.5
+    local dx, dy
+    
+    if followAim then
+        -- Вектор от кастера к цели
+        dx, dy = tx - cx, ty - cy
+    else
+        dx = (caster.facing == -1) and -1 or 1
+        dy = 0
+    end
+
+    if directionMode == "horizontal" then
+        dx = (dx < 0) and -1 or 1
+        dy = 0
+    elseif directionMode == "vertical" then
+        dx = 0
+        dy = (cy - ty < 0) and -1 or 1
+    end
+    
+    return MathUtils.normalize(dx, dy)
+end
+
 return MathUtils

@@ -1,6 +1,5 @@
 local Skills = {}
 
--- Пример скилла "Огненный шар"
 Skills["fireball"] = {
     id = "fireball",
     name = "Fireball",
@@ -135,6 +134,49 @@ Skills["green-fireball"] = {
             debuffDamage = 12,
             debuffTickRate = 0.4
         }
+    }
+}
+
+-- === MELEE SKILL ===
+Skills["zombie-cleave"] = {
+    id = "zombie-cleave",
+    name = "Zombie Cleave",
+    description = "Cleaves the ground in front of the zombie, dealing damage to enemies in a cone",
+    type = "melee",
+
+    stats = {
+        -- боевые
+        damage = 35,
+        cooldown = 1.0,
+        range = 80,            -- триггер-дистанция для AI (если не передан tx,ty)
+        hitMaxTargets = 0,     -- 0 = без лимита
+        knockback = 0,
+
+        -- геометрия сектора
+        arcAngleDeg = 60,     -- 360 = круг
+        arcRadius = 80,
+        arcInnerRadius = 0,
+        arcOffsetDeg = 0,
+
+        -- тайминги
+        windup = 0.7,         -- замах
+        active = 0.05,         -- окно урона
+
+        -- поведение наведения
+        followAim = true,            -- брать направление от цели/курсора
+        directionMode = "free",      -- "free" | "horizontal" | "vertical"
+        trackDuringWindup = true,    -- сектор «прилипает» во время замаха
+        lockMovement = false,        -- при желании можно учитывать во внешней логике
+        centerOffset = 10,           -- слегка вынести удар вперёд
+
+        -- визуал телеграфа
+        telegraphColor = {1,1,1},
+        telegraphAlpha = 0.15,
+    },
+
+    upgrades = {
+        { damage = 80, cooldown = 0.85, arcAngleDeg = 140 },
+        { damage = 100, cooldown = 0.7, arcAngleDeg = 160 },
     }
 }
 

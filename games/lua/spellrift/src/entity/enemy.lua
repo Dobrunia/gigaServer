@@ -40,7 +40,14 @@ function Enemy:getDesiredStopDistance()
     local minReady, minAny
     if self.skills then
         for _, sk in ipairs(self.skills) do
-            local r = sk.stats and sk.stats.range
+            local r
+            if sk.type == "melee" then
+                -- для melee используем arcRadius вместо range (это реальный радиус поражения)
+                r = sk.stats and (sk.stats.arcRadius or sk.stats.range)
+            else
+                r = sk.stats and sk.stats.range
+            end
+            
             if r then
                 if sk:canCast() then
                     minReady = (minReady and math.min(minReady, r)) or r
@@ -57,8 +64,26 @@ function Enemy:tryCastAt(hero)
     if not (self.skills and hero) then return false end
 
     for _, sk in ipairs(self.skills) do
-        local r = sk.stats and sk.stats.range
-        if r and sk:canCast() and MathUtils.canAttackTarget(self, hero, r) then
+        local r
+        if sk.type == "melee" then
+            -- для melee используем arcRadius вместо range (это реальный радиус поражения)
+            r = sk.stats and (sk.stats.arcRadius or sk.stats.range)
+        else
+            r = sk.stats and sk.stats.range
+        end
+        
+        if r and sk:canCast() then
+            local canHit = MathUtils.canAttackTarget(self, hero, r)
+            
+            -- Для melee навыков добавляем более простую проверку дистанции
+            if sk.type == "melee" and not canHit then
+                local dx = hero.x - self.x
+                local dy = hero.y - self.y
+                local dist = math.sqrt(dx*dx + dy*dy)
+                canHit = dist <= r
+            end
+            
+            if canHit then
             -- смотреть на цель
             local dx = hero.x - self.x
             local dy = hero.y - self.y
@@ -71,9 +96,12 @@ function Enemy:tryCastAt(hero)
                 self._attackAnimTimer = self._castHold
             end
 
-            -- запускаем скилл
-            sk:castAt(self.world, hero.x, hero.y)
+            -- запускаем скилл - передаем центр хитбокса героя, а не угол
+            local heroCenterX = hero.x + (hero.effectiveWidth or 0) * 0.5
+            local heroCenterY = hero.y + (hero.effectiveHeight or 0) * 0.5
+            sk:castAt(self.world, heroCenterX, heroCenterY)
             return true
+            end
         end
     end
     return false
@@ -100,7 +128,18 @@ function Enemy:update(dt, hero)
         local dist = math.sqrt(dx*dx + dy*dy)
 
         local stopDist = self:getDesiredStopDistance()
-        local stopWithHyst = math.max(0, stopDist - 8)
+        -- Для melee навыков нужен меньший гистерезис, чтобы подойти ближе
+        local hasMelee = false
+        if self.skills then
+            for _, sk in ipairs(self.skills) do
+                if sk.type == "melee" then
+                    hasMelee = true
+                    break
+                end
+            end
+        end
+        local hyst = hasMelee and 2 or 8  -- меньший гистерезис для melee
+        local stopWithHyst = math.max(0, stopDist - hyst)
 
         if dist > stopWithHyst and dist > 0.0001 then
             -- идём к герою (через changePosition -> флип и walk сработают)

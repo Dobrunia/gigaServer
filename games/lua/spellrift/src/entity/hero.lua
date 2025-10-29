@@ -144,8 +144,8 @@ function Hero:_attackLogic()
         end
 
         for _, skill in ipairs(self.skills) do
-            -- считаем направленными скиллы типа "projectile"
-            if skill.type == "projectile" and skill:canCast() then
+            -- считаем направленными скиллы типа "projectile" и "melee"
+            if (skill.type == "projectile" or skill.type == "melee") and skill:canCast() then
                 -- Играем анимацию только при успешном касте
                 self:_faceAndPlayCast(tx, ty)
                 skill:castAt(self.world, tx, ty)
