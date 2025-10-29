@@ -281,6 +281,26 @@ function Creature:draw()
             end
         end
     end
+    
+    -- Рисуем уровень существа если включена отладка
+    if Constants.DEBUG_DRAW_LEVELS then
+        local levelText = "Lv." .. (self.level or 1)
+        local textX = self.x + self.effectiveWidth * 0.5
+        local textY = self.y - 20 -- выше существа
+        
+        -- Фон для текста
+        local font = love.graphics.getFont()
+        local textWidth = font:getWidth(levelText)
+        local textHeight = font:getHeight()
+        
+        love.graphics.setColor(0, 0, 0, 0.7) -- черный полупрозрачный фон
+        love.graphics.rectangle("fill", textX - textWidth * 0.5 - 2, textY - textHeight * 0.5 - 1, textWidth + 4, textHeight + 2)
+        
+        -- Текст уровня
+        love.graphics.setColor(1, 1, 0, 1) -- желтый цвет
+        love.graphics.printf(levelText, textX - textWidth * 0.5, textY - textHeight * 0.5, textWidth, "center")
+        love.graphics.setColor(1, 1, 1, 1) -- сбрасываем цвет
+    end
 end
 
 return Creature
