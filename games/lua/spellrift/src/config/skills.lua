@@ -326,4 +326,44 @@ Skills["satan-aura"] = {
         },
     },
 }
+
+-- === SUMMON SKILLS ===
+Skills["bear"] = {
+    id = "bear",
+    name = "Bear",
+    description = "Summons a bear that attacks enemies",
+    type = "summon",
+    isStartingSkill = true,
+
+    stats = {
+        health = 100,
+        armor
+        MoveSpeed
+        cooldown = 10.0,
+        
+    },
+
+    width = 64,
+    height = 64,
+    skills = {'zombie-cleave'},
+
+    quads = {
+        idle = {
+            row = 1,
+            col = 1
+        },
+        walk = {
+            startrow = 1,
+            startcol = 2,
+            endrow = 1,
+            endcol = 4
+        },
+        cast = {
+            startrow = 1,
+            startcol = 5,
+            endrow = 1,
+            endcol = 6
+        }
+    },
+}
 return Skills
