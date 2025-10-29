@@ -162,7 +162,13 @@ function Projectile:update(dt, world)
                 local ddx, ddy = cx - closestX, cy - closestY
                 if (ddx*ddx + ddy*ddy) <= r2 then
                     -- попадание
-                    if t.takeDamage then t:takeDamage(self.damage) end
+                    if t.takeDamage then 
+                        t:takeDamage(self.damage)
+                        -- Отслеживаем урон для статистики
+                        if self.caster and self.caster.dealDamage then
+                            self.caster:dealDamage(self.damage)
+                        end
+                    end
                     local st = self.skill.stats
                     if st.debuffType and t.addDebuff then
                         t:addDebuff("burn", st.debuffDuration, {

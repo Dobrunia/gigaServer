@@ -27,6 +27,9 @@ function Hero.new(x, y, heroId, level)
 
     self.experience = 0
     self.experienceToNext = 100
+    
+    -- Статистика
+    self.damageDealt = 0
 
     -- Таймер удержания анимации каста
     self._castAnimTimer = 0
@@ -40,6 +43,10 @@ function Hero:gainExperience(amount)
     if self.experience >= self.experienceToNext then
         self:levelUp()
     end
+end
+
+function Hero:dealDamage(amount)
+    self.damageDealt = self.damageDealt + amount
 end
 
 function Hero:levelUp()

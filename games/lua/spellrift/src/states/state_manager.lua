@@ -35,7 +35,14 @@ end
 
 function StateManager:update(dt)
     if self.currentState and self.currentState.update then
-        self.currentState:update(dt)
+        local result = self.currentState:update(dt)
+        if result and result.state then
+            if result.state == "game" then
+                self:switch(result.state, result.selectedHeroId, result.selectedSkillId)
+            else
+                self:switch(result.state, result.gameStats, result.selectedHeroId, result.selectedSkillId)
+            end
+        end
     end
 end
 

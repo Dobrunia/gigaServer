@@ -40,6 +40,18 @@ function Game:enter(selectedHeroId, selectedSkillId)
   self.gameTime = 0
   -- инициализация мира
   self.world:setup(selectedHeroId, selectedSkillId, self.map.width, self.map.height)
+  
+  -- Сохраняем выбранные параметры для рестарта
+  self.selectedHeroId = selectedHeroId
+  self.selectedSkillId = selectedSkillId
+  
+  -- Статистика игры
+  self.gameStats = {
+    level = 1,
+    time = 0,
+    enemiesKilled = 0,
+    damageDealt = 0
+  }
 end
 
 function Game:update(dt)
@@ -94,6 +106,23 @@ function Game:update(dt)
   -- Обработка движения героя при зажатой ПКМ
   local hero = self.world.heroes and self.world.heroes[1]
   if hero then
+    -- Проверяем, не умер ли герой
+    if hero.isDead then
+      -- Обновляем статистику перед переходом к Game Over
+      self.gameStats.level = hero.level or 1
+      self.gameStats.time = self.gameTime
+      self.gameStats.enemiesKilled = self.world.enemiesKilled or 0
+      self.gameStats.damageDealt = hero.damageDealt or 0
+      
+      -- Возвращаем переход к Game Over
+      return {
+        state = "game_over",
+        gameStats = self.gameStats,
+        selectedHeroId = self.selectedHeroId,
+        selectedSkillId = self.selectedSkillId
+      }
+    end
+    
     -- Движение только при зажатой ПКМ
     if self.input:isRightMouseDown() then
       local mx, my = self.input:getMousePosition()

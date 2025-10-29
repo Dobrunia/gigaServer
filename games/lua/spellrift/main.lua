@@ -3,6 +3,7 @@ local MainMenu    = require("src.states.main_menu")
 local HeroSelect  = require("src.states.hero_select")
 local SkillSelect = require("src.states.skill_select")
 local Game = require("src.states.game")
+local GameOver = require("src.states.game_over")
 
 local stateManager -- локальная ссылка на инстанс
 
@@ -13,6 +14,7 @@ function love.load()
     stateManager:register("hero_select", HeroSelect)
     stateManager:register("skill_select", SkillSelect)
     stateManager:register("game", Game)
+    stateManager:register("game_over", GameOver)
 
     stateManager:switch("main_menu")
 end

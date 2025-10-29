@@ -16,6 +16,9 @@ function World.new(mapWidth, mapHeight)
     self.enemies = {}
     self.drops = {}
     
+    -- Статистика
+    self.enemiesKilled = 0
+    
     -- Создаем менеджер урона только если включена отладка
     if Constants.DEBUG_DRAW_DAMAGE_NUMBERS then
         self.damageManager = DamageManager.new()
@@ -121,6 +124,7 @@ function World:update(dt)
     -- Очистка умерших врагов (если кто-то не удалил сам)
     for i = #self.enemies, 1, -1 do
         if self.enemies[i].isDead then
+            self.enemiesKilled = self.enemiesKilled + 1
             table.remove(self.enemies, i)
         end
     end
