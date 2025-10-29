@@ -133,7 +133,7 @@ Skills["green-fireball"] = {
     }
 }
 
--- === MELEE SKILL ===
+-- === MELEE SKILLS ===
 Skills["zombie-cleave"] = {
     id = "zombie-cleave",
     name = "Zombie Cleave",
@@ -176,6 +176,7 @@ Skills["zombie-cleave"] = {
     }
 }
 
+-- === VOLLEY SKILLS ===
 Skills["crimson-volley"] = {
     id = "crimson-volley",
     name = "Crimson Volley",
@@ -230,5 +231,6 @@ Skills["crimson-volley"] = {
         }
     }
 }
+
 
 return Skills
