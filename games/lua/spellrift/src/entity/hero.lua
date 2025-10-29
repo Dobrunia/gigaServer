@@ -61,6 +61,7 @@ end
 
 function Hero:levelUp()
     self.level = self.level + 1
+    self.experience = 0  -- очищаем опыт при повышении уровня
     self.experienceToNext = self.experienceToNext * 1.3
 
     self.baseHp = self.baseHp + self.hpGrowth
