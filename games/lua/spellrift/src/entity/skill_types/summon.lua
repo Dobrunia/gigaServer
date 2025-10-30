@@ -247,8 +247,7 @@ function Summon:_combatAI(dt)
     -- подходим, если далеко от дистанции самого близкого готового скилла
     local minReady, minAny = nil, nil
     for _, sk in ipairs(s.skills) do
-        local r = (sk.type == "melee") and ((sk.stats and (sk.stats.arcRadius or sk.stats.range)) or 0)
-                                  or ((sk.stats and sk.stats.range) or 0)
+        local r = (sk.stats and sk.stats.range) or 0
         if r and r > 0 then
             minAny = (minAny and math.min(minAny, r)) or r
             if sk:canCast() then
@@ -271,8 +270,7 @@ function Summon:_combatAI(dt)
             if sk:canCast() then
                 local ex = enemy.x + (enemy.effectiveWidth or 0)*0.5
                 local ey = enemy.y + (enemy.effectiveHeight or 0)*0.5
-                local r = (sk.type == "melee") and ((sk.stats and (sk.stats.arcRadius or sk.stats.range)) or 0)
-                                          or ((sk.stats and sk.stats.range) or 0)
+                local r = (sk.stats and sk.stats.range) or 0
                 if r == 0 or dist <= r + 1 then
                     if s.animationsList["cast"] then 
                         s:playAnimation("cast")

@@ -150,7 +150,6 @@ Skills["zombie-cleave"] = {
 
         -- === ГЕОМЕТРИЯ СЕКТОРА ===
         arcAngleDeg = 30,      -- угол сектора в градусах (360 = полный круг)
-        arcRadius = 80,        -- внешний радиус сектора
         arcInnerRadius = 0,    -- внутренний радиус сектора (0 = от центра)
         arcOffsetDeg = 0,      -- поворот сектора относительно направления атаки
 
@@ -192,7 +191,6 @@ Skills["bear-cleave"] = {
 
         -- геометрия сектора
         arcAngleDeg = 120,     -- 360 = круг
-        arcRadius = 80,
         arcInnerRadius = 0,
         arcOffsetDeg = 0,
 

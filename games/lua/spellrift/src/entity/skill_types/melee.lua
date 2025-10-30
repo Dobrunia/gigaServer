@@ -40,7 +40,7 @@ local function _build(world, caster, skill, tx, ty)
     -- геометрия
     self.arcAngle  = math.rad(st.arcAngleDeg or 90)
     self.halfAngle = self.arcAngle * 0.5
-    self.arcRadius = st.arcRadius or 60
+    self.arcRadius = st.range or 60  -- используем range вместо arcRadius
     self.arcInner  = st.arcInnerRadius or 0
     self.arcOffset = math.rad(st.arcOffsetDeg or 0)
 

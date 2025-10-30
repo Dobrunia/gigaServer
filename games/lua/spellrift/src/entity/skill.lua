@@ -91,7 +91,7 @@ function Skill:castAt(world, tx, ty)
     
         -- если координаты не передали — автонаведение по ближайшей цели в пределах триггер-дистанции
         if tx == nil or ty == nil then
-            local castRange = (self.stats and (self.stats.range or self.stats.arcRadius)) or 0
+            local castRange = (self.stats and self.stats.range) or 0
             local tgt, dist = MathUtils.findNearestOpponent(self.caster, world, castRange > 0 and castRange or nil)
             if not tgt then return false end
             -- если указан range, не кастуем, если цель слишком далеко

@@ -40,13 +40,7 @@ function Enemy:getDesiredStopDistance()
     local minReady, minAny
     if self.skills then
         for _, sk in ipairs(self.skills) do
-            local r
-            if sk.type == "melee" then
-                -- для melee используем arcRadius вместо range (это реальный радиус поражения)
-                r = sk.stats and (sk.stats.arcRadius or sk.stats.range)
-            else
-                r = sk.stats and sk.stats.range
-            end
+            local r = sk.stats and sk.stats.range
             
             if r then
                 if sk:canCast() then
@@ -64,13 +58,7 @@ function Enemy:tryCastAt(hero)
     if not (self.skills and hero) then return false end
 
     for _, sk in ipairs(self.skills) do
-        local r
-        if sk.type == "melee" then
-            -- для melee используем arcRadius вместо range (это реальный радиус поражения)
-            r = sk.stats and (sk.stats.arcRadius or sk.stats.range)
-        else
-            r = sk.stats and sk.stats.range
-        end
+        local r = sk.stats and sk.stats.range
         
         if r and sk:canCast() then
             local canHit = MathUtils.canAttackTarget(self, hero, r)
