@@ -44,23 +44,30 @@ local function inBounds(x, y, W, H, m)
   return x >= m and x <= W - m and y >= m and y <= H - m
 end
 
--- случайная точка, но не ближе minDist к герою
-local function randomPointAwayFromHero(heroX, heroY, minDist, W, H, m)
+-- случайная точка в диапазоне от minDist до maxDist от героя
+local function randomPointAwayFromHero(heroX, heroY, minDist, maxDist, W, H, m)
   local tries, maxTries = 0, 50
   repeat
     local x = MathUtils.randomRange(m, W - m)
     local y = MathUtils.randomRange(m, H - m)
     local dx, dy = x - heroX, y - heroY
-    if (dx*dx + dy*dy) >= (minDist * minDist) then
+    local dist2 = dx*dx + dy*dy
+    local minDist2 = minDist * minDist
+    local maxDist2 = maxDist * maxDist
+    if dist2 >= minDist2 and dist2 <= maxDist2 then
       return x, y
     end
     tries = tries + 1
   until tries >= maxTries
 
-  -- fallback: противоположный угол от героя
-  local cx = (heroX < W * 0.5) and (W - m) or m
-  local cy = (heroY < H * 0.5) and (H - m) or m
-  return cx, cy
+  -- fallback: случайная точка в кольце вокруг героя
+  local angle = MathUtils.randomRange(0, 2 * math.pi)
+  local dist = MathUtils.randomRange(minDist, maxDist)
+  local x = heroX + math.cos(angle) * dist
+  local y = heroY + math.sin(angle) * dist
+  x = clamp(x, m, W - m)
+  y = clamp(y, m, H - m)
+  return x, y
 end
 
 -- равномерное размещение группы вдоль случайного направления
@@ -101,6 +108,7 @@ function Spawner.new(mapWidth, mapHeight)
   self.maxAlive = 20
 
   self.minDistanceFromHero = 300
+  self.maxDistanceFromHero = 1200  -- максимальное расстояние от героя для спавна
 
   -- хронометр
   self.elapsed = 0
@@ -178,7 +186,7 @@ function Spawner:update(dt, world, hero)
 
   -- базовая точка
   local bx, by = randomPointAwayFromHero(
-    hero.x, hero.y, self.minDistanceFromHero,
+    hero.x, hero.y, self.minDistanceFromHero, self.maxDistanceFromHero,
     self.mapWidth, self.mapHeight, self.mapMargin
   )
   if not bx or not by then
