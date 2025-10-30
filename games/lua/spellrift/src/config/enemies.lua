@@ -123,6 +123,75 @@ local enemies = {
                 col = 4,
             }
         }
+    },
+
+    satyr = {
+        id = "satyr",
+        name = "Satyr",
+        type = "ranged",
+        
+        baseHp = 15,
+        hpGrowth = 3,
+        baseArmor = 0,
+        armorGrowth = 0.2,
+        baseMoveSpeed = 50,
+        speedGrowth = 1,
+        
+        skills = {'satyr-boomerang'},
+
+        drop = {
+            id = "xp",
+            name = "XP",
+            description = "XP",
+            type = "xp",
+
+            value = 25,
+            valueGrowth = 3,
+
+            width = 32,
+            height = 32,
+        
+            quads = {
+                idle = {
+                    row = 1,
+                    col = 1
+                }
+            }
+        },
+        
+        -- Spawn parameters
+        spawnWeight = 6,
+        spawnStartTime = 0,
+        spawnEndTime = nil,
+        spawnGroupSize = 1,
+
+        width = 32,
+        height = 32,
+
+        quads = {
+            idle = {
+                row = 1,
+                col = 1,
+            },
+            walk = {
+                startrow = 1,
+                startcol = 7,
+                endrow = 1,
+                endcol = 18,
+            },
+            cast = {
+                startrow = 1,
+                startcol = 19, -- реализовать поддержку start/end, как возможный вариант
+                endrow = 1,
+                endcol = 27,
+            },
+            die = { -- реализовать поддержку
+                startrow = 1,
+                startcol = 28,
+                endrow = 1,
+                endcol = 31,
+            }
+        }
     }
 }
 

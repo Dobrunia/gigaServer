@@ -133,6 +133,50 @@ Skills["green-fireball"] = {
     }
 }
 
+Skills["satyr-boomerang"] = {
+    id = "satyr-boomerang",
+    name = "Satyr boomerang",
+    description = "Shoots a satyr boomerang and roots",
+    type = "projectile",
+    
+    stats = {
+        damage = 5,
+        cooldown = 5.0,
+        range = 700,
+        speed = 220,
+        radius = 20,
+
+        debuffType = "root",  -- реализовать поддержку ( спрайт проигрывать за время длительности с 1 по 7 и назад до 1)
+        debuffDuration = 2.5,
+    },
+
+
+    quads = {
+        idle = {
+            row = 1,
+            col = 6
+        },
+        fly = {
+            startrow = 1,
+            startcol = 1,
+            endrow = 1,
+            endcol = 11,
+        }
+    },
+
+    upgrades = {
+        {
+            debuffDuration = 3.0,  -- реализовать поддержку если еще не
+        },
+        {
+            debuffDuration = 3.5,
+        },
+        {
+            debuffDuration = 4.0,
+        }
+    }
+}
+
 -- === MELEE SKILLS ===
 Skills["zombie-cleave"] = {
     id = "zombie-cleave",
