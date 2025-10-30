@@ -328,4 +328,13 @@ function Orbital.drawAll()
     end
 end
 
+function Orbital.clearAll()
+    for i = #_alive, 1, -1 do
+        _alive[i] = nil
+    end
+    for i = #_pool, 1, -1 do
+        _pool[i] = nil
+    end
+end
+
 return Orbital

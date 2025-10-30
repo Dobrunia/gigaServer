@@ -54,6 +54,20 @@ function Game:enter(selectedHeroId, selectedSkillId)
   }
 end
 
+function Game:exit()
+  -- Полная очистка мира и ссылок при выходе из состояния
+  if self.world and self.world.dispose then
+    self.world:dispose()
+  end
+  self.world = nil
+  self.map = nil
+  self.camera = nil
+  self.minimap = nil
+  self.uiPauseMenu = nil
+  self.hud = nil
+  self.debugDisplay = nil
+end
+
 function Game:update(dt)
   -- обновляем ввод на реальном dt (чтобы клики/нажатия были отзывчивы)
   self.input:update(dt)
@@ -75,6 +89,21 @@ function Game:update(dt)
     local clicked = self.uiPauseMenu:update(dt, self.input)
     if clicked == "resume" then
       self.isPaused = false
+    elseif clicked == "restart" then
+      -- полный рестарт текущей игры с тем же героем/скиллом
+      return {
+        state = "game",
+        selectedHeroId = self.selectedHeroId,
+        selectedSkillId = self.selectedSkillId
+      }
+    elseif clicked == "main_menu" then
+      -- выход в главное меню
+      return {
+        state = "main_menu",
+        gameStats = nil,
+        selectedHeroId = nil,
+        selectedSkillId = nil
+      }
     end
     return -- не обновляем игру, но input работает
   end

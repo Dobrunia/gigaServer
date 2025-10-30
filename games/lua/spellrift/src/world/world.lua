@@ -39,6 +39,27 @@ function World.new(mapWidth, mapHeight)
     return self
 end
 
+function World:dispose()
+    -- Очищаем сущности мира
+    self.heroes = {}
+    self.enemies = {}
+    self.summons = {}
+    self.drops = {}
+    self._legacyProjectiles = {}
+
+    -- Сбрасываем глобальные пулы эффектов/скиллов
+    if Projectile and Projectile.clearAll then Projectile.clearAll() end
+    if Melee and Melee.clearAll then Melee.clearAll() end
+    if Orbital and Orbital.clearAll then Orbital.clearAll() end
+    if Aura and Aura.clearAll then Aura.clearAll() end
+    if Summon and Summon.clearAll then Summon.clearAll() end
+
+    -- Менеджер урона
+    if self.damageManager and self.damageManager.clear then
+        self.damageManager:clear()
+    end
+end
+
 function World:setup(selectedHeroId, selectedSkillId, mapWidth, mapHeight)
     if mapWidth  then self.width  = mapWidth  end
     if mapHeight then self.height = mapHeight end

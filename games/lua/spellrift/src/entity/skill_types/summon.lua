@@ -488,4 +488,13 @@ function Summon.drawAll()
     end
 end
 
+function Summon.clearAll()
+    for i = #_alive, 1, -1 do
+        _alive[i] = nil
+    end
+    for i = #_pool, 1, -1 do
+        _pool[i] = nil
+    end
+end
+
 return Summon
