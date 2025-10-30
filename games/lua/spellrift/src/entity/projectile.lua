@@ -148,8 +148,28 @@ function Projectile:update(dt, world)
         return
     end
 
-    -- цели: враги если кастер герой, и герои если кастер враг
-    local targets = (self.caster and self.caster.enemyId) and (world and world.heroes) or (world and world.enemies)
+    -- цели: враги если кастер герой, и герои+саммоны если кастер враг
+    local targets
+    if self.caster and self.caster.enemyId then
+        -- враг атакует - цели: герои + саммоны
+        targets = {}
+        if world and world.heroes then
+            for _, hero in ipairs(world.heroes) do
+                table.insert(targets, hero)
+            end
+        end
+        -- добавляем саммонов как цели для атак врагов
+        if world and world.summons then
+            for _, summon in ipairs(world.summons) do
+                if summon.summon and not summon.summon.isDead then
+                    table.insert(targets, summon.summon)
+                end
+            end
+        end
+    else
+        -- герой атакует - цели: враги
+        targets = (world and world.enemies)
+    end
     if targets then
         local cx, cy = self.x, self.y  -- self.x, self.y уже центр спрайта
         local r2 = self.radius * self.radius

@@ -119,7 +119,28 @@ function Melee:_applyHit()
     local dy = self.fixedDirY    or self.dirY
     dx, dy = MathUtils.rotateVector(dx, dy, self.arcOffset)
 
-    local targets = (self.caster and self.caster.enemyId) and (self.world and self.world.heroes) or (self.world and self.world.enemies)
+    -- цели: враги если кастер герой, и герои+саммоны если кастер враг
+    local targets
+    if self.caster and self.caster.enemyId then
+        -- враг атакует - цели: герои + саммоны
+        targets = {}
+        if self.world and self.world.heroes then
+            for _, hero in ipairs(self.world.heroes) do
+                table.insert(targets, hero)
+            end
+        end
+        -- добавляем саммонов как цели для атак врагов
+        if self.world and self.world.summons then
+            for _, summon in ipairs(self.world.summons) do
+                if summon.summon and not summon.summon.isDead then
+                    table.insert(targets, summon.summon)
+                end
+            end
+        end
+    else
+        -- герой атакует - цели: враги
+        targets = (self.world and self.world.enemies)
+    end
     if not targets then return end
 
     local hits = 0

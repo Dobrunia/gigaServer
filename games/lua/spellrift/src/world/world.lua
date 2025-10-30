@@ -18,6 +18,7 @@ function World.new(mapWidth, mapHeight)
 
     self.heroes = {}
     self.enemies = {}
+    self.summons = {}
     self.drops = {}
     
     -- Статистика

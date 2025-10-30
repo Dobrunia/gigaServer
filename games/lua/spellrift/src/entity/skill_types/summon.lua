@@ -123,6 +123,31 @@ local function _build(world, caster, outerSkill)
     summon._lockMoveTimer, summon._lockFaceTimer = 0, 0
     summon._castAnimTimer = 0  -- таймер для анимации каста
     summon._animChangeTimer = 0  -- таймер для задержки смены анимаций
+    
+    -- добавляем метод получения урона
+    function summon:takeDamage(damage)
+        if self.isDead then return end
+        
+        -- применяем броню
+        local actualDamage = damage
+        if self.armor and self.armor > 0 then
+            local reduction = 1 - math.min(0.75, self.armor * 0.06)
+            actualDamage = damage * reduction
+        end
+        
+        self.hp = self.hp - actualDamage
+        
+        -- показываем цифру урона если включена отладка
+        if self.world and self.world.damageManager then
+            local color = {1, 0, 0, 1} -- красный для урона
+            self.world.damageManager:addDamageNumber(self.x, self.y, actualDamage, color)
+        end
+        
+        if self.hp <= 0 then
+            self.hp = 0
+            self.isDead = true
+        end
+    end
 
     -- анимации
     local q = skillConfig.quads or {}
@@ -182,6 +207,12 @@ function Summon.spawn(world, caster, skill)
     end
     self._dead = false
     table.insert(_alive, self)
+    
+    -- регистрируем саммона в мире
+    if world and world.summons then
+        table.insert(world.summons, self)
+    end
+    
     return self
 end
 
@@ -423,6 +454,17 @@ function Summon:isDead() return self._dead end
 function Summon:dispose()
     self._dead = true
     if self.summon then self.summon.isDead = true end
+    
+    -- удаляем из мира
+    if self.world and self.world.summons then
+        for i = #self.world.summons, 1, -1 do
+            if self.world.summons[i] == self then
+                table.remove(self.world.summons, i)
+                break
+            end
+        end
+    end
+    
     self.world, self.caster, self.skill, self.summon = nil, nil, nil, nil
     table.insert(_pool, self)
 end
