@@ -13,17 +13,42 @@ local BUTTON_BORDER_RADIUS = 8
 
 function UIMainMenu.new()
     local self = setmetatable({}, UIMainMenu)
-    
-    -- Вычислим позицию кнопки один раз
-    self.buttonX = (love.graphics.getWidth() - MENU_BUTTON_WIDTH) / 2
-    self.buttonY = (love.graphics.getHeight() - MENU_BUTTON_HEIGHT) / 2
-    
+    -- кнопки: старт и альманах
+    self.buttons = {
+        { id = "start",   label = "START GAME", x = 0, y = 0, w = MENU_BUTTON_WIDTH, h = MENU_BUTTON_HEIGHT },
+        { id = "almanac", label = "ALMANAC",    x = 0, y = 0, w = MENU_BUTTON_WIDTH, h = MENU_BUTTON_HEIGHT },
+    }
+
+    -- Вычислим позиции кнопок один раз
+    local w, h = love.graphics.getWidth(), love.graphics.getHeight()
+    local totalH = MENU_BUTTON_HEIGHT * #self.buttons + 12 * (#self.buttons - 1)
+    local startY = (h - totalH) / 2
+    local x = (w - MENU_BUTTON_WIDTH) / 2
+    for i = 1, #self.buttons do
+        local b = self.buttons[i]
+        b.x = x
+        b.y = startY + (i - 1) * (MENU_BUTTON_HEIGHT + 12)
+    end
+
     return self
 end
 
 function UIMainMenu:isButtonHovered(x, y)
-    return x >= self.buttonX and x <= self.buttonX + MENU_BUTTON_WIDTH
-        and y >= self.buttonY and y <= self.buttonY + MENU_BUTTON_HEIGHT
+    -- совместимость: ховер по первой кнопке (start)
+    local b = self.buttons and self.buttons[1]
+    if not b then return false end
+    return x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h
+end
+
+function UIMainMenu:hitTest(x, y)
+    if not self.buttons then return nil end
+    for i = 1, #self.buttons do
+        local b = self.buttons[i]
+        if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
+            return b.id
+        end
+    end
+    return nil
 end
 
 function UIMainMenu:draw()
@@ -34,24 +59,27 @@ function UIMainMenu:draw()
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.printf("DOBLIKE ROGUELIKE", 0, UIConstants.START_Y * 6, love.graphics.getWidth(), "center")
 
-    -- Проверка наведения
+    -- Кнопки
     local mx, my = love.mouse.getPosition()
-    local isHovered = self:isButtonHovered(mx, my)
+    for i = 1, #self.buttons do
+        local b = self.buttons[i]
+        local hovered = (mx >= b.x and mx <= b.x + b.w and my >= b.y and my <= b.y + b.h)
 
-    -- Кнопка
-    love.graphics.setColor(isHovered and COLOR_BUTTON_HOVER or COLOR_BUTTON_DEFAULT)
-    love.graphics.rectangle("fill", self.buttonX, self.buttonY, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, BUTTON_BORDER_RADIUS, BUTTON_BORDER_RADIUS)
+        -- фон
+        love.graphics.setColor(hovered and COLOR_BUTTON_HOVER or COLOR_BUTTON_DEFAULT)
+        love.graphics.rectangle("fill", b.x, b.y, b.w, b.h, BUTTON_BORDER_RADIUS, BUTTON_BORDER_RADIUS)
 
-    -- Обводка
-    love.graphics.setColor(BUTTON_BORDER)
-    love.graphics.setLineWidth(1)
-    love.graphics.rectangle("line", self.buttonX, self.buttonY, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, BUTTON_BORDER_RADIUS, BUTTON_BORDER_RADIUS)
-    love.graphics.setLineWidth(1)
+        -- рамка
+        love.graphics.setColor(BUTTON_BORDER)
+        love.graphics.setLineWidth(1)
+        love.graphics.rectangle("line", b.x, b.y, b.w, b.h, BUTTON_BORDER_RADIUS, BUTTON_BORDER_RADIUS)
+        love.graphics.setLineWidth(1)
 
-    -- Текст
-    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.printf("START GAME", self.buttonX, self.buttonY + MENU_BUTTON_HEIGHT / 2 - UIConstants.FONT_LARGE / 2, MENU_BUTTON_WIDTH, "center")
+        -- текст
+        love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.printf(b.label, b.x, b.y + b.h / 2 - UIConstants.FONT_LARGE / 2, b.w, "center")
+    end
 end
 
 return UIMainMenu

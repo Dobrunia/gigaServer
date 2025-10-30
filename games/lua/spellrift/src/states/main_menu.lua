@@ -17,7 +17,7 @@ function MainMenu:update(dt)
     -- Обновляем ввод
     self.input:update(dt)
 
-    -- Обработка ЛКМ - клик по кнопке "START GAME"
+    -- Обработка ЛКМ - клики по кнопкам меню
     if self.input:isLeftMousePressed() then
         local mouseX, mouseY = self.input:getMousePosition()
         self:handleMouseClick(mouseX, mouseY)
@@ -35,14 +35,15 @@ function MainMenu:draw()
 end
 
 function MainMenu:handleMouseClick(x, y)
-    -- Проверяем клик по кнопке "START GAME"
-    if self.ui:isButtonHovered(x, y) then
-        -- Меняем состояние через локальный менеджер
+    local hit = (self.ui.hitTest and self.ui:hitTest(x, y)) or (self.ui:isButtonHovered(x, y) and "start")
+    if hit == "start" then
         if self.manager then
             self.manager:switch("hero_select")
-        else
-            print("[WARN] No state manager linked to MainMenu")
         end
+    elseif hit == "almanac" then
+        -- Заглушка: позже добавить экран альманаха
+        -- Пока просто печатаем в консоль, оставляем в main menu
+        print("[INFO] Almanac is not implemented yet")
     end
 end
 
