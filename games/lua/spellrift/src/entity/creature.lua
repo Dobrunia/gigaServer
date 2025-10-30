@@ -2,6 +2,7 @@ local Object = require("src.entity.object")
 local Constants = require("src.constants")
 local Debuff = require("src.entity.debuff")
 local Skill = require("src.entity.skill")
+local GroundAOE = require("src.entity.skill_types.ground_aoe")
 
 local Creature = {}
 Creature.__index = Creature
@@ -250,6 +251,11 @@ function Creature:update(dt)
     for _, skill in ipairs(self.skills) do
         if (skill.type == "orbital" or skill.type == "aura" or skill.type == "summon") and skill:canCast() then
             skill:castAt(self.world, nil, nil)
+        elseif skill.type == "ground_aoe" and skill:canCast() then
+            -- ground_aoe требует цели в кольце [spawnRadiusMin, spawnRadiusMax]
+            if GroundAOE.hasEligibleTargets(self.world, self, skill) then
+                skill:castAt(self.world, nil, nil)
+            end
         end
     end
 

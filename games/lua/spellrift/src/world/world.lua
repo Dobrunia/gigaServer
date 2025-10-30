@@ -7,6 +7,7 @@ local Melee = require("src.entity.skill_types.melee")
 local Orbital = require("src.entity.skill_types.orbital")
 local Aura = require("src.entity.skill_types.aura")
 local Summon = require("src.entity.skill_types.summon")
+local GroundAOE = require("src.entity.skill_types.ground_aoe")
 
 local World = {}
 World.__index = World
@@ -53,6 +54,7 @@ function World:dispose()
     if Orbital and Orbital.clearAll then Orbital.clearAll() end
     if Aura and Aura.clearAll then Aura.clearAll() end
     if Summon and Summon.clearAll then Summon.clearAll() end
+    if GroundAOE and GroundAOE.clearAll then GroundAOE.clearAll() end
 
     -- Менеджер урона
     if self.damageManager and self.damageManager.clear then
@@ -121,6 +123,7 @@ function World:update(dt)
     Orbital.updateAll(dt, self)
     Aura.updateAll(dt, self)
     Summon.updateAll(dt, self)
+    GroundAOE.updateAll(dt, self)
 
     -- Совместимость: если кто-то вручную добавил projectile-объекты
     -- требующие update — поддержим
@@ -179,6 +182,7 @@ function World:draw()
     Orbital.drawAll()
     Aura.drawAll()
     Summon.drawAll()
+    GroundAOE.drawAll()
 
     -- 4) Дропы
     for i = 1, #self.drops do

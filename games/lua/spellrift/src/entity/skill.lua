@@ -6,6 +6,7 @@ local Melee = require("src.entity.skill_types.melee")
 local Orbital = require("src.entity.skill_types.orbital")
 local Aura = require("src.entity.skill_types.aura")
 local Summon = require("src.entity.skill_types.summon")
+local GroundAOE = require("src.entity.skill_types.ground_aoe")
 
 local Skill = {}
 Skill.__index = Skill
@@ -147,6 +148,16 @@ function Skill:castAt(world, tx, ty)
     elseif self.type == "summon" then
         if not (world and self.caster) then return false end
         Summon.spawn(world, self.caster, self)
+        self:startCooldown()
+        return true
+
+    elseif self.type == "ground_aoe" then
+        if not (world and self.caster) then return false end
+        -- требуем наличие целей в диапазоне [spawnRadiusMin, spawnRadiusMax]
+        if not GroundAOE.hasEligibleTargets(world, self.caster, self) then
+            return false
+        end
+        GroundAOE.spawn(world, self.caster, self)
         self:startCooldown()
         return true
     end
