@@ -408,4 +408,54 @@ Skills["bear"] = {
         }
     },
 }
+
+-- === GROUND AOE SKILLS ===
+Skills["geyser"] = {
+    id = "geyser",
+    name = "Geyser",
+    description = "Spawns red warning circles that explode after a delay",
+    type = "ground_aoe",
+    isStartingSkill = true,
+
+    stats = {
+        -- Боевые
+        damage = 60,              -- разовый урон при взрыве
+        cooldown = 8.0,           -- КД умения
+
+        -- Геометрия зоны
+        radius = 80,              -- радиус круга (визуал + хитбокс)
+        
+        -- Телеграф/задержка
+        armTime = 1.2,            -- время «зарядки» (мигает красным), после чего взрыв
+        zoneLifetime = 0.3,       -- сколько зона живёт после взрыва (для эффектов/затухания)
+        warningBlinkSpeed = 8.0,  -- скорость мигания (Гц)
+        color = {1, 0, 0},        -- базовый цвет телеграфа (RGB)
+        warningAlphaMin = 0.25,   -- минимальная альфа в мигании
+        warningAlphaMax = 0.85,   -- максимальная альфа в мигании
+
+        -- Спавн зон
+        spawnMode = "on_target",  -- "on_target" (под ногами цели) | "around_caster" (в радиусе от кастера в случайном месте)
+        spawnCount = 3,           -- сколько максимум зон создать за активацию применять к РАЗНЫМ ЦЕЛЯМ (если цель 1 то зона 1)
+        spawnInterval = 0.2,      -- задержка между спавнами зон (серия)
+        spawnRadiusMin = 120,     -- мин. дистанция спавна от кастера (для around_caster) отображать при Constants.DEBUG_DRAW_HITBOXES = true
+        spawnRadiusMax = 280,     -- макс. дистанция спавна от кастера (для around_caster) отображать при Constants.DEBUG_DRAW_HITBOXES = true
+
+        -- Наведение/цель
+        followTargetDuringArm = false,-- если true, зона «прилипает» к цели во время armTime (обычно false)ъ
+        followTargetSpeed = 100,      -- скорость следования за целью (если followTargetDuringArm = true)
+
+        -- Опциональные эффекты
+        debuffType = nil,         -- тип дебаффа после взрыва (если нужен)
+        debuffDuration = 0.0,
+        debuffDamage = 0,
+        debuffTickRate = 0.0,
+    },
+
+    -- Опционально: кадры для визуала зоны (если используешь атлас для анимированной заливки)
+    quads = {
+        idle = { row = 1, col = 1 },
+        fly = { startrow = 1, startcol = 2, endrow = 1, endcol = 2 }, -- можно оставить один кадр
+        hit = { row = 1, col = 3 }, -- вспышка в момент взрыва (если есть)
+    }
+}
 return Skills
