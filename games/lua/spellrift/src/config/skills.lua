@@ -141,21 +141,63 @@ Skills["zombie-cleave"] = {
     type = "melee",
 
     stats = {
+        -- === БОЕВЫЕ ПАРАМЕТРЫ ===
+        damage = 35,           -- урон при попадании
+        cooldown = 2.0,        -- время перезарядки скилла (секунды)
+        range = 80,            -- триггер-дистанция для AI (если не передан tx,ty)
+        hitMaxTargets = 0,     -- максимальное количество целей (0 = без лимита)
+        knockback = 0,         -- сила отталкивания при попадании
+
+        -- === ГЕОМЕТРИЯ СЕКТОРА ===
+        arcAngleDeg = 30,      -- угол сектора в градусах (360 = полный круг)
+        arcRadius = 80,        -- внешний радиус сектора
+        arcInnerRadius = 0,    -- внутренний радиус сектора (0 = от центра)
+        arcOffsetDeg = 0,      -- поворот сектора относительно направления атаки
+
+        -- === ТАЙМИНГИ ===
+        windup = 0.8,          -- время замаха (секунды) - анимация подготовки
+        active = 0.05,         -- окно урона (секунды) - когда наносится урон
+
+        -- === ПОВЕДЕНИЕ НАВЕДЕНИЯ ===
+        followAim = true,            -- следовать за целью/курсором (true) или использовать facing (false)
+        directionMode = "free",      -- режим направления: "free" | "horizontal" | "vertical"
+        trackDuringWindup = true,    -- сектор "прилипает" к цели во время замаха
+        lockMovement = false,        -- блокировать движение кастера во время замаха
+        centerOffset = 10,           -- смещение центра атаки вперед по направлению
+
+        -- === ВИЗУАЛ ТЕЛЕГРАФА ===
+        telegraphColor = {1,1,1},    -- цвет предварительного показа сектора (RGB)
+        telegraphAlpha = 0.15,       -- прозрачность предварительного показа
+    },
+
+    upgrades = {
+        { damage = 80, cooldown = 0.85, arcAngleDeg = 140 },
+        { damage = 100, cooldown = 0.7, arcAngleDeg = 160 },
+    }
+}
+
+Skills["bear-cleave"] = {
+    id = "bear-cleave",
+    name = "Bear Cleave",
+    description = "Cleaves the ground in front of the bear, dealing damage to enemies in a cone",
+    type = "melee",
+
+    stats = {
         -- боевые
-        damage = 35,
-        cooldown = 2.0,
+        damage = 40,
+        cooldown = 4.0,
         range = 80,            -- триггер-дистанция для AI (если не передан tx,ty)
         hitMaxTargets = 0,     -- 0 = без лимита
         knockback = 0,
 
         -- геометрия сектора
-        arcAngleDeg = 30,     -- 360 = круг
+        arcAngleDeg = 120,     -- 360 = круг
         arcRadius = 80,
         arcInnerRadius = 0,
         arcOffsetDeg = 0,
 
         -- тайминги
-        windup = 0.8,         -- замах
+        windup = 0.5,         -- замах
         active = 0.05,         -- окно урона
 
         -- поведение наведения
@@ -171,8 +213,8 @@ Skills["zombie-cleave"] = {
     },
 
     upgrades = {
-        { damage = 80, cooldown = 0.85, arcAngleDeg = 140 },
-        { damage = 100, cooldown = 0.7, arcAngleDeg = 160 },
+        { damage = 60, cooldown = 1.5},
+        { damage = 80, cooldown = 1,},
     }
 }
 
@@ -337,15 +379,16 @@ Skills["bear"] = {
 
     stats = {
         health = 100,
-        armor
-        MoveSpeed
-        cooldown = 10.0,
-        
+        armor = 5,
+        moveSpeed = 80,
+        cooldown = 30.0,
+        duration = 30.0,  -- длительность существования
+        followDistance = 500,  -- дистанция следования за героем
     },
 
     width = 64,
     height = 64,
-    skills = {'zombie-cleave'},
+    skills = {'bear-cleave'},
 
     quads = {
         idle = {

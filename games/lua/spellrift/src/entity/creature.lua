@@ -246,10 +246,10 @@ function Creature:update(dt)
         skill:update(dt)
     end
 
-    -- Автокаст орбитальных скиллов и аур - они не требуют целей
+    -- Автокаст орбитальных скиллов, аур и суммонов - они не требуют целей
     for _, skill in ipairs(self.skills) do
-        if (skill.type == "orbital" or skill.type == "aura") and skill:canCast() then
-            skill:castAt(self.world, nil, nil) -- орбитальные и ауры не нуждаются в координатах
+        if (skill.type == "orbital" or skill.type == "aura" or skill.type == "summon") and skill:canCast() then
+            skill:castAt(self.world, nil, nil)
         end
     end
 
