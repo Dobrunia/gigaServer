@@ -122,6 +122,7 @@ local function _build(world, caster, outerSkill)
     summon._vx, summon._vy = 0, 0
     summon._lockMoveTimer, summon._lockFaceTimer = 0, 0
     summon._castAnimTimer = 0  -- таймер для анимации каста
+    summon._animChangeTimer = 0  -- таймер для задержки смены анимаций
 
     -- анимации
     local q = skillConfig.quads or {}
@@ -276,6 +277,7 @@ function Summon:_combatAI(dt)
                     if s.animationsList["cast"] then 
                         s:playAnimation("cast")
                         s._castAnimTimer = 0.5  -- длительность анимации каста
+                        s._animChangeTimer = 0.2  -- задержка перед следующей сменой анимации
                     end
                     -- лочим фейс на короткое окно (если задан windup)
                     if sk.type == "melee" then
@@ -317,6 +319,11 @@ function Summon:update(dt)
     if s._castAnimTimer and s._castAnimTimer > 0 then
         s._castAnimTimer = math.max(0, s._castAnimTimer - dt)
     end
+    
+    -- тик задержки смены анимаций
+    if s._animChangeTimer and s._animChangeTimer > 0 then
+        s._animChangeTimer = math.max(0, s._animChangeTimer - dt)
+    end
 
     -- 1) СНАЧАЛА ИИ (движение/касты)
     self:_combatAI(dt)
@@ -345,16 +352,23 @@ function Summon:_updateAnimations()
         return
     end
     
+    -- если не прошло достаточно времени с последней смены анимации, не переключаем
+    if (s._animChangeTimer or 0) > 0 then
+        return
+    end
+    
     -- проверяем движение - используем _lastMoveX и _lastMoveY как в Creature
     local mv = math.abs(s._lastMoveX or 0) + math.abs(s._lastMoveY or 0)
     
     if mv > 0.01 and s.animationsList["walk"] then
         if s.currentAnimation ~= "walk" then
             s:playAnimation("walk")
+            s._animChangeTimer = 0.2  -- задержка 200мс перед следующей сменой
         end
     elseif s.animationsList["idle"] then
         if s.currentAnimation ~= "idle" then
             s:playAnimation("idle")
+            s._animChangeTimer = 0.2  -- задержка 200мс перед следующей сменой
         end
     end
 end
