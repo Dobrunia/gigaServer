@@ -47,6 +47,7 @@ local function _build(world, caster, skill)
     self.projectileRadius = st.radius or 12
     self.projectileSpeed = st.speed or 0  -- 0 = статичные, >0 = движутся по орбите
     self.selfRotationSpeed = st.selfRotationSpeed or 0  -- скорость вращения вокруг своей оси
+    self.hitCooldown = st.hitCooldown or 0.4
 
     -- поведение
     self.followCaster = (st.followCaster ~= false)  -- следовать за кастером
@@ -135,7 +136,9 @@ function Orbital:_createOrbitalProjectile(x, y, initialAngle)
         -- Спрайт
         spriteSheet = spriteSheet,
         flyQuad = flyQuad,
-        scale = 1.0
+        scale = 1.0,
+        -- Per-target hit cooldown
+        _recentHits = {}  -- таблица последних попаданий по целям
     }
     
     return projectile
@@ -186,14 +189,17 @@ function Orbital:_updateProjectiles(dt)
 end
 
 function Orbital:_checkHits()
-    local targets = (self.caster and self.caster.enemyId) and (self.world and self.world.heroes) or (self.world and self.world.enemies)
+    local targets = (self.caster and self.caster.enemyId)
+        and (self.world and self.world.heroes)
+        or  (self.world and self.world.enemies)
     if not targets then return end
 
-    for i, projectile in ipairs(self.projectiles) do
+    local now = love.timer.getTime()  -- текущее время (в секундах)
+
+    for _, projectile in ipairs(self.projectiles) do
         if not projectile.isDead then
-            for j, target in ipairs(targets) do
+            for _, target in ipairs(targets) do
                 if target and not target.isDead then
-                    -- Используем ту же логику, что и в projectile.lua - проверяем ближайшую точку прямоугольника
                     local targetWidth = target.effectiveWidth or 0
                     local targetHeight = target.effectiveHeight or 0
                     local closestX = math.max(target.x, math.min(projectile.x, target.x + targetWidth))
@@ -201,29 +207,34 @@ function Orbital:_checkHits()
                     local ddx, ddy = projectile.x - closestX, projectile.y - closestY
                     local distanceSquared = ddx*ddx + ddy*ddy
                     local radiusSquared = projectile.radius * projectile.radius
-                    
+
                     if distanceSquared <= radiusSquared then
-                        -- Попадание
-                        if target.takeDamage then 
-                            target:takeDamage(projectile.damage)
-                            -- Отслеживаем урон для статистики
-                            if self.caster and self.caster.dealDamage then
-                                self.caster:dealDamage(projectile.damage)
+                        -- ⏳ проверяем, можно ли снова бить эту цель
+                        local lastHit = projectile._recentHits[target]
+                        if not lastHit or (now - lastHit) >= self.hitCooldown then
+                            projectile._recentHits[target] = now  -- обновляем время
+
+                            -- Наносим урон один раз в HIT_COOLDOWN
+                            if target.takeDamage then 
+                                target:takeDamage(projectile.damage)
+                                if self.caster and self.caster.dealDamage then
+                                    self.caster:dealDamage(projectile.damage)
+                                end
                             end
-                        end
-                        
-                        -- Применяем дебаффы если есть
-                        local st = self.skill.stats
-                        if st.debuffType and target.addDebuff then
-                            target:addDebuff(st.debuffType, st.debuffDuration, {
-                                damage = st.debuffDamage,
-                                tickRate = st.debuffTickRate
-                            }, self.caster)
-                        end
-                        
-                        -- Уничтожаем проджектайл при попадании (опционально)
-                        if st.destroyOnHit ~= false then
-                            projectile.isDead = true
+
+                            -- Дебаффы
+                            local st = self.skill.stats
+                            if st.debuffType and target.addDebuff then
+                                target:addDebuff(st.debuffType, st.debuffDuration, {
+                                    damage = st.debuffDamage,
+                                    tickRate = st.debuffTickRate
+                                }, self.caster)
+                            end
+
+                            -- Если destroyOnHit == true, убиваем снаряд как раньше
+                            if st.destroyOnHit ~= false then
+                                projectile.isDead = true
+                            end
                         end
                     end
                 end
