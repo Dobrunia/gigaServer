@@ -19,6 +19,10 @@ function UIMainMenu.new()
         { id = "almanac", label = "ALMANAC",    x = 0, y = 0, w = MENU_BUTTON_WIDTH, h = MENU_BUTTON_HEIGHT },
     }
 
+    -- шрифты
+    self.fontTitle = love.graphics.newFont(UIConstants.FONT_LARGE)
+    self.fontBtn = love.graphics.newFont(UIConstants.FONT_MEDIUM)
+
     -- Вычислим позиции кнопок один раз
     local w, h = love.graphics.getWidth(), love.graphics.getHeight()
     local totalH = MENU_BUTTON_HEIGHT * #self.buttons + 12 * (#self.buttons - 1)
@@ -53,11 +57,25 @@ end
 
 function UIMainMenu:draw()
     love.graphics.setColor(COLOR_BUTTON_DEFAULT)
-    love.graphics.clear()
 
-    love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
+    love.graphics.setFont(self.fontTitle)
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.printf("DOBLIKE ROGUELIKE", 0, UIConstants.START_Y * 6, love.graphics.getWidth(), "center")
+
+    -- Подложка под блок кнопок (затемнение как в паузе)
+    local padding = 16
+    local top = self.buttons[1].y - padding
+    local bottom = self.buttons[#self.buttons].y + self.buttons[#self.buttons].h + padding
+    local left = self.buttons[1].x - padding
+    local right = self.buttons[1].x + self.buttons[1].w + padding
+    local panelW = right - left
+    local panelH = bottom - top
+    love.graphics.setColor(0, 0, 0, 0.35)
+    love.graphics.rectangle("fill", left, top, panelW, panelH, BUTTON_BORDER_RADIUS, BUTTON_BORDER_RADIUS)
+    love.graphics.setColor(1, 1, 1, 0.5)
+    love.graphics.setLineWidth(2)
+    love.graphics.rectangle("line", left, top, panelW, panelH, BUTTON_BORDER_RADIUS, BUTTON_BORDER_RADIUS)
+    love.graphics.setColor(1, 1, 1, 1)
 
     -- Кнопки
     local mx, my = love.mouse.getPosition()
@@ -66,19 +84,23 @@ function UIMainMenu:draw()
         local hovered = (mx >= b.x and mx <= b.x + b.w and my >= b.y and my <= b.y + b.h)
 
         -- фон
-        love.graphics.setColor(hovered and COLOR_BUTTON_HOVER or COLOR_BUTTON_DEFAULT)
+        if hovered then
+            love.graphics.setColor(1, 1, 1, 0.10)
+        else
+            love.graphics.setColor(1, 1, 1, 0.07)
+        end
         love.graphics.rectangle("fill", b.x, b.y, b.w, b.h, BUTTON_BORDER_RADIUS, BUTTON_BORDER_RADIUS)
 
         -- рамка
-        love.graphics.setColor(BUTTON_BORDER)
-        love.graphics.setLineWidth(1)
+        love.graphics.setColor(hovered and {1,1,1,0.8} or {1,1,1,0.5})
+        love.graphics.setLineWidth(2)
         love.graphics.rectangle("line", b.x, b.y, b.w, b.h, BUTTON_BORDER_RADIUS, BUTTON_BORDER_RADIUS)
         love.graphics.setLineWidth(1)
 
         -- текст
-        love.graphics.setFont(love.graphics.newFont(UIConstants.FONT_LARGE))
+        love.graphics.setFont(self.fontBtn)
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.printf(b.label, b.x, b.y + b.h / 2 - UIConstants.FONT_LARGE / 2, b.w, "center")
+        love.graphics.printf(b.label, b.x, b.y + (b.h - self.fontBtn:getHeight()) * 0.5, b.w, "center")
     end
 end
 
