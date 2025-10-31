@@ -177,6 +177,36 @@ Skills["satyr-boomerang"] = {
     }
 }
 
+-- === MELEE PROJECTILE SKILLS ===
+Skills["slash6"] = {
+    id = "slash6",
+    name = "Slash6",
+    description = "Slashes the ground in front",
+    type = "projectile",
+
+    stats = {
+        damage = 30,
+        cooldown = 2.0,
+        range = 100,
+        speed = 100,
+        radius = 30,
+    },
+
+
+    quads = {
+        idle = {
+            row = 1,
+            col = 5
+        },
+        fly = {
+            startrow = 1,
+            startcol = 1,
+            endrow = 1,
+            endcol = 10,
+        }
+    },
+}
+
 -- === MELEE SKILLS ===
 Skills["zombie-cleave"] = {
     id = "zombie-cleave",

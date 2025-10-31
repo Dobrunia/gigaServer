@@ -10,8 +10,8 @@ local enemies = {
         armorGrowth = 0.5,
         baseMoveSpeed = 60,
         speedGrowth = 5,
-        baseDamage = 10,
-        damageGrowth = 3,
+        -- baseDamage = 10,
+        -- damageGrowth = 3,
         
         skills = {'zombie-cleave'},
 
@@ -62,6 +62,72 @@ local enemies = {
         }
     },
 
+    white_werewolf = {
+        id = "white_werewolf",
+        name = "White Werewolf",
+        baseHp = 40,
+        hpGrowth = 5,
+        baseArmor = 0,
+        armorGrowth = 0,
+        baseMoveSpeed = 100,
+        speedGrowth = 10,
+        
+        skills = {'slash6'},
+
+        drop = {
+            id = "xp",
+            name = "XP",
+            description = "XP",
+            type = "xp",
+
+            value = 10,
+            valueGrowth = 3,
+
+            width = 16,
+            height = 16,
+        
+            quads = {
+                idle = {
+                    row = 1,
+                    col = 1
+                }
+            }
+        },
+
+        width = 32,
+        height = 32,
+
+        -- Spawn parameters
+        spawnWeight = 1,            -- Common mob (1=very common, 10=very rare)
+        spawnStartTime = 0,         -- Can spawn from game start
+        spawnEndTime = nil,         -- Spawns forever (no end time)
+        spawnGroupSize = 1,         -- Single mob spawns
+
+        quads = {
+            idle = {
+                row = 1,
+                col = 1,
+            },
+            walk = {
+                startrow = 1,
+                startcol = 9,
+                endrow = 1,
+                endcol = 17,
+            },
+            cast = {
+                startrow = 1,
+                startcol = 18,
+                endrow = 1,
+                endcol = 21,
+            },
+            die = {
+                startrow = 1,
+                startcol = 22,
+                endrow = 1,
+                endcol = 23,
+            }
+        }
+    }
 
     -- === RANGED MOB ===
     fireclaw = {
