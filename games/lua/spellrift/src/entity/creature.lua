@@ -65,8 +65,24 @@ function Creature.new(spriteSheet, x, y, config, level)
 
     if config.quads and config.quads.cast then
         local cq = config.quads.cast
-        -- один кадр: start=end=col; скорость любая (мы удерживаем кадр таймером)
-        self:setAnimationList("cast", cq.row, cq.col, cq.col, 999999)
+        -- поддержка как старого формата (row/col), так и нового (startrow/startcol/endrow/endcol)
+        if cq.startrow and cq.startcol and cq.endcol then
+            local speed = cq.animationSpeed or 0.5
+            self:setAnimationList("cast", cq.startrow, cq.startcol, cq.endcol, speed)
+        else
+            -- один кадр: start=end=col; скорость любая (мы удерживаем кадр таймером)
+            self:setAnimationList("cast", cq.row, cq.col, cq.col, 999999)
+        end
+    end
+
+    -- die анимация (для врагов)
+    if config.quads and config.quads.die then
+        local dq = config.quads.die
+        local speed = dq.animationSpeed or 0.3
+        local startrow = dq.startrow or dq.row or 1
+        local startcol = dq.startcol or dq.col or 1
+        local endcol = dq.endcol or dq.col or 1
+        self:setAnimationList("die", startrow, startcol, endcol, speed)
     end
 
     return self
@@ -161,7 +177,24 @@ end
 
 function Creature:die()
     self.isDead = true
-    -- self:playAnimation("death")
+    -- проигрываем die анимацию если есть
+    if self.animationsList and self.animationsList["die"] then
+        self:playAnimation("die")
+        self._dieAnimPlaying = true
+        -- вычисляем длительность die анимации для таймера удаления
+        local anim = self.animationsList["die"]
+        if anim and anim.totalFrames and anim.animationSpeed then
+            -- длительность = количество кадров * скорость анимации
+            self._dieAnimDuration = anim.totalFrames * anim.animationSpeed
+        else
+            -- дефолтная длительность если не удалось вычислить
+            self._dieAnimDuration = 1.0
+        end
+        self._dieAnimTimer = self._dieAnimDuration
+    else
+        -- если нет die анимации, можно удалить сразу
+        self._dieAnimTimer = 0
+    end
 end
 
 function Creature:castSkill(skill)
@@ -227,8 +260,17 @@ function Creature:getSeparationForce()
 end
 
 function Creature:update(dt)
-    -- Если мертв, не обновляем логику
+    -- Если мертв, обновляем только анимации (для die анимации)
     if self.isDead then
+        -- тикаем таймер die анимации
+        if self._dieAnimTimer then
+            self._dieAnimTimer = self._dieAnimTimer - dt
+            if self._dieAnimTimer <= 0 then
+                self._dieAnimTimer = nil
+                self._dieAnimPlaying = false
+            end
+        end
+        Object.update(self, dt)
         return
     end
 
@@ -272,9 +314,9 @@ function Creature:update(dt)
     -- ВЫБОР АНИМАЦИИ по движению за этот кадр
     local mv = math.abs(self._lastMoveX) + math.abs(self._lastMoveY)
     
-    -- НЕ переключаем анимацию если уже играет cast
-    if self.currentAnimation == "cast" then
-        -- оставляем cast анимацию как есть
+    -- НЕ переключаем анимацию если уже играет cast или die
+    if self.currentAnimation == "cast" or self.currentAnimation == "die" then
+        -- оставляем анимацию как есть
     elseif mv > 0.01 and self.animationsList["walk"] then
         if self.currentAnimation ~= "walk" then
             self:playAnimation("walk")
@@ -292,22 +334,27 @@ function Creature:update(dt)
 end
 
 function Creature:draw()
-    if self.isDead then return end
+    -- рендерим die анимацию даже если мертв
+    if self.isDead and not (self._dieAnimPlaying and self.currentAnimation == "die") then
+        return
+    end
 
     -- Используем базовую отрисовку из Object
     Object.draw(self)
 
-    -- Полоска HP (масштабированная)
-    local barWidth, barHeight = self.effectiveWidth, 4 * self.scaleHeight
-    local barX, barY = self.x, self.y - 10 * self.scaleHeight
-    local healthPercent = (self.baseHp and self.baseHp > 0) and (self.hp / self.baseHp) or 0
+    -- Полоска HP (не показываем если мертв)
+    if not self.isDead then
+        local barWidth, barHeight = self.effectiveWidth, 4 * self.scaleHeight
+        local barX, barY = self.x, self.y - 10 * self.scaleHeight
+        local healthPercent = (self.baseHp and self.baseHp > 0) and (self.hp / self.baseHp) or 0
 
-    love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
-    love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
+        love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
+        love.graphics.rectangle("fill", barX, barY, barWidth, barHeight)
 
-    love.graphics.setColor(1, 0, 0, 0.9)
-    love.graphics.rectangle("fill", barX, barY, barWidth * healthPercent, barHeight)
-    love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setColor(1, 0, 0, 0.9)
+        love.graphics.rectangle("fill", barX, barY, barWidth * healthPercent, barHeight)
+        love.graphics.setColor(1, 1, 1, 1)
+    end
 
     -- рисуем эффекты под ногами
     for _, debuff in ipairs(self.debuffs) do

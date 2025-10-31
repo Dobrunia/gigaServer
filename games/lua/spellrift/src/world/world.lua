@@ -154,11 +154,15 @@ function World:update(dt)
         self.damageManager:update(dt)
     end
 
-    -- Очистка умерших врагов (если кто-то не удалил сам)
+    -- Очистка умерших врагов (после завершения die анимации)
     for i = #self.enemies, 1, -1 do
-        if self.enemies[i].isDead then
-            self.enemiesKilled = self.enemiesKilled + 1
-            table.remove(self.enemies, i)
+        local enemy = self.enemies[i]
+        if enemy.isDead then
+            -- удаляем только если die анимация завершилась или её нет
+            if not enemy._dieAnimTimer or enemy._dieAnimTimer <= 0 then
+                self.enemiesKilled = self.enemiesKilled + 1
+                table.remove(self.enemies, i)
+            end
         end
     end
 end

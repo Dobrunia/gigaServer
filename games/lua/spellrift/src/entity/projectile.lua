@@ -192,10 +192,11 @@ function Projectile:update(dt, world)
                     end
                     local st = self.skill.stats
                     if st.debuffType and t.addDebuff then
-                        t:addDebuff("burn", st.debuffDuration, {
-                            damage = st.debuffDamage,   -- опционально
-                            tickRate = st.debuffTickRate -- опционально
-                        }, self.caster)                        
+                        -- передаем debuffType из конфига (может быть "burn", "root" и т.д.)
+                        local params = {}
+                        if st.debuffDamage then params.damage = st.debuffDamage end
+                        if st.debuffTickRate then params.tickRate = st.debuffTickRate end
+                        t:addDebuff(st.debuffType, st.debuffDuration, params, self.caster)
                     end
                     self:impact()
                     break

@@ -96,7 +96,11 @@ function Enemy:tryCastAt(hero)
 end
 
 function Enemy:update(dt, hero)
-    if self.isDead then return end
+    -- Если мертв, обновляем только анимации (для die анимации)
+    if self.isDead then
+        Creature.update(self, dt)
+        return
+    end
 
     -- тикает удержание кадра каста
     if self._attackAnimTimer and self._attackAnimTimer > 0 then
