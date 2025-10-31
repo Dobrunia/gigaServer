@@ -10,8 +10,6 @@ local enemies = {
         armorGrowth = 0.5,
         baseMoveSpeed = 60,
         speedGrowth = 5,
-        -- baseDamage = 10,
-        -- damageGrowth = 3,
         
         skills = {'zombie-cleave'},
 
