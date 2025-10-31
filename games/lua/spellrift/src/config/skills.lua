@@ -6,7 +6,8 @@ Skills["fireball"] = {
     description = "Shoots a fireball that deals damage to enemies",
     type = "projectile",
     isStartingSkill = true,
-    
+    can_be_selected = true,
+
     -- Базовые характеристики
     stats = {
         damage = 40,           -- Урон при попадании
@@ -300,7 +301,8 @@ Skills["crimson-volley"] = {
     description = "Shoots a volley of crimson arrows in 8 directions",
     type = "volley",
     isStartingSkill = true,
-    
+    can_be_selected = true,
+
     -- Базовые характеристики
     stats = {
         damage = 30,           -- Урон при попадании
@@ -356,6 +358,8 @@ Skills["axe-whirlwind"] = {
     description = "Flying axes orbit around you, dealing damage to enemies",
     type = "orbital",
     isStartingSkill = true,
+    can_be_selected = true,
+
     stats = {
         -- боевые
         damage = 15,                    -- Урон за попадание
@@ -404,6 +408,7 @@ Skills["satan-aura"] = {
     description = "Creates a satan aura around the player that deals damage over time",
     type = "aura",
     isStartingSkill = true,
+    can_be_selected = true,
 
     stats = {
         damage = 5,
@@ -452,6 +457,7 @@ Skills["bear"] = {
     description = "Summons a bear that attacks enemies",
     type = "summon",
     isStartingSkill = true,
+    can_be_selected = true,
 
     stats = {
         health = 100,
@@ -493,7 +499,8 @@ Skills["geyser"] = {
     description = "Spawns red warning circles that explode after a delay",
     type = "ground_aoe",
     isStartingSkill = true,
-
+    can_be_selected = true,
+    
     stats = {
         -- Боевые
         damage = 40,              -- разовый урон при взрыве
