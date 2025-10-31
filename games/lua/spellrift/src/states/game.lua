@@ -5,6 +5,10 @@ local Minimap = require("src.system.minimap")
 local Map = require("src.world.map")
 local Constants = require("src.constants")
 local UIPauseMenu = require("src.ui.ui_pause_menu")
+local UISkillUpgrade = require("src.ui.ui_skill_upgrade")
+local SkillsConfig = require("src.config.skills")
+local Skill = require("src.entity.skill")
+local SpriteManager = require("src.utils.sprite_manager")
 local HUD = require("src.ui.hud")
 
 -- Подключаем отладку только если включена
@@ -15,6 +19,109 @@ end
 
 local Game = {}
 Game.__index = Game
+
+-- Генерирует список доступных опций для выбора скиллов
+local function generateUpgradeOptions(hero)
+    local options = {}
+    
+    -- Получаем список скиллов героя
+    local heroSkillIds = {}
+    for _, skill in ipairs(hero.skills) do
+        heroSkillIds[skill.id] = true
+    end
+    
+    -- Собираем доступные новые скиллы
+    local availableNewSkills = {}
+    for id, cfg in pairs(SkillsConfig) do
+        if cfg.can_be_selected and not heroSkillIds[id] then
+            local sprite = SpriteManager.loadSkillSprite(id)
+            table.insert(availableNewSkills, {
+                id = id,
+                config = cfg,
+                sprite = sprite
+            })
+        end
+    end
+    
+    -- Собираем доступные улучшения
+    local availableUpgrades = {}
+    for _, skill in ipairs(hero.skills) do
+        if skill:canLevelUp() then
+            local nextLevel = skill.level + 1
+            local upgradeIndex = nextLevel - 1
+            if skill.upgrades and skill.upgrades[upgradeIndex] then
+                local upgrade = skill.upgrades[upgradeIndex]
+                local cfg = SkillsConfig[skill.id]
+                local sprite = SpriteManager.loadSkillSprite(skill.id)
+                table.insert(availableUpgrades, {
+                    skill = skill,
+                    config = cfg,
+                    upgrade = upgrade,
+                    sprite = sprite
+                })
+            end
+        end
+    end
+    
+    -- Определяем, что можно предлагать
+    local hasFreeSlots = #hero.skills < hero.maxSkillSlots
+    local hasUpgrades = #availableUpgrades > 0
+    
+    -- Если все слоты заняты, предлагаем только улучшения
+    if not hasFreeSlots then
+        if not hasUpgrades then
+            return {}
+        end
+        for _, upgrade in ipairs(availableUpgrades) do
+            table.insert(options, {
+                type = "upgrade",
+                skill = upgrade.skill,
+                config = upgrade.config,
+                upgrade = upgrade.upgrade,
+                sprite = upgrade.sprite
+            })
+        end
+    else
+        -- Есть свободные слоты - смешиваем опции
+        for _, newSkill in ipairs(availableNewSkills) do
+            table.insert(options, {
+                type = "new_skill",
+                id = newSkill.id,
+                config = newSkill.config,
+                sprite = newSkill.sprite
+            })
+        end
+        
+        for _, upgrade in ipairs(availableUpgrades) do
+            table.insert(options, {
+                type = "upgrade",
+                skill = upgrade.skill,
+                config = upgrade.config,
+                upgrade = upgrade.upgrade,
+                sprite = upgrade.sprite
+            })
+        end
+    end
+    
+    if #options == 0 then
+        return {}
+    end
+    
+    -- Случайно выбираем 3 опции
+    if #options > 3 then
+        for i = #options, 2, -1 do
+            local j = math.random(i)
+            options[i], options[j] = options[j], options[i]
+        end
+        local selected = {}
+        for i = 1, 3 do
+            table.insert(selected, options[i])
+        end
+        return selected
+    end
+    
+    return options
+end
 
 function Game:enter(selectedHeroId, selectedSkillId)
   self.input = Input.new()
@@ -28,6 +135,8 @@ function Game:enter(selectedHeroId, selectedSkillId)
   self.isPaused = false
   self.uiPauseMenu = UIPauseMenu.new()
   self.hud = HUD.new()
+  self.isSkillUpgradeScreen = false
+  self.uiSkillUpgrade = nil
   
   -- Инициализируем отладку только если включена
   if DebugDisplay then
@@ -64,6 +173,7 @@ function Game:exit()
   self.camera = nil
   self.minimap = nil
   self.uiPauseMenu = nil
+  self.uiSkillUpgrade = nil
   self.hud = nil
   self.debugDisplay = nil
 end
@@ -108,6 +218,32 @@ function Game:update(dt)
     return -- не обновляем игру, но input работает
   end
   
+  -- Экран выбора скиллов при повышении уровня
+  if self.isSkillUpgradeScreen then
+    if self.uiSkillUpgrade then
+      local selected = self.uiSkillUpgrade:update(dt, self.input)
+      if selected then
+        -- Применяем выбранный вариант
+        local hero = self.world.heroes and self.world.heroes[1]
+        if hero then
+          if selected.type == "new_skill" then
+            local newSkill = Skill.new(selected.id, 1, hero)
+            table.insert(hero.skills, newSkill)
+          elseif selected.type == "upgrade" then
+            selected.skill:levelUp()
+          end
+        end
+        -- Закрываем экран выбора
+        self.isSkillUpgradeScreen = false
+        self.uiSkillUpgrade = nil
+      end
+    else
+      -- Если UI не создан (нет опций), просто закрываем экран
+      self.isSkillUpgradeScreen = false
+    end
+    return -- не обновляем игру, но input работает
+  end
+  
   -- обновляем игровое время (только если не на паузе)
   self.gameTime = self.gameTime + dt
 
@@ -135,6 +271,18 @@ function Game:update(dt)
   -- Обработка движения героя при зажатой ПКМ
   local hero = self.world.heroes and self.world.heroes[1]
   if hero then
+    -- Проверяем, нужно ли показать экран выбора скиллов
+    if hero.needsSkillChoice then
+      hero.needsSkillChoice = false  -- сбрасываем флаг
+      local options = generateUpgradeOptions(hero)
+      if #options > 0 then
+        self.isSkillUpgradeScreen = true
+        self.uiSkillUpgrade = UISkillUpgrade.new(hero, options)
+      end
+      -- Если нет опций, просто продолжаем игру
+      return -- не обновляем игру в этом кадре, показываем экран выбора
+    end
+    
     -- Проверяем, не умер ли герой
     if hero.isDead then
       -- Обновляем статистику перед переходом к Game Over
@@ -185,9 +333,13 @@ function Game:update(dt)
 end
 
 function Game:draw()
-
   if self.isPaused then
     self.uiPauseMenu:draw()
+    return
+  elseif self.isSkillUpgradeScreen then
+    if self.uiSkillUpgrade then
+      self.uiSkillUpgrade:draw()
+    end
     return
   else
     -- всё, что “в мире”, рисуем под камерой

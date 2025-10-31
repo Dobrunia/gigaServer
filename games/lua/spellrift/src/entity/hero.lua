@@ -70,6 +70,9 @@ function Hero:levelUp()
     self.armor = self.armor + self.armorGrowth
     self.baseMoveSpeed = self.baseMoveSpeed + self.speedGrowth
     self.moveSpeed = self.moveSpeed + self.speedGrowth
+    
+    -- Флаг для показа экрана выбора скиллов
+    self.needsSkillChoice = true
 end
 
 function Hero:getStats()
