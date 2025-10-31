@@ -427,22 +427,24 @@ function Summon:draw()
     love.graphics.setColor(0, 1, 0, 0.9)
     love.graphics.rectangle("fill", bx, hpBy, bw * hp, bh)
     
-    -- Level text
-    local levelText = "Lv." .. (s.level or 1)
-    local textX = s.x + (s.effectiveWidth or 64) * 0.5
-    local textY = s.y - 35
-    
-    -- Фон для текста
-    local font = love.graphics.getFont()
-    local textWidth = font:getWidth(levelText)
-    local textHeight = font:getHeight()
-    
-    love.graphics.setColor(0, 0, 0, 0.7) -- черный полупрозрачный фон
-    love.graphics.rectangle("fill", textX - textWidth * 0.5 - 2, textY - textHeight * 0.5 - 1, textWidth + 4, textHeight + 2)
-    
-    -- Текст уровня
-    love.graphics.setColor(1, 1, 0, 1) -- желтый цвет
-    love.graphics.printf(levelText, textX - textWidth * 0.5, textY - textHeight * 0.5, textWidth, "center")
+    -- Level text (только если включена отладка)
+    if Constants.DEBUG_DRAW_LEVELS then
+        local levelText = "Lv." .. (s.level or 1)
+        local textX = s.x + (s.effectiveWidth or 64) * 0.5
+        local textY = s.y - 35
+        
+        -- Фон для текста
+        local font = love.graphics.getFont()
+        local textWidth = font:getWidth(levelText)
+        local textHeight = font:getHeight()
+        
+        love.graphics.setColor(0, 0, 0, 0.7) -- черный полупрозрачный фон
+        love.graphics.rectangle("fill", textX - textWidth * 0.5 - 2, textY - textHeight * 0.5 - 1, textWidth + 4, textHeight + 2)
+        
+        -- Текст уровня
+        love.graphics.setColor(1, 1, 0, 1) -- желтый цвет
+        love.graphics.printf(levelText, textX - textWidth * 0.5, textY - textHeight * 0.5, textWidth, "center")
+    end
     
     love.graphics.setColor(1, 1, 1, 1)
 end
