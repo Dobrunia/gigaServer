@@ -80,12 +80,33 @@ function Projectile.spawn(world, caster, skill, tx, ty)
     end
 
     -- анимация полёта (обязательна)
+    -- loop по умолчанию true (зациклена), если явно указано loop = false, то не зациклена
+    local flyLoop = (qfly.loop == nil) and true or qfly.loop
+    
+    -- вычисляем параметры анимации
+    local startCol = qfly.startcol or qfly.col or 1
+    local endCol = qfly.endcol or qfly.col or 1
+    local totalFrames = endCol - startCol + 1
+    
+    -- если анимация не зациклена, вычисляем скорость так, чтобы все кадры проигрались за время полета
+    local animSpeed
+    if not flyLoop and skillConfig and skillConfig.stats then
+        local range = skillConfig.stats.range or 250
+        local speed = skillConfig.stats.speed or 180
+        local flightTime = range / speed  -- время полета до достижения range
+        animSpeed = flightTime / totalFrames  -- скорость смены кадров
+    else
+        -- для зацикленных анимаций или если не указано - используем значение из конфига
+        animSpeed = qfly.animationSpeed or 0.1
+    end
+    
     self:setAnimationList(
         "fly",
         qfly.startrow or qfly.row or 1,
-        qfly.startcol or qfly.col or 1,
-        qfly.endcol   or qfly.col or 1,
-        qfly.animationSpeed or 0.1
+        startCol,
+        endCol,
+        animSpeed,
+        flyLoop
     )
     self:playAnimation("fly")
 
@@ -214,7 +235,18 @@ function Projectile:draw()
     if quad then
         local ox = self.baseWidth * 0.5  -- центр спрайта
         local oy = self.baseHeight * 0.5
-        love.graphics.draw(self.spriteSheet, quad, self.x, self.y, self.angle, self.scaleWidth, self.scaleHeight, ox, oy)
+        
+        -- проверяем нужен ли поворот по направлению (для горизонтальных спрайтов типа slash)
+        local st = self.skill and self.skill.stats
+        if st and st.faceDirection then
+            -- зеркалируем по горизонтали в зависимости от facing
+            local sx = (self.facing == -1) and -1 or 1
+            local flipOx = (sx == -1) and self.baseWidth or 0
+            love.graphics.draw(self.spriteSheet, quad, self.x, self.y, 0, sx * self.scaleWidth, self.scaleHeight, flipOx, oy)
+        else
+            -- обычный поворот по углу движения
+            love.graphics.draw(self.spriteSheet, quad, self.x, self.y, self.angle, self.scaleWidth, self.scaleHeight, ox, oy)
+        end
     end
     
     -- Рисуем хитбокс если включена отладка

@@ -145,6 +145,7 @@ Skills["satyr-boomerang"] = {
         range = 700,
         speed = 220,
         radius = 20,
+        faceDirection = true,
 
         debuffType = "root",  -- реализовать поддержку ( спрайт проигрывать за время длительности с 1 по 7 и назад до 1)
         debuffDuration = 2.5,
@@ -161,6 +162,7 @@ Skills["satyr-boomerang"] = {
             startcol = 1,
             endrow = 1,
             endcol = 11,
+            loop = false,  -- анимация проигрывается один раз (не зацикливается)
         }
     },
 
@@ -189,9 +191,9 @@ Skills["slash6"] = {
         cooldown = 2.0,
         range = 100,
         speed = 100,
-        radius = 30,
+        radius = 14,
+        faceDirection = true,  -- спрайт зеркалируется по горизонтали в зависимости от направления движения
     },
-
 
     quads = {
         idle = {
@@ -203,6 +205,7 @@ Skills["slash6"] = {
             startcol = 1,
             endrow = 1,
             endcol = 10,
+            loop = false,  -- анимация проигрывается один раз (не зацикливается)
         }
     },
 }

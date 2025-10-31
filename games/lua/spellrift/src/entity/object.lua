@@ -60,13 +60,14 @@ function Object:setSize(targetWidth, targetHeight)
     self.effectiveHeight = self.targetHeight
 end
 
-function Object:setAnimationList(animationName, startRow, startCol, endCol, animationSpeed)
+function Object:setAnimationList(animationName, startRow, startCol, endCol, animationSpeed, loop)
     local anim = {
         startRow = startRow,
         startCol = startCol,
         endCol = endCol,
         animationSpeed = animationSpeed or DEFAULT_ANIMATION_SPEED,
         totalFrames = endCol - startCol + 1,
+        loop = (loop ~= nil) and loop or true,  -- по умолчанию зациклена
         quads = {}  -- предкэш кадров
     }
 
@@ -105,6 +106,12 @@ end
 function Object:update(dt)
     if self.currentAnimation and self.animationsList[self.currentAnimation] then
         local anim = self.animationsList[self.currentAnimation]
+        
+        -- если анимация не зациклена и уже на последнем кадре, не обновляем
+        if not anim.loop and self.currentAnimationFrame >= anim.totalFrames then
+            return
+        end
+        
         self.currentAnimationTime = self.currentAnimationTime + dt
         
         if self.currentAnimationTime >= anim.animationSpeed then
@@ -112,7 +119,12 @@ function Object:update(dt)
             self.currentAnimationFrame = self.currentAnimationFrame + 1
             
             if self.currentAnimationFrame > anim.totalFrames then
-                self.currentAnimationFrame = 1
+                if anim.loop then
+                    self.currentAnimationFrame = 1
+                else
+                    -- останавливаем на последнем кадре
+                    self.currentAnimationFrame = anim.totalFrames
+                end
             end
         end
     end

@@ -24,8 +24,8 @@ local enemies = {
             value = 10,
             valueGrowth = 3,
 
-            width = 32,
-            height = 32,
+            width = 18,
+            height = 18,
         
             quads = {
                 idle = {
@@ -83,8 +83,8 @@ local enemies = {
             value = 10,
             valueGrowth = 3,
 
-            width = 16,
-            height = 16,
+            width = 18,
+            height = 18,
         
             quads = {
                 idle = {
@@ -127,7 +127,7 @@ local enemies = {
                 endcol = 23,
             }
         }
-    }
+    },
 
     -- === RANGED MOB ===
     fireclaw = {
@@ -153,8 +153,8 @@ local enemies = {
             value = 15,
             valueGrowth = 3,
 
-            width = 32,
-            height = 32,
+            width = 18,
+            height = 18,
         
             quads = {
                 idle = {
@@ -214,8 +214,8 @@ local enemies = {
             value = 25,
             valueGrowth = 3,
 
-            width = 32,
-            height = 32,
+            width = 18,
+            height = 18,
         
             quads = {
                 idle = {
