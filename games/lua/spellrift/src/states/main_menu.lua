@@ -63,6 +63,8 @@ function MainMenu:handleMouseClick(x, y)
         -- Заглушка: позже добавить экран альманаха
         -- Пока просто печатаем в консоль, оставляем в main menu
         print("[INFO] Almanac is not implemented yet")
+    elseif hit == "exit" then
+        love.event.quit()
     end
 end
 

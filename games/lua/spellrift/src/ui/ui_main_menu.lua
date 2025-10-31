@@ -13,10 +13,11 @@ local BUTTON_BORDER_RADIUS = 8
 
 function UIMainMenu.new()
     local self = setmetatable({}, UIMainMenu)
-    -- кнопки: старт и альманах
+    -- кнопки: старт, альманах и выход
     self.buttons = {
         { id = "start",   label = "START GAME", x = 0, y = 0, w = MENU_BUTTON_WIDTH, h = MENU_BUTTON_HEIGHT },
         { id = "almanac", label = "ALMANAC",    x = 0, y = 0, w = MENU_BUTTON_WIDTH, h = MENU_BUTTON_HEIGHT },
+        { id = "exit",    label = "EXIT",       x = 0, y = 0, w = MENU_BUTTON_WIDTH, h = MENU_BUTTON_HEIGHT },
     }
 
     -- шрифты

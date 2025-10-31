@@ -70,11 +70,11 @@ end
 function Drop:draw()
     if self.collected then return end
     Object.draw(self)
-    -- if self.type == "xp" then
-    --     love.graphics.setColor(0, 1, 0, 0.3)
-    --     love.graphics.circle("fill", self.x + self.effectiveWidth/2, self.y + self.effectiveHeight/2, 20)
-    --     love.graphics.setColor(1, 1, 1, 1)
-    -- end
+    if self.type == "xp" then
+        love.graphics.setColor(0.4, 0.8, 1.0, 0.3)  -- нежно-голубой блик для дропа
+        love.graphics.circle("fill", self.x + self.effectiveWidth/2, self.y + self.effectiveHeight/2, 20)
+        love.graphics.setColor(1, 1, 1, 1)
+    end
 end
 
 return Drop

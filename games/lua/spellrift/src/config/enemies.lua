@@ -97,9 +97,9 @@ local enemies = {
 
         -- Spawn parameters
         spawnWeight = 1,            -- Common mob (1=very common, 10=very rare)
-        spawnStartTime = 0,         -- Can spawn from game start
-        spawnEndTime = nil,         -- Spawns forever (no end time)
-        spawnGroupSize = 1,         -- Single mob spawns
+        spawnStartTime = 120,         -- Can spawn from game start
+        spawnEndTime = 300,         -- Spawns forever (no end time)
+        spawnGroupSize = 3,         -- Single mob spawns
 
         quads = {
             idle = {
@@ -166,7 +166,7 @@ local enemies = {
         spawnWeight = 3,
         spawnStartTime = 0,
         spawnEndTime = nil,
-        spawnGroupSize = 2,
+        spawnGroupSize = 1,
 
         width = 32,
         height = 32,
