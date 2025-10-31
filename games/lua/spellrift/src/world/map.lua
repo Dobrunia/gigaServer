@@ -165,7 +165,7 @@ function Map:renderMap()
     
     -- Фон убираем - биомы сами формируют фон
     -- Рисуем биомы затемненными, чтобы существа и предметы выделялись
-    love.graphics.setColor(0.65, 0.65, 0.65, 1)  -- затемняем блоки до 65% яркости
+    love.graphics.setColor(0.35, 0.35, 0.35, 1)  -- затемняем блоки до 65% яркости
     for _, biome in ipairs(self.biomes) do
         if biome.quad then
             love.graphics.draw(self.mapSpriteSheet, biome.quad, biome.x, biome.y)
