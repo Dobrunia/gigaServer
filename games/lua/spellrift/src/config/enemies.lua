@@ -224,8 +224,8 @@ local enemies = {
         },
         
         -- Spawn parameters
-        spawnWeight = 6,
-        spawnStartTime = 0,
+        spawnWeight = 8,
+        spawnStartTime = 60,
         spawnEndTime = nil,
         spawnGroupSize = 1,
 

@@ -144,7 +144,7 @@ Skills["satyr-boomerang"] = {
         damage = 5,
         cooldown = 5.0,
         range = 700,
-        speed = 220,
+        speed = 200,
         radius = 20,
         faceDirection = true,
 
@@ -491,6 +491,126 @@ Skills["bear"] = {
         }
     },
 }
+
+-- === PERMANENT BUFF SKILLS ===
+-- Постоянные баффы можно набирать бесконечно, без ограничений на количество
+Skills["speed-buff"] = {
+    id = "speed-buff",
+    name = "Swiftness",
+    description = "Increases movement speed permanently (+15)",
+    type = "permanent_buff",
+    can_be_selected = true,
+
+    stats = {
+        moveSpeedBonus = 15,  -- бонус к скорости движения
+    },
+
+    quads = {
+        idle = {
+            row = 1,
+            col = 1
+        }
+    },
+}
+
+-- Skills["hp-buff"] = {
+--     id = "hp-buff",
+--     name = "Vitality",
+--     description = "Increases maximum health permanently (+30)",
+--     type = "permanent_buff",
+--     can_be_selected = true,
+
+--     stats = {
+--         hpBonus = 30,  -- бонус к максимальному HP
+--     },
+
+--     quads = {
+--         idle = {
+--             row = 1,
+--             col = 1
+--         }
+--     },
+-- }
+
+-- Skills["armor-buff"] = {
+--     id = "armor-buff",
+--     name = "Fortitude",
+--     description = "Increases armor permanently (+3)",
+--     type = "permanent_buff",
+--     can_be_selected = true,
+
+--     stats = {
+--         armorBonus = 3,  -- бонус к армору
+--     },
+
+--     quads = {
+--         idle = {
+--             row = 1,
+--             col = 1
+--         }
+--     },
+-- }
+
+-- Skills["pickup-buff"] = {
+--     id = "pickup-buff",
+--     name = "Magnetism",
+--     description = "Increases pickup range for drops (+50)",
+--     type = "permanent_buff",
+--     can_be_selected = true,
+
+--     stats = {
+--         pickupRangeBonus = 50,  -- бонус к радиусу подбора
+--     },
+
+--     quads = {
+--         idle = {
+--             row = 1,
+--             col = 1
+--         }
+--     },
+-- }
+
+-- === TEMPORARY BUFF SKILLS ===
+-- Временные баффы имеют длительность и таймер
+-- Skills["speed-burst"] = {
+--     id = "speed-burst",
+--     name = "Speed Burst",
+--     description = "Temporarily increases movement speed (+30 for 10s)",
+--     type = "temporary_buff",
+--     can_be_selected = true,
+
+--     stats = {
+--         moveSpeedBonus = 30,  -- бонус к скорости движения
+--         duration = 10.0,      -- длительность в секундах
+--     },
+
+--     quads = {
+--         idle = {
+--             row = 1,
+--             col = 1
+--         }
+--     },
+-- }
+
+-- Skills["health-boost"] = {
+--     id = "health-boost",
+--     name = "Health Boost",
+--     description = "Temporarily increases maximum health (+50 for 15s)",
+--     type = "temporary_buff",
+--     can_be_selected = true,
+
+--     stats = {
+--         hpBonus = 50,        -- бонус к максимальному HP
+--         duration = 15.0,      -- длительность в секундах
+--     },
+
+--     quads = {
+--         idle = {
+--             row = 1,
+--             col = 1
+--         }
+--     },
+-- }
 
 -- === GROUND AOE SKILLS ===
 Skills["geyser"] = {
