@@ -25,6 +25,9 @@ function Hero.new(x, y, heroId, level)
     self.experience = 0
     self.experienceToNext = 100
     self.damageDealt = 0
+    
+    -- радиус подбора дропов (из конфига героя или дефолтное значение)
+    self.pickupRange = config.pickupRange or 100
 
     -- анимация каста
     self._castAnimTimer = 0
@@ -86,6 +89,10 @@ function Hero:getStats()
         armorGrowth = self.armorGrowth,
         speed = self.moveSpeed,
         speedGrowth = self.speedGrowth,
+        baseHp = self.baseHp,
+        baseArmor = self.baseArmor,
+        baseMoveSpeed = self.baseMoveSpeed,
+        pickupRange = self.pickupRange or 100,
     }
 end
 

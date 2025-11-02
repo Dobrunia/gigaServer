@@ -92,12 +92,16 @@ function HUD:draw(player, gameTime)
         self.levelUp = false
     end
     
-    -- Draw canvas to screen
+    -- Draw canvas to screen (подняли выше)
     if self.playerCardCanvas then
         local screenH = love.graphics.getHeight()
-        local cardY = screenH - HUD_CONSTANTS.HUD_HEIGHT
+        local cardY = screenH - HUD_CONSTANTS.HUD_HEIGHT - 140  -- подняли на 140px выше
         love.graphics.draw(self.playerCardCanvas, self.cardX, cardY)
+        self.cardY = cardY  -- сохраняем для отображения статов под карточкой
     end
+    
+    -- Draw stats under card (always redraw)
+    self:drawStats(player)
     
     -- Draw skills (always redraw for cooldowns)
     self:drawSkills(player)
@@ -155,17 +159,6 @@ function HUD:updatePlayerCardCanvas(player)
     self.xpY = xpY
     self:drawXPBar(stats, levelX, xpY, cardWidth)
     
-    -- Stats with icons (bottom part of card)
-    love.graphics.setFont(self.fontSmall)
-    local statsX = levelX + 6
-    local statsY = xpY + HUD_CONSTANTS.FONT_MEDIUM + HUD_CONSTANTS.HUD_ELEMENTS_OFFSET_Y
-    local statsOffset = HUD_CONSTANTS.HUD_ELEMENTS_OFFSET_Y
-    
-    love.graphics.print("Armor: " .. MathUtils.round(stats.armor, 1) .. " + " .. MathUtils.round(stats.armorGrowth, 1), statsX, statsY)
-    local speedY = statsY + statsOffset
-    love.graphics.print("Speed: " .. MathUtils.round(stats.speed, 0) .. " + " .. MathUtils.round(stats.speedGrowth, 0), statsX, speedY)
-    local castSpeedY = speedY + statsOffset
-    love.graphics.print("Cast: " .. MathUtils.round(stats.castSpeed, 2) .. "x + " .. MathUtils.round(stats.castSpeedGrowth, 2) .. "x", statsX, castSpeedY)
     
     -- Reset canvas
     love.graphics.setCanvas()
@@ -308,6 +301,40 @@ function HUD:drawBuffProgressBar(skill, player, x, y, skillSize)
             break
         end
     end
+end
+
+function HUD:drawStats(player)
+    if not player then return end
+    
+    local stats = player:getStats()
+    if not stats.baseHp or not self.cardY then return end
+    
+    local screenH = love.graphics.getHeight()
+    local statsY = self.cardY + HUD_CONSTANTS.HUD_HEIGHT + 10  -- под карточкой
+    local statsX = HUD_CONSTANTS.CARD_PADDING
+    local statsOffset = HUD_CONSTANTS.HUD_ELEMENTS_OFFSET_Y + 4
+    
+    love.graphics.setFont(self.fontSmall)
+    love.graphics.setColor(Colors.TEXT_PRIMARY)
+    
+    -- HP: baseHp + hpGrowth
+    local hpText = "HP: " .. MathUtils.round(stats.baseHp, 1) .. " + " .. MathUtils.round(stats.hpGrowth, 1)
+    love.graphics.print(hpText, statsX, statsY)
+    
+    -- Armor: baseArmor + armorGrowth
+    local armorY = statsY + statsOffset
+    local armorText = "Armor: " .. MathUtils.round(stats.baseArmor, 1) .. " + " .. MathUtils.round(stats.armorGrowth, 1)
+    love.graphics.print(armorText, statsX, armorY)
+    
+    -- MoveSpeed: baseMoveSpeed + speedGrowth
+    local speedY = armorY + statsOffset
+    local speedText = "MoveSpeed: " .. MathUtils.round(stats.baseMoveSpeed, 1) .. " + " .. MathUtils.round(stats.speedGrowth, 1)
+    love.graphics.print(speedText, statsX, speedY)
+    
+    -- PickupRange
+    local pickupY = speedY + statsOffset
+    local pickupText = "PickupRange: " .. MathUtils.round(stats.pickupRange or 100, 1)
+    love.graphics.print(pickupText, statsX, pickupY)
 end
 
 function HUD:drawTimer(gameTime)
