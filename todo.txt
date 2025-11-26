@@ -15,3 +15,5 @@ Local Rate-Limiter / Circuit-Breaker Proxy
 Зачем: стабильные интеграции и экономия квоты.
 Стек: Go + fasthttp, LRU-кэш.
 
+
+1) cделайть прокси для gpt api с ключем через заголовок
