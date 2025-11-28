@@ -46,9 +46,9 @@ Skills["fireball"] = {
     isStartingSkill = true,
     can_be_selected = true,
 
-    -- Базовые характеристики
+    -- Базовые характеристики (DPS ~30: (53 + 8*5) * 0.85 / 3 = 26.4, ближе к 30)
     stats = {
-        damage = 40,           -- Урон при попадании
+        damage = 53,           -- Урон при попадании
         cooldown = 3.0,        -- Кулдаун скилла
         range = 250,           -- Дальность полета
         speed = 180,           -- Скорость снаряда
@@ -78,30 +78,21 @@ Skills["fireball"] = {
             col = 5,
         }
     },
-    -- Апгрейды по уровням
+    -- Апгрейды по уровням (DPS: 30 → 35 → 40 → 45)
     upgrades = {
-        -- Level 2: больше урона и дольше
+        -- Level 2: больше урона (DPS ~35: (63 + 10*5) * 0.85 / 3 = 32.0)
         {
-            damage = 60,
+            damage = 63,
+            debuffDamage = 10
+        },
+        -- Level 3: дольше DoT (DPS ~40: (63 + 12*6) * 0.85 / 3 = 38.3)
+        {
             debuffDuration = 6.0,
             debuffDamage = 12
         },
-        -- Level 3: быстрее кулдаун и сильнее
+        -- Level 4: быстрее кулдаун (DPS ~45: (63 + 12*6) * 0.85 / 2.5 = 46.0)
         {
-            damage = 80,
-            cooldown = 2.5,
-            debuffDuration = 7.0,
-            debuffDamage = 15,
-            debuffTickRate = 0.8
-        },
-        -- Level 4: максимальная мощь
-        {
-            damage = 100,
-            cooldown = 2.0,
-            range = 300,
-            debuffDuration = 8.0,
-            debuffDamage = 20,
-            debuffTickRate = 0.6
+            cooldown = 2.5
         }
     }
 }
@@ -225,8 +216,9 @@ Skills["slash6"] = {
     description = "Slashes the ground in front",
     type = "projectile",
 
+    -- Базовые характеристики (DPS ~30: 71 * 0.85 / 2 = 30.2)
     stats = {
-        damage = 30,
+        damage = 71,
         cooldown = 2.0,
         range = 100,
         speed = 100,
@@ -247,6 +239,21 @@ Skills["slash6"] = {
             loop = false,  -- анимация проигрывается один раз (не зацикливается)
         }
     },
+    -- Апгрейды по уровням (DPS: 30 → 35 → 40 → 45)
+    upgrades = {
+        -- Level 2: больше урона (DPS ~35: 82 * 0.85 / 2 = 34.9)
+        {
+            damage = 82
+        },
+        -- Level 3: быстрее кулдаун (DPS ~40: 82 * 0.85 / 1.75 = 39.8)
+        {
+            cooldown = 1.75
+        },
+        -- Level 4: еще больше урона (DPS ~45: 95 * 0.85 / 1.75 = 46.1)
+        {
+            damage = 95
+        }
+    }
 }
 
 -- === MELEE SKILLS ===
@@ -285,9 +292,20 @@ Skills["zombie-cleave"] = {
         telegraphAlpha = 0.15,       -- прозрачность предварительного показа
     },
 
+    -- Апгрейды по уровням (DPS: 30 → 35 → 40 → 45)
     upgrades = {
-        { damage = 80, cooldown = 0.85, arcAngleDeg = 140 },
-        { damage = 100, cooldown = 0.7, arcAngleDeg = 160 },
+        -- Level 2: больше урона (DPS ~35: 77 * 1.5 * 0.85 / 2.8 = 35.1)
+        {
+            damage = 77
+        },
+        -- Level 3: шире угол (DPS ~40: 77 * 1.8 * 0.85 / 2.8 = 42.0)
+        {
+            arcAngleDeg = 50
+        },
+        -- Level 4: быстрее кулдаун (DPS ~45: 77 * 1.8 * 0.85 / 2.4 = 49.0)
+        {
+            cooldown = 1.6
+        }
     }
 }
 
@@ -297,9 +315,10 @@ Skills["bear-cleave"] = {
     description = "Cleaves the ground in front of the bear, dealing damage to enemies in a cone",
     type = "melee",
 
+    -- Базовые характеристики (DPS ~30: 64 * 2.5 * 0.85 / 4.5 = 30.2)
     stats = {
         -- боевые
-        damage = 40,
+        damage = 64,
         cooldown = 4.0,
         range = 80,            -- триггер-дистанция для AI (если не передан tx,ty)
         hitMaxTargets = 0,     -- 0 = без лимита
@@ -326,9 +345,20 @@ Skills["bear-cleave"] = {
         telegraphAlpha = 0.15,
     },
 
+    -- Апгрейды по уровням (DPS: 30 → 35 → 40 → 45)
     upgrades = {
-        { damage = 60, cooldown = 1.5},
-        { damage = 80, cooldown = 1,},
+        -- Level 2: больше урона (DPS ~35: 75 * 2.5 * 0.85 / 4.5 = 35.4)
+        {
+            damage = 75
+        },
+        -- Level 3: быстрее кулдаун (DPS ~40: 75 * 2.5 * 0.85 / 4.0 = 39.8)
+        {
+            cooldown = 3.5
+        },
+        -- Level 4: еще больше урона (DPS ~45: 87 * 2.5 * 0.85 / 4.0 = 46.2)
+        {
+            damage = 87
+        }
     }
 }
 
@@ -341,9 +371,9 @@ Skills["crimson-volley"] = {
     isStartingSkill = true,
     can_be_selected = true,
 
-    -- Базовые характеристики
+    -- Базовые характеристики (DPS ~30: 16 * 6.5 * 0.85 / 3 = 29.5)
     stats = {
-        damage = 30,           -- Урон при попадании
+        damage = 16,           -- Урон при попадании
         cooldown = 3.0,        -- Кулдаун скилла
         range = 300,           -- Дальность полета
         speed = 300,           -- Скорость снаряда
@@ -368,23 +398,19 @@ Skills["crimson-volley"] = {
             col = 5,
         }
     },
-    -- Апгрейды по уровням
+    -- Апгрейды по уровням (DPS: 30 → 35 → 40 → 45)
     upgrades = {
-        -- Level 2: больше урона и дольше
+        -- Level 2: больше урона (DPS ~35: 19 * 6.5 * 0.85 / 3 = 35.0)
         {
-            damage = 40,
-            range = 350,
+            damage = 19
         },
-        -- Level 3: быстрее кулдаун и сильнее
+        -- Level 3: быстрее кулдаун (DPS ~40: 19 * 6.5 * 0.85 / 2.6 = 40.0)
         {
-            damage = 50,
-            cooldown = 2.5,
-            range = 400,
+            cooldown = 2.6
         },
-        -- Level 4: максимальная мощь
+        -- Level 4: еще больше урона (DPS ~45: 22 * 6.5 * 0.85 / 2.6 = 45.6)
         {
-            damage = 60,
-            cooldown = 1.5,
+            damage = 22
         }
     }
 }
@@ -398,9 +424,11 @@ Skills["axe-whirlwind"] = {
     isStartingSkill = true,
     can_be_selected = true,
 
+    -- Базовые характеристики (DPS ~30: (5.3 / 0.4) * 3 * (8 / 12) = 26.5, округлим до 6)
+    -- Средний DPS = (damage / hitCooldown) * projectileCount * (duration / cooldown)
     stats = {
         -- боевые
-        damage = 15,                    -- Урон за попадание
+        damage = 6,                    -- Урон за попадание
         cooldown = 12.0,                 -- Кулдаун скилла
         radius = 20,                    -- Радиус проджектайла
         
@@ -437,6 +465,21 @@ Skills["axe-whirlwind"] = {
             endcol = 2,
         }
     },
+    -- Апгрейды по уровням (DPS: 30 → 35 → 40 → 45)
+    upgrades = {
+        -- Level 2: больше урона (DPS ~35: (7 / 0.4) * 3 * (8 / 12) = 35.0)
+        {
+            damage = 7
+        },
+        -- Level 3: дольше длительность (DPS ~40: (7 / 0.4) * 3 * (9 / 12) = 39.4)
+        {
+            duration = 9.0
+        },
+        -- Level 4: еще больше урона (DPS ~45: (8 / 0.4) * 3 * (9 / 12) = 45.0)
+        {
+            damage = 8
+        }
+    }
 }
 
 -- == AURA SKILLS ===
@@ -448,8 +491,10 @@ Skills["satan-aura"] = {
     isStartingSkill = true,
     can_be_selected = true,
 
+    -- Базовые характеристики (DPS ~30: (16 / 0.3) * (8 / 14) = 30.5)
+    -- Средний DPS = (damage / tickRate) * (duration / cooldown)
     stats = {
-        damage = 5,
+        damage = 16,
         cooldown = 14.0,
         radius = 200,
         tickRate = 0.3, -- Частота тиков урона по цели за секунду
@@ -474,17 +519,20 @@ Skills["satan-aura"] = {
         }
     },
 
+    -- Апгрейды по уровням (DPS: 30 → 35 → 40 → 45)
     upgrades = {
+        -- Level 2: больше урона (DPS ~35: (19 / 0.3) * (8 / 14) = 36.2)
         {
-            duration = 10.0, 
+            damage = 19
         },
+        -- Level 3: дольше длительность (DPS ~40: (19 / 0.3) * (9 / 14) = 40.7)
         {
-            damage = 10,
-            radius = 250,
+            duration = 9.0
         },
+        -- Level 4: еще больше урона (DPS ~45: (22 / 0.3) * (9 / 14) = 47.1)
         {
-            tickRate = 0.2,
-        },
+            damage = 22
+        }
     },
 }
 
@@ -497,6 +545,9 @@ Skills["bear"] = {
     isStartingSkill = true,
     can_be_selected = true,
 
+    -- Базовые характеристики
+    -- DPS медведя через bear-cleave: 64 * 2.5 * 0.85 / 4.5 = 30.2
+    -- Средний DPS = 30.2 * (30 / 30) = 30.2 (медведь живет столько же, сколько кулдаун)
     stats = {
         health = 100,
         armor = 5,
@@ -528,6 +579,23 @@ Skills["bear"] = {
             endcol = 6
         }
     },
+    -- Апгрейды по уровням (DPS: 30 → 35 → 40 → 45)
+    -- Улучшаем характеристики медведя, что косвенно повышает его DPS через bear-cleave
+    upgrades = {
+        -- Level 2: больше здоровья и урона медведя (через bear-cleave)
+        {
+            health = 130
+        },
+        -- Level 3: дольше живет (DPS ~40: 30.2 * (35 / 30) = 35.2, но медведь сильнее)
+        {
+            duration = 35.0
+        },
+        -- Level 4: еще больше здоровья и быстрее кулдаун
+        {
+            health = 160,
+            cooldown = 26.0
+        }
+    }
 }
 
 -- === PERMANENT BUFF SKILLS ===
@@ -659,9 +727,11 @@ Skills["geyser"] = {
     isStartingSkill = true,
     can_be_selected = true,
     
+    -- Базовые характеристики (DPS ~30: 102 * 3 * 0.9 / 9.2 = 29.9)
+    -- Реальное время = cooldown + armTime = 8.0 + 1.2 = 9.2
     stats = {
         -- Боевые
-        damage = 40,              -- разовый урон при взрыве
+        damage = 102,              -- разовый урон при взрыве
         cooldown = 8.0,           -- КД умения
 
         -- Геометрия зоны
@@ -697,6 +767,21 @@ Skills["geyser"] = {
     quads = {
         idle = { row = 1, col = 1 },
         fly = { startrow = 1, startcol = 2, endrow = 1, endcol = 11 },
+    },
+    -- Апгрейды по уровням (DPS: 30 → 35 → 40 → 45)
+    upgrades = {
+        -- Level 2: больше урона (DPS ~35: 119 * 3 * 0.9 / 9.2 = 34.9)
+        {
+            damage = 119
+        },
+        -- Level 3: больше зон (DPS ~40: 119 * 3.5 * 0.9 / 9.2 = 40.8)
+        {
+            spawnCount = 4
+        },
+        -- Level 4: быстрее кулдаун (DPS ~45: 119 * 3.5 * 0.9 / 8.0 = 46.9)
+        {
+            cooldown = 7.0
+        }
     }
 }
 return Skills
