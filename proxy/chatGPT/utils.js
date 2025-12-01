@@ -1,5 +1,7 @@
 const axios = require('axios');
 
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+
 /**
  * Extract API key from Authorization header
  */
@@ -23,7 +25,7 @@ function extractApiKey(req) {
 async function proxyToOpenAI(apiKey, body, req, res, isStreaming = false) {
   const config = {
     method: 'POST',
-    url: 'https://api.openai.com/v1/chat/completions',
+    url: OPENAI_API_URL,
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
