@@ -1,0 +1,16 @@
+{
+  "name": "socks5-proxy",
+  "version": "1.0.0",
+  "description": "Simple SOCKS5 proxy server with authentication",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "socksv5": "^0.0.6",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
